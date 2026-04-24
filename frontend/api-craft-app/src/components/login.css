@@ -1,0 +1,90 @@
+/* Page background */
+.login-page {
+  min-height: 100vh;
+  background-color: #E9E3E3;
+}
+
+/* Brand */
+.brand-title {
+  font-family: 'Lalezar', sans-serif;
+  font-size: 1.4rem;
+  color: #1a1a1a;
+}
+
+/* Card */
+.login-card {
+  width: 100%;
+  max-width: 360px;
+  border-radius: 12px;
+  border: none;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+}
+
+/* Card title */
+.login-title {
+  font-family: 'Lalezar', sans-serif;
+  font-size: 2rem;
+  color: #1a1a1a;
+}
+
+/* Underline inputs */
+.input-underline {
+  border: none;
+  border-bottom: 1.5px solid #aaa;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+  padding-left: 0.25rem;
+}
+
+.input-underline:focus {
+  border-bottom: 1.5px solid #4A4A4A;
+  box-shadow: none;
+  background: transparent;
+}
+
+.input-icon {
+  color: #aaa;
+  font-size: 1rem;
+}
+
+/* Forgot password */
+.forgot-password {
+  font-size: 0.82rem;
+  color: #888;
+  text-decoration: none;
+  cursor: default;
+}
+
+/* Login button */
+.btn-login {
+  background-color: #E9E3E3;
+  color: #4A4A4A;
+  border: none;
+  border-radius: 50px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  padding: 0.55rem 1rem;
+}
+
+.btn-login:hover {
+  background-color: #ddd6d6;
+  color: #4A4A4A;
+}
+
+/* Sign up text */
+.signup-text {
+  font-size: 0.85rem;
+  color: #888;
+}
+
+.signup-link {
+  font-size: 0.85rem;
+  color: #4A4A4A;
+  font-weight: 600;
+  text-decoration: underline;
+}
+
+.signup-link:hover {
+  color: #1a1a1a;
+}

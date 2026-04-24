@@ -1,0 +1,15 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+venv/
+
+# React / Node
+frontend/api-craft-app/node_modules/
+frontend/api-craft-app/build/
+
+# IDE
+.idea/
+
+# Environment
+.env
