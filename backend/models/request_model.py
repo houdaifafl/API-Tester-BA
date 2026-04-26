@@ -1,4 +1,4 @@
-from backend.models.base import db
+from models.base import db
 class Request(db.Model):
     __tablename__ = 'requests'
 

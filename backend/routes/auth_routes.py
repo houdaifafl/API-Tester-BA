@@ -1,0 +1,41 @@
+from flask import Blueprint, request, jsonify
+from services.auth_service import signup_user, login_user
+
+auth_bp = Blueprint('auth', __name__)
+
+@auth_bp.route('/api/auth/signup', methods=['POST'])
+def signup():
+    data = request.json if request.is_json else {}
+    username = data.get('username')
+    email = data.get('email')
+    password = data.get('password')
+
+    if not username:
+        return jsonify({'error': 'Name is required'}), 400
+    if not email:
+        return jsonify({'error': 'Email is required'}), 400
+    if not password:
+        return jsonify({'error': 'Password is required'}), 400
+
+    _, error = signup_user(username, email, password)
+    if error:
+        return jsonify({'error': error}), 409
+
+    return jsonify({'message': 'User created successfully'}), 201
+
+@auth_bp.route('/api/auth/login', methods=['POST'])
+def login():
+    data = request.json if request.is_json else {}
+    username = data.get('username')
+    password = data.get('password')
+
+    if not username:
+        return jsonify({'error': 'Username is required'}), 400
+    if not password:
+        return jsonify({'error': 'Password is required'}), 400
+
+    _, error = login_user(username, password)
+    if error:
+        return jsonify({'error': error}), 401
+
+    return jsonify({'message': 'Login successful'}), 200

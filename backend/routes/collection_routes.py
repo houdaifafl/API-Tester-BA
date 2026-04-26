@@ -1,5 +1,5 @@
 from flask import Blueprint, request, jsonify
-from backend.services.collection_service import create_collection
+from services.collection_service import create_collection
 
 collection_bp = Blueprint('collection', __name__)
 

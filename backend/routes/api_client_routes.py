@@ -1,5 +1,5 @@
 from flask import Blueprint, request, jsonify
-from backend.services.api_client_service import execute_request
+from services.api_client_service import execute_request
 
 api_client_bp = Blueprint("api_client", __name__)
 

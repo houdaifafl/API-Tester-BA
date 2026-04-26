@@ -1,5 +1,5 @@
-from backend.models.collection_model import Collection
-from backend.models.base import db
+from models.collection_model import Collection
+from models.base import db
 
 def create_collection(name):
     try:

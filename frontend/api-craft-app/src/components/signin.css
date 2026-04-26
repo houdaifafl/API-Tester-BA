@@ -1,4 +1,4 @@
-.login-page {
+.signup-page {
   min-height: 100vh;
   background-color: #E9E3E3;
 }
@@ -9,7 +9,7 @@
   color: #1a1a1a;
 }
 
-.login-card {
+.signup-card {
   width: 100%;
   max-width: 310px;
   border-radius: 12px;
@@ -17,37 +17,38 @@
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
 }
 
-/*big screens (like laptops)*/
 @media (min-width: 1280px) {
-  .login-card {
+  .signup-card {
     max-width: 380px;
-    padding-top: 5rem !important;
-    padding-bottom: 5rem !important;
+    padding-top: 3rem !important;
+    padding-bottom: 3rem !important;
   }
 }
 
-/*smaller screens (like Ipads)*/
-@media (max-height: 620px) {
-  .login-card {
-    padding-top: 5rem !important;
-    padding-bottom: 1.5rem !important;
+/*smaller screens (like 14" laptops and iPads): tighten to avoid scroll*/
+@media (max-height: 768px) {
+  .signup-card {
+    padding-top: 1.5rem !important;
+    padding-bottom: 0.5rem !important;
   }
-  .login-card .mb-5 {
-    margin-bottom: 1.5rem !important;
+  .signup-card .mb-4 {
+    margin-bottom: 0.6rem !important;
   }
-  .login-title {
-    margin-bottom: 1.5rem !important;
+  .signup-card .mb-3 {
+    margin-bottom: 0.5rem !important;
+  }
+  .signup-title {
+    margin-bottom: 0.9rem !important;
   }
 }
 
-.login-title {
+.signup-title {
   font-family: 'Lalezar', sans-serif;
   font-size: 2rem;
   color: #1a1a1a;
-  margin-top: -3rem;
 }
 
-.input-underline {
+.su-input-underline {
   border: none;
   border-bottom: 1.5px solid #aaa;
   border-radius: 0;
@@ -56,31 +57,26 @@
   padding-left: 0.25rem;
 }
 
-.input-underline:focus {
+.su-input-underline:focus {
   border-bottom: 1.5px solid #4A4A4A;
   box-shadow: none;
   background: transparent;
 }
 
-.password-underline .input-underline,
-.password-underline .input-underline:focus {
+.su-password-underline .su-input-underline,
+.su-password-underline .su-input-underline:focus {
   border-bottom: none;
 }
 
-.password-underline {
+.su-password-underline {
   border-bottom: 1.5px solid #aaa;
 }
 
-.password-underline:focus-within {
+.su-password-underline:focus-within {
   border-bottom: 1.5px solid #4A4A4A;
 }
 
-.input-icon {
-  color: #aaa;
-  font-size: 1rem;
-}
-
-.eye-toggle {
+.su-eye-toggle {
   background: none;
   border: none;
   padding: 0;
@@ -91,16 +87,11 @@
   flex-shrink: 0;
 }
 
-.eye-toggle:hover {
+.su-eye-toggle:hover {
   color: #4A4A4A;
 }
 
-.forgot-password {
-  font-size: 0.82rem;
-  color: #888;
-}
-
-.btn-login {
+.btn-signup {
   background-color: #E9E3E3;
   color: #4A4A4A;
   border: none;
@@ -110,22 +101,50 @@
   padding: 0.55rem 1rem;
 }
 
-.btn-login:hover {
+.btn-signup:hover {
   background-color: #ddd6d6;
 }
 
-.signup-text {
+.su-divider {
+  border-color: #ccc;
+  opacity: 1;
+  margin: 0;
+}
+
+.su-divider-text {
+  font-size: 0.68rem;
+  color: #aaa;
+  letter-spacing: 0.1em;
+  white-space: nowrap;
+}
+
+.btn-google {
+  background: none;
+  border: none;
+  color: #4A4A4A;
+  font-weight: 700;
+  font-size: 0.85rem;
+  letter-spacing: 0.1em;
+  cursor: pointer;
+  padding: 0;
+}
+
+.btn-google:hover {
+  color: #1a1a1a;
+}
+
+.su-footer-text {
   font-size: 0.85rem;
   color: #888;
 }
 
-.signup-link {
+.su-footer-link {
   font-size: 0.85rem;
   color: #4A4A4A;
   font-weight: 600;
   text-decoration: underline;
 }
 
-.signup-link:hover {
+.su-footer-link:hover {
   color: #1a1a1a;
 }

@@ -1,9 +1,10 @@
 from flask import Flask
-from sqlalchemy import create_engine
-from backend.models.base import db
-from backend.routes.collection_routes import collection_bp
+from flask_cors import CORS
+from models.base import db
+from routes.collection_routes import collection_bp
 from routes.api_client_routes import api_client_bp
-from backend.models import collection_model, request_model
+from routes.auth_routes import auth_bp
+from models import collection_model, request_model, user_model
 
 def create_app():
     app = Flask(__name__)
@@ -12,6 +13,7 @@ def create_app():
         'SQLALCHEMY_DATABASE_URI'] = ("mssql+pyodbc://@MSI\\SQLEXPRESS01/"
                                       "API_tester?driver=ODBC+Driver+17+"
                                       "for+SQL+Server")
+    CORS(app)
     db.init_app(app)
 
     with app.app_context():
@@ -20,6 +22,7 @@ def create_app():
     # Register Blueprints
     app.register_blueprint(api_client_bp)
     app.register_blueprint(collection_bp)
+    app.register_blueprint(auth_bp)
 
     # Simple test route
     @app.route("/")
