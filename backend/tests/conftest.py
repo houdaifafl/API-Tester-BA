@@ -33,6 +33,6 @@ def client(app):
 @pytest.fixture
 def registered_user(client):
     """Creates a user in the DB and returns their credentials for login tests."""
-    payload = {'username': 'testuser', 'email': 'test@example.com', 'password': 'secret123'}
+    payload = {'username': 'testuser', 'first_name': 'Test', 'email': 'test@example.com', 'password': 'secret123'}
     client.post('/api/auth/signup', json=payload)
     return payload

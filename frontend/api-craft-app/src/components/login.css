@@ -1,12 +1,7 @@
 .login-page {
-  min-height: 100vh;
+  height: 100vh;
+  overflow: hidden;
   background-color: #E9E3E3;
-}
-
-.brand-title {
-  font-family: 'Lalezar', sans-serif;
-  font-size: 1.4rem;
-  color: #1a1a1a;
 }
 
 .login-card {
@@ -17,26 +12,29 @@
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
 }
 
-/*big screens (like laptops)*/
 @media (min-width: 1280px) {
   .login-card {
     max-width: 380px;
-    padding-top: 5rem !important;
-    padding-bottom: 5rem !important;
+    padding-top: 3rem !important;
   }
 }
 
-/*smaller screens (like Ipads)*/
+@media (max-height: 768px) {
+  .login-card {
+    zoom: 0.88;
+    padding-bottom: 1rem !important;
+  }
+}
+
+@media (max-height: 700px) {
+  .login-card {
+    zoom: 0.80;
+  }
+}
+
 @media (max-height: 620px) {
   .login-card {
-    padding-top: 5rem !important;
-    padding-bottom: 1.5rem !important;
-  }
-  .login-card .mb-5 {
-    margin-bottom: 1.5rem !important;
-  }
-  .login-title {
-    margin-bottom: 1.5rem !important;
+    zoom: 0.72;
   }
 }
 
@@ -44,7 +42,7 @@
   font-family: 'Lalezar', sans-serif;
   font-size: 2rem;
   color: #1a1a1a;
-  margin-top: -3rem;
+  margin-top: -1rem;
 }
 
 .input-underline {

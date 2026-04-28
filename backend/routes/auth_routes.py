@@ -7,17 +7,20 @@ auth_bp = Blueprint('auth', __name__)
 def signup():
     data = request.json if request.is_json else {}
     username = data.get('username')
+    first_name = data.get('first_name')
     email = data.get('email')
     password = data.get('password')
 
     if not username:
-        return jsonify({'error': 'Name is required'}), 400
+        return jsonify({'error': 'Username is required'}), 400
+    if not first_name:
+        return jsonify({'error': 'First name is required'}), 400
     if not email:
         return jsonify({'error': 'Email is required'}), 400
     if not password:
         return jsonify({'error': 'Password is required'}), 400
 
-    _, error = signup_user(username, email, password)
+    _, error = signup_user(username, first_name, email, password)
     if error:
         return jsonify({'error': error}), 409
 
@@ -34,8 +37,8 @@ def login():
     if not password:
         return jsonify({'error': 'Password is required'}), 400
 
-    _, error = login_user(username, password)
+    user, error = login_user(username, password)
     if error:
         return jsonify({'error': error}), 401
 
-    return jsonify({'message': 'Login successful'}), 200
+    return jsonify({'message': 'Login successful', 'first_name': user.first_name}), 200

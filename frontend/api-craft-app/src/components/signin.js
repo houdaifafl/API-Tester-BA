@@ -4,7 +4,8 @@ import { FaEye, FaEyeSlash } from 'react-icons/fa';
 import './signin.css';
 
 function Signin() {
-  const [name, setName] = useState('');
+  const [username, setUsername] = useState('');
+  const [firstName, setFirstName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -18,7 +19,7 @@ function Signin() {
       const res = await fetch('http://localhost:5000/api/auth/signup', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username: name, email, password }),
+        body: JSON.stringify({ username, first_name: firstName, email, password }),
       });
       if (res.ok) {
         navigate('/login');
@@ -47,14 +48,25 @@ function Signin() {
 
           <form onSubmit={handleSubmit} className="px-2">
 
-            {/* Name field */}
+            {/* First Name field */}
             <div className="mb-4">
-              <label className="form-label text-secondary fw-semibold">Name</label>
+              <label className="form-label text-secondary fw-semibold">First Name</label>
               <input
                 type="text"
                 className="form-control su-input-underline w-100"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
+                value={firstName}
+                onChange={(e) => setFirstName(e.target.value)}
+              />
+            </div>
+
+            {/* Username field */}
+            <div className="mb-4">
+              <label className="form-label text-secondary fw-semibold">Username</label>
+              <input
+                type="text"
+                className="form-control su-input-underline w-100"
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
               />
             </div>
 

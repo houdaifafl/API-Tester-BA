@@ -20,7 +20,9 @@ function Login() {
         body: JSON.stringify({ username, password }),
       });
       if (res.ok) {
-        navigate('/dashboard');
+        const data = await res.json();
+        localStorage.setItem('firstName', data.first_name);
+        navigate('/main');
       } else {
         const data = await res.json();
         setError(data.error);

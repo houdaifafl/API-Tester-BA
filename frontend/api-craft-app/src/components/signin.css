@@ -1,12 +1,7 @@
 .signup-page {
-  min-height: 100vh;
+  height: 100vh;
+  overflow: hidden;
   background-color: #E9E3E3;
-}
-
-.brand-title {
-  font-family: 'Lalezar', sans-serif;
-  font-size: 1.4rem;
-  color: #1a1a1a;
 }
 
 .signup-card {
@@ -21,24 +16,25 @@
   .signup-card {
     max-width: 380px;
     padding-top: 3rem !important;
-    padding-bottom: 3rem !important;
   }
 }
 
-/*smaller screens (like 14" laptops and iPads): tighten to avoid scroll*/
 @media (max-height: 768px) {
   .signup-card {
-    padding-top: 1.5rem !important;
-    padding-bottom: 0.5rem !important;
+    zoom: 0.88;
+    padding-bottom: 1rem !important;
   }
-  .signup-card .mb-4 {
-    margin-bottom: 0.6rem !important;
+}
+
+@media (max-height: 700px) {
+  .signup-card {
+    zoom: 0.80;
   }
-  .signup-card .mb-3 {
-    margin-bottom: 0.5rem !important;
-  }
-  .signup-title {
-    margin-bottom: 0.9rem !important;
+}
+
+@media (max-height: 620px) {
+  .signup-card {
+    zoom: 0.72;
   }
 }
 
@@ -46,6 +42,7 @@
   font-family: 'Lalezar', sans-serif;
   font-size: 2rem;
   color: #1a1a1a;
+  margin-top: -1rem;
 }
 
 .su-input-underline {

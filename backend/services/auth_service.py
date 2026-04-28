@@ -2,13 +2,13 @@ from models.user_model import User
 from models.base import db
 from werkzeug.security import generate_password_hash, check_password_hash
 
-def signup_user(username, email, password):
+def signup_user(username, first_name, email, password):
     if User.query.filter_by(username=username).first():
         return None, 'Username already exists'
     if User.query.filter_by(email=email).first():
         return None, 'Email already in use'
 
-    user = User(username=username, email=email, password=generate_password_hash(password))
+    user = User(username=username, first_name=first_name, email=email, password=generate_password_hash(password))
     db.session.add(user)
     db.session.commit()
     return user, None
