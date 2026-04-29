@@ -8,3 +8,4 @@ class User(db.Model):
     first_name = db.Column(db.String(100), nullable=False)
     email = db.Column(db.String(255), unique=True, nullable=False)
     password = db.Column(db.String(255), nullable=False)
+    workspaces = db.relationship('Workspace', backref='owner', lazy=True)

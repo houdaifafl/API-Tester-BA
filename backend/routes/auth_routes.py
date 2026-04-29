@@ -41,4 +41,4 @@ def login():
     if error:
         return jsonify({'error': error}), 401
 
-    return jsonify({'message': 'Login successful', 'first_name': user.first_name}), 200
+    return jsonify({'message': 'Login successful', 'first_name': user.first_name, 'user_id': user.id, 'email': user.email}), 200
