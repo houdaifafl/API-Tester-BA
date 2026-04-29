@@ -127,3 +127,20 @@
 .signup-link:hover {
   color: #1a1a1a;
 }
+
+.login-page,
+.login-card {
+  user-select: none;
+  cursor: default;
+}
+
+.login-title,
+.signup-text,
+.forgot-password {
+  user-select: none;
+}
+
+.input-underline {
+  user-select: text;
+  cursor: text;
+}

@@ -1,7 +1,9 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { FaUser, FaLock, FaEye, FaEyeSlash } from 'react-icons/fa';
-import './login.css';
+import { login } from '../services/authService';
+import { useAuth } from '../contexts/AuthContext';
+import './Login.css';
 
 function Login() {
   const [username, setUsername] = useState('');
@@ -9,26 +11,20 @@ function Login() {
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
   const navigate = useNavigate();
+  const { setUser } = useAuth();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
     try {
-      const res = await fetch('http://localhost:5000/api/auth/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username, password }),
-      });
-      if (res.ok) {
-        const data = await res.json();
-        localStorage.setItem('firstName', data.first_name);
-        navigate('/main');
-      } else {
-        const data = await res.json();
-        setError(data.error);
-      }
-    } catch {
-      setError('Could not connect to the server.');
+      const data = await login(username, password);
+      localStorage.setItem('firstName', data.first_name);
+      localStorage.setItem('userId', data.user_id);
+      localStorage.setItem('email', data.email);
+      setUser({ userId: data.user_id, email: data.email, firstName: data.first_name });
+      navigate('/main');
+    } catch (err) {
+      setError(err.message || 'Could not connect to the server.');
     }
   };
 

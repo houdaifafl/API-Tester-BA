@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { FaEye, FaEyeSlash } from 'react-icons/fa';
-import './signin.css';
+import { signup } from '../services/authService';
+import './Signin.css';
 
 function Signin() {
   const [username, setUsername] = useState('');
@@ -16,19 +17,10 @@ function Signin() {
     e.preventDefault();
     setError('');
     try {
-      const res = await fetch('http://localhost:5000/api/auth/signup', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username, first_name: firstName, email, password }),
-      });
-      if (res.ok) {
-        navigate('/login');
-      } else {
-        const data = await res.json();
-        setError(data.error);
-      }
-    } catch {
-      setError('Could not connect to the server.');
+      await signup(username, firstName, email, password);
+      navigate('/login');
+    } catch (err) {
+      setError(err.message || 'Could not connect to the server.');
     }
   };
 

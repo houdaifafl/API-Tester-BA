@@ -145,3 +145,20 @@
 .su-footer-link:hover {
   color: #1a1a1a;
 }
+
+.signup-page,
+.signup-card {
+  user-select: none;
+  cursor: default;
+}
+
+.signup-title,
+.su-divider-text,
+.su-footer-text {
+  user-select: none;
+}
+
+.su-input-underline {
+  user-select: text;
+  cursor: text;
+}

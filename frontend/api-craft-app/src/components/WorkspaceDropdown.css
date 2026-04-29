@@ -1,0 +1,195 @@
+.wsd-container {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 8px;         /* ← horizontal offset from the sidebar edge — increase to push right, decrease to push left */
+  width: 280px;
+  background: #ffffff;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  border-radius: 10px;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.12);
+  padding: 10px 0 6px;
+  z-index: 100;
+  user-select: none;
+  cursor: default;
+}
+
+/* ── Current workspace ── */
+.wsd-current {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 12px 10px;
+}
+
+.wsd-avatar {
+  width: 26px;
+  height: 26px;
+  border-radius: 6px;
+  background: #1a1a1a;
+  color: #fff;
+  font-size: 12px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.wsd-current-name {
+  font-size: 13px;
+  font-weight: 600;
+  color: #1a1a1a;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ── Action buttons ── */
+.wsd-actions {
+  display: flex;
+  gap: 6px;
+  padding: 0 12px 10px;
+}
+
+.wsd-action-btn {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 11.5px;
+  font-weight: 500;
+  color: #333;
+  background: transparent;
+  border: 1px solid rgba(0, 0, 0, 0.18);
+  border-radius: 6px;
+  padding: 4px 8px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.wsd-action-btn:hover {
+  background: rgba(0, 0, 0, 0.05);
+}
+
+.wsd-action-icon {
+  font-size: 11px;
+  color: #555;
+}
+
+/* ── Divider ── */
+.wsd-divider {
+  border: none;
+  border-top: 1px solid rgba(0, 0, 0, 0.08);
+  margin: 0 0 6px;
+}
+
+/* ── Email ── */
+.wsd-email {
+  font-size: 11px;
+  color: #888;
+  padding: 0 12px 6px;
+  user-select: none;
+}
+
+/* ── Workspace list ── */
+.wsd-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.wsd-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 5px 12px;
+  cursor: pointer;
+}
+
+.wsd-item:hover {
+  background: rgba(0, 0, 0, 0.04);
+}
+
+.wsd-item-avatar {
+  width: 22px;
+  height: 22px;
+  border-radius: 5px;
+  background: #1a1a1a;
+  color: #fff;
+  font-size: 10px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.wsd-item-name {
+  font-size: 12.5px;
+  color: #1a1a1a;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ── New workspace ── */
+.wsd-new-btn {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  width: 100%;
+  padding: 6px 12px;
+  font-size: 12.5px;
+  color: #555;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  text-align: left;
+  margin-top: 2px;
+}
+
+.wsd-new-btn:hover {
+  background: rgba(0, 0, 0, 0.04);
+  color: #1a1a1a;
+}
+
+.wsd-new-icon {
+  font-size: 10px;
+}
+
+/* ── Inline create input ── */
+.wsd-new-input-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+}
+
+.wsd-new-input {
+  flex: 1;
+  font-size: 12px;
+  border: 1px solid rgba(0, 0, 0, 0.2);
+  border-radius: 5px;
+  padding: 3px 7px;
+  outline: none;
+  user-select: text;
+  cursor: text;
+}
+
+.wsd-new-input:focus {
+  border-color: #4a4a4a;
+}
+
+.wsd-new-confirm {
+  font-size: 11.5px;
+  font-weight: 600;
+  background: #1a1a1a;
+  color: #fff;
+  border: none;
+  border-radius: 5px;
+  padding: 3px 9px;
+  cursor: pointer;
+}
+
+.wsd-new-confirm:hover {
+  background: #333;
+}
