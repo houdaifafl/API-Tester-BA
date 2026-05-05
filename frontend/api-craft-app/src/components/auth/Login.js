@@ -1,8 +1,8 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { FaUser, FaLock, FaEye, FaEyeSlash } from 'react-icons/fa';
-import { login } from '../services/authService';
-import { useAuth } from '../contexts/AuthContext';
+import { login } from '../../services/authService';
+import { useAuth } from '../../contexts/AuthContext';
 import './Login.css';
 
 function Login() {
@@ -101,7 +101,7 @@ function Login() {
           <div className="text-center">
             <span className="signup-text">Don't have an account yet? </span>
             <br></br>
-            <Link to="/signup" className="signup-link">Sign Up</Link> 
+            <Link to="/signup" className="signup-link">Sign Up</Link>
           </div>
 
         </div>

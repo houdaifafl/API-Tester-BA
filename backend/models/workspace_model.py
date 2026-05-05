@@ -6,3 +6,4 @@ class Workspace(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(100), nullable=False)
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    is_default = db.Column(db.Boolean, nullable=False, default=False, server_default='0')

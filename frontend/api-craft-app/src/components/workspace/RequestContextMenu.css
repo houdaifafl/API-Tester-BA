@@ -1,0 +1,43 @@
+.req-ctx-menu {
+  position: fixed;
+  background: #ffffff;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  border-radius: 8px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+  padding: 4px;
+  min-width: 130px;
+  z-index: 200;
+  user-select: none;
+}
+
+.req-ctx-item {
+  display: block;
+  width: 100%;
+  text-align: left;
+  background: transparent;
+  border: none;
+  padding: 7px 12px;
+  font-size: 13px;
+  color: #1a1a1a;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background 0.12s;
+}
+
+.req-ctx-item:hover {
+  background: rgba(0, 0, 0, 0.05);
+}
+
+.req-ctx-delete {
+  color: #e74c3c;
+}
+
+.req-ctx-delete:hover {
+  background: rgba(231, 76, 60, 0.06);
+}
+
+.req-ctx-divider {
+  height: 1px;
+  background: rgba(0, 0, 0, 0.07);
+  margin: 3px 0;
+}

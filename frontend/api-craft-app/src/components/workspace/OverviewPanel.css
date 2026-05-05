@@ -1,0 +1,14 @@
+.overview-docs {
+  width: 100%;
+  max-width: 560px;
+  padding: 24px 32px;
+  align-self: flex-start;
+  user-select: none;
+}
+
+.overview-docs p {
+  font-size: 13.5px;
+  color: #444;
+  line-height: 1.7;
+  margin-bottom: 14px;
+}

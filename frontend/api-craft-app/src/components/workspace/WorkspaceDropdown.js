@@ -1,10 +1,10 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { FaCog, FaUserFriends, FaPlus } from 'react-icons/fa';
-import { createWorkspace } from '../services/workspaceService';
-import { useAuth } from '../contexts/AuthContext';
+import { FaCog, FaUserFriends, FaPlus, FaMinus } from 'react-icons/fa';
+import { createWorkspace, deleteWorkspace } from '../../services/workspaceService';
+import { useAuth } from '../../contexts/AuthContext';
 import './WorkspaceDropdown.css';
 
-export default function WorkspaceDropdown({ workspaces, activeWorkspace, onSwitch, onWorkspaceCreated, onClose }) {
+export default function WorkspaceDropdown({ workspaces, activeWorkspace, onSwitch, onWorkspaceCreated, onWorkspaceDeleted, onClose }) {
   const { user } = useAuth();
   const { email, userId } = user;
 
@@ -27,6 +27,14 @@ export default function WorkspaceDropdown({ workspaces, activeWorkspace, onSwitc
       setNewName('');
       setCreating(false);
       onWorkspaceCreated(ws);
+    } catch {}
+  };
+
+  const handleDelete = async (e, ws) => {
+    e.stopPropagation();
+    try {
+      await deleteWorkspace(ws.id, userId);
+      onWorkspaceDeleted(ws.id);
     } catch {}
   };
 
@@ -58,6 +66,11 @@ export default function WorkspaceDropdown({ workspaces, activeWorkspace, onSwitc
           <li key={ws.id} className="wsd-item" onClick={() => onSwitch(ws)}>
             <div className="wsd-item-avatar">{ws.name.charAt(0).toUpperCase()}</div>
             <span className="wsd-item-name">{ws.name}</span>
+            {!ws.is_default && (
+              <button className="wsd-delete-btn" onClick={(e) => handleDelete(e, ws)} title="Delete workspace">
+                <FaMinus />
+              </button>
+            )}
           </li>
         ))}
       </ul>

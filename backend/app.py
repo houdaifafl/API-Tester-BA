@@ -5,6 +5,7 @@ from routes.collection_routes import collection_bp
 from routes.api_client_routes import api_client_bp
 from routes.auth_routes import auth_bp
 from routes.workspace_routes import workspace_bp
+from routes.request_routes import request_bp
 from models import collection_model, request_model, user_model, workspace_model
 
 def create_app():
@@ -19,6 +20,7 @@ def create_app():
     db.init_app(app)
 
     with app.app_context():
+        db.drop_all()
         db.create_all()
 
     # Register Blueprints
@@ -26,6 +28,7 @@ def create_app():
     app.register_blueprint(collection_bp)
     app.register_blueprint(auth_bp)
     app.register_blueprint(workspace_bp)
+    app.register_blueprint(request_bp)
 
     # Simple test route
     @app.route("/")

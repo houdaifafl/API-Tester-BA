@@ -19,7 +19,7 @@ def signup_user(username, first_name, email, password):
     user = User(username=username, first_name=first_name, email=email, password=hashed)
     db.session.add(user)
     db.session.flush()
-    default_workspace = Workspace(name=f"{first_name}'s Space", user_id=user.id)
+    default_workspace = Workspace(name=f"{first_name}'s Space", user_id=user.id, is_default=True)
     db.session.add(default_workspace)
     db.session.commit()
     return user, None

@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { FaEye, FaEyeSlash } from 'react-icons/fa';
-import { signup } from '../services/authService';
+import { signup } from '../../services/authService';
 import './Signin.css';
 
 function Signin() {

@@ -17,3 +17,12 @@ export async function createWorkspace(userId, name) {
   if (!res.ok) throw new Error(data.error);
   return data;
 }
+
+export async function deleteWorkspace(workspaceId, userId) {
+  const res = await fetch(`${BASE_URL}/api/workspaces/${workspaceId}?user_id=${userId}`, {
+    method: 'DELETE',
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error);
+  return data;
+}
