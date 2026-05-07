@@ -18,11 +18,11 @@ function Login() {
     setError('');
     try {
       const data = await login(username, password);
-      localStorage.setItem('firstName', data.first_name);
+      localStorage.setItem('username', data.username);
       localStorage.setItem('userId', data.user_id);
       localStorage.setItem('email', data.email);
-      setUser({ userId: data.user_id, email: data.email, firstName: data.first_name });
-      navigate('/main');
+      setUser({ userId: data.user_id, email: data.email, username: data.username });
+      navigate(`/workspace/${data.default_workspace_id}`);
     } catch (err) {
       setError(err.message || 'Could not connect to the server.');
     }

@@ -1,9 +1,10 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
 import TopBar from './TopBar';
 import Sidebar from './Sidebar';
 import MainPanel from './MainPanel';
-import { getWorkspaces } from '../../services/workspaceService';
-import { getCollections, addCollection, renameCollection, deleteCollection, createRequest, renameRequest, deleteRequest } from '../../services/collectionService';
+import { getWorkspaces, getWorkspaceById } from '../../services/workspaceService';
+import { getCollections, addCollection, renameCollection, deleteCollection, createRequest, renameRequest, deleteRequest, updateRequestMethod } from '../../services/collectionService';
 import { useAuth } from '../../contexts/AuthContext';
 import './MainPage.css';
 
@@ -21,10 +22,14 @@ const OVERVIEW_TAB = {
 export default function MainPage() {
   const { user } = useAuth();
   const { userId } = user;
+  const { workspaceId: workspaceIdParam } = useParams();
+  const navigate = useNavigate();
 
   const [sidebarWidth, setSidebarWidth]       = useState(() => window.innerWidth * 0.17);
   const [workspaces, setWorkspaces]           = useState([]);
   const [activeWorkspace, setActiveWorkspace] = useState(null);
+  const [workspaceError, setWorkspaceError]   = useState(null);
+  const [workspaceLoading, setWorkspaceLoading] = useState(true);
   const [collections, setCollections]         = useState([]);
   const [openTabs, setOpenTabs]               = useState([OVERVIEW_TAB]);
   const [activeTabId, setActiveTabId]         = useState('overview');
@@ -36,15 +41,33 @@ export default function MainPage() {
   // Keep collectionsRef in sync so async callbacks can read current state
   useEffect(() => { collectionsRef.current = collections; }, [collections]);
 
+  // Load all workspaces for the user once
   useEffect(() => {
     if (!userId) return;
     getWorkspaces(userId)
-      .then(data => {
-        setWorkspaces(data);
-        if (data.length > 0) setActiveWorkspace(data[0]);
-      })
+      .then(data => setWorkspaces(data))
       .catch(() => {});
   }, [userId]);
+
+  // Validate workspace ownership on every URL param change — no fallback allowed
+  useEffect(() => {
+    if (!userId || !workspaceIdParam) return;
+    setActiveWorkspace(null);
+    setWorkspaceError(null);
+    setWorkspaceLoading(true);
+    if (!/^\d+$/.test(workspaceIdParam)) {
+      setWorkspaceError('invalid');
+      setWorkspaceLoading(false);
+      return;
+    }
+    getWorkspaceById(workspaceIdParam, userId)
+      .then(data => { setActiveWorkspace(data); setWorkspaceLoading(false); })
+      .catch(err => {
+        const error = err.status === 404 ? 'not_found' : err.status === 400 ? 'invalid' : 'forbidden';
+        setWorkspaceError(error);
+        setWorkspaceLoading(false);
+      });
+  }, [workspaceIdParam, userId]);
 
   // Reload collections whenever the active workspace changes
   const activeWorkspaceId = activeWorkspace?.id ?? null;
@@ -62,26 +85,22 @@ export default function MainPage() {
   }, [activeWorkspaceId]);
 
   const handleSwitch = useCallback((ws) => {
-    setActiveWorkspace(ws);
-  }, []);
+    navigate(`/workspace/${ws.id}`);
+  }, [navigate]);
 
   const handleWorkspaceCreated = useCallback((ws) => {
     setWorkspaces(prev => [...prev, ws]);
-    setActiveWorkspace(ws);
-  }, []);
+    navigate(`/workspace/${ws.id}`);
+  }, [navigate]);
 
   const handleWorkspaceDeleted = useCallback((wsId) => {
-    setWorkspaces(prev => {
-      const updated = prev.filter(w => w.id !== wsId);
-      setActiveWorkspace(active => {
-        if (active && active.id === wsId) {
-          return updated.find(w => w.is_default) || updated[0] || null;
-        }
-        return active;
-      });
-      return updated;
-    });
-  }, []);
+    const updated = workspaces.filter(w => w.id !== wsId);
+    setWorkspaces(updated);
+    if (parseInt(workspaceIdParam, 10) === wsId) {
+      const fallback = updated.find(w => w.is_default) || updated[0] || null;
+      if (fallback) navigate(`/workspace/${fallback.id}`);
+    }
+  }, [workspaces, workspaceIdParam, navigate]);
 
   const handleRequestOpen = useCallback((request) => {
     const tabId = `req-${request.id}`;
@@ -101,6 +120,17 @@ export default function MainPage() {
 
   const handleTabChange = useCallback((tabId) => {
     setActiveTabId(tabId);
+  }, []);
+
+  const handleRequestMethodChange = useCallback(async (id, newMethod) => {
+    setCollections(prev => prev.map(col => ({
+      ...col,
+      requests: col.requests.map(r => r.id === id ? { ...r, method: newMethod } : r),
+    })));
+    setOpenTabs(prev => prev.map(t => t.requestId === id ? { ...t, method: newMethod } : t));
+    try {
+      await updateRequestMethod(id, newMethod);
+    } catch {}
   }, []);
 
   const handleRequestRename = useCallback(async (id, newName) => {
@@ -224,6 +254,20 @@ export default function MainPage() {
   const activeTab = openTabs.find(t => t.id === activeTabId) ?? OVERVIEW_TAB;
   const activeRequestId = activeTab.type === 'request' ? activeTab.requestId : null;
 
+  if (workspaceLoading || workspaceError) {
+    return (
+      <div className="workspace-error">
+        {workspaceError && (
+          <p className="workspace-error-message">
+            {workspaceError === 'invalid'   ? 'Invalid workspace ID.'  :
+             workspaceError === 'not_found' ? 'Workspace not found.'   :
+                                             'Access denied.'}
+          </p>
+        )}
+      </div>
+    );
+  }
+
   return (
     <div className="workspace">
       <TopBar
@@ -256,6 +300,7 @@ export default function MainPage() {
           activeTab={activeTab}
           responseHeights={responseHeights}
           requestStates={requestStates}
+          onMethodChange={handleRequestMethodChange}
         />
       </div>
     </div>

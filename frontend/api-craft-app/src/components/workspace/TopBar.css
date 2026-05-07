@@ -60,16 +60,22 @@
   background: rgba(0, 0, 0, 0.1);
 }
 
-/* Sign-out button */
-.top-bar-signout {
+/* Profile button */
+.top-bar-profile {
+  position: relative;
   flex-shrink: 0;
+  margin-right: 8px;
+  display: flex;
+  align-items: center;
+}
+
+.profile-btn {
   background: transparent;
   border: none;
-  color: #aaa;
-  font-size: 14px;
-  padding: 6px 10px;
-  margin-right: 6px;
-  border-radius: 5px;
+  color: #888;
+  font-size: 22px;
+  padding: 4px 5px;
+  border-radius: 50%;
   cursor: pointer;
   display: flex;
   align-items: center;
@@ -77,7 +83,69 @@
   user-select: none;
 }
 
-.top-bar-signout:hover {
+.profile-btn:hover {
+  color: #333;
+  background: rgba(0, 0, 0, 0.06);
+}
+
+/* Account dropdown */
+.account-dropdown {
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  background: #fff;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+  min-width: 200px;
+  z-index: 200;
+  overflow: hidden;
+  user-select: none;
+  cursor: default;
+}
+
+.account-info {
+  padding: 12px 14px 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.account-name {
+  font-size: 13px;
+  font-weight: 600;
+  color: #1a1a1a;
+  user-select: none;
+}
+
+.account-email {
+  font-size: 12px;
+  color: #888;
+  user-select: none;
+}
+
+.account-divider {
+  height: 1px;
+  background: #f0f0f0;
+}
+
+.account-signout {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 9px 14px;
+  background: transparent;
+  border: none;
+  color: #555;
+  font-size: 13px;
+  cursor: pointer;
+  text-align: left;
+  transition: background 0.1s, color 0.1s;
+  user-select: none;
+}
+
+.account-signout:hover {
+  background: rgba(231, 76, 60, 0.06);
   color: #e74c3c;
-  background: rgba(231, 76, 60, 0.08);
 }

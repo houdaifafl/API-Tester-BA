@@ -82,10 +82,9 @@
 }
 
 .ws-method-get    { color: #49cc90; }
-.ws-method-post   { color: #f6851b; }
-.ws-method-put    { color: #e6a817; }
-.ws-method-delete { color: #e74c3c; }
-.ws-method-patch  { color: #9b59b6; }
+.ws-method-post   { color: #e74c3c; }
+.ws-method-put    { color: #4a90e2; }
+.ws-method-delete { color: #795548; }
 
 .ws-request-name {
   flex: 1;

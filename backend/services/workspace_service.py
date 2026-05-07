@@ -13,6 +13,14 @@ def create_workspace(user_id, name):
     ensure_default_collection(workspace.id)  # creates collection + default requests and commits
     return {'id': workspace.id, 'name': workspace.name, 'is_default': workspace.is_default}
 
+def get_workspace_by_id(workspace_id, user_id):
+    workspace = Workspace.query.filter_by(id=workspace_id).first()
+    if not workspace:
+        return None, 'not_found'
+    if workspace.user_id != user_id:
+        return None, 'forbidden'
+    return {'id': workspace.id, 'name': workspace.name, 'is_default': workspace.is_default}, None
+
 def delete_workspace(workspace_id, user_id):
     workspace = Workspace.query.filter_by(id=workspace_id, user_id=user_id).first()
     if not workspace:

@@ -2,7 +2,7 @@ import React from 'react';
 import RequestBuilder from '../request/RequestBuilder';
 import OverviewPanel from './OverviewPanel';
 
-export default function MainPanel({ activeTab, responseHeights, requestStates }) {
+export default function MainPanel({ activeTab, responseHeights, requestStates, onMethodChange }) {
   if (activeTab.type === 'request') {
     const rid = activeTab.requestId;
     const savedState = requestStates.current[rid];
@@ -19,6 +19,7 @@ export default function MainPanel({ activeTab, responseHeights, requestStates })
           onResponseHeightChange={(h) => { responseHeights.current[rid] = h; }}
           savedState={savedState}
           onStateChange={handleStateChange}
+          onMethodChange={onMethodChange}
         />
       </main>
     );

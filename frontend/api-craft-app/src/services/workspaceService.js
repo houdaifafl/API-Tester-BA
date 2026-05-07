@@ -18,6 +18,24 @@ export async function createWorkspace(userId, name) {
   return data;
 }
 
+export async function getWorkspaceById(workspaceId, userId) {
+  const res = await fetch(`${BASE_URL}/api/workspaces/${workspaceId}?user_id=${userId}`);
+  let data;
+  try {
+    data = await res.json();
+  } catch {
+    const err = new Error('Invalid response');
+    err.status = res.status;
+    throw err;
+  }
+  if (!res.ok) {
+    const err = new Error(data.error);
+    err.status = res.status;
+    throw err;
+  }
+  return data;
+}
+
 export async function deleteWorkspace(workspaceId, userId) {
   const res = await fetch(`${BASE_URL}/api/workspaces/${workspaceId}?user_id=${userId}`, {
     method: 'DELETE',

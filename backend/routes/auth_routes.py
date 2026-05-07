@@ -1,5 +1,6 @@
 from flask import Blueprint, request, jsonify
 from services.auth_service import signup_user, login_user
+from services.workspace_service import get_user_workspaces
 
 auth_bp = Blueprint('auth', __name__)
 
@@ -41,4 +42,13 @@ def login():
     if error:
         return jsonify({'error': error}), 401
 
-    return jsonify({'message': 'Login successful', 'first_name': user.first_name, 'user_id': user.id, 'email': user.email}), 200
+    workspaces = get_user_workspaces(user.id)
+    default_ws = next((w for w in workspaces if w['is_default']), workspaces[0] if workspaces else None)
+
+    return jsonify({
+        'message': 'Login successful',
+        'username': user.username,
+        'user_id': user.id,
+        'email': user.email,
+        'default_workspace_id': default_ws['id'] if default_ws else None,
+    }), 200

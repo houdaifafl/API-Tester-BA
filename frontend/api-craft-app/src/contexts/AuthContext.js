@@ -6,14 +6,14 @@ export function AuthProvider({ children }) {
   const [user, setUser] = useState({
     userId: localStorage.getItem('userId'),
     email: localStorage.getItem('email'),
-    firstName: localStorage.getItem('firstName'),
+    username: localStorage.getItem('username'),
   });
 
   const logout = useCallback(() => {
     localStorage.removeItem('userId');
     localStorage.removeItem('email');
-    localStorage.removeItem('firstName');
-    setUser({ userId: null, email: null, firstName: null });
+    localStorage.removeItem('username');
+    setUser({ userId: null, email: null, username: null });
   }, []);
 
   const value = useMemo(() => ({ user, setUser, logout }), [user, logout]);

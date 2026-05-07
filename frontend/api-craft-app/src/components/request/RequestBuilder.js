@@ -10,7 +10,7 @@ import BodyTab from './BodyTab';
 import ResponsePanel from './ResponsePanel';
 import './RequestBuilder.css';
 
-export default function RequestBuilder({ request, initialResponseHeight, onResponseHeightChange, savedState, onStateChange }) {
+export default function RequestBuilder({ request, initialResponseHeight, onResponseHeightChange, savedState, onStateChange, onMethodChange }) {
   const [activeTab, setActiveTab] = useState(savedState?.activeSubTab ?? 'Docs');
 
   // Live cache for sub-tab state — always holds the latest values so remounting
@@ -61,7 +61,10 @@ export default function RequestBuilder({ request, initialResponseHeight, onRespo
         </button>
       </div>
 
-      <RequestBar method={request.method} />
+      <RequestBar
+        method={request.method}
+        onMethodChange={(m) => onMethodChange?.(request.requestId, m)}
+      />
       <RequestTabs activeTab={activeTab} onTabChange={handleSubTabChange} />
 
       <div className="req-content">

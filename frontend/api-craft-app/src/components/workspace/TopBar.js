@@ -1,16 +1,16 @@
-import React, { useState, useCallback } from 'react';
-import { FaChevronDown, FaPlus, FaBinoculars, FaTimes, FaSignOutAlt } from 'react-icons/fa';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
+import { FaChevronDown, FaPlus, FaBinoculars, FaTimes, FaUserCircle, FaSignOutAlt } from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import WorkspaceDropdown from './WorkspaceDropdown';
+import SignOutModal from './SignOutModal';
 import './TopBar.css';
 
 const METHOD_COLORS = {
-  GET: '#49cc90',
-  POST: '#f6851b',
-  PUT: '#e6a817',
-  DELETE: '#e74c3c',
-  PATCH: '#9b59b6',
+  GET:    '#49cc90',
+  POST:   '#e74c3c',
+  PUT:    '#4a90e2',
+  DELETE: '#795548',
 };
 
 export default function TopBar({
@@ -25,11 +25,30 @@ export default function TopBar({
   onTabChange,
   onTabClose,
 }) {
-  const { logout } = useAuth();
+  const { user, logout } = useAuth();
   const navigate = useNavigate();
   const [dropdownOpen, setDropdownOpen] = useState(false);
+  const [accountOpen, setAccountOpen] = useState(false);
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const accountRef = useRef(null);
 
-  const handleLogout = useCallback(() => {
+  useEffect(() => {
+    if (!accountOpen) return;
+    const handler = (e) => {
+      if (accountRef.current && !accountRef.current.contains(e.target)) {
+        setAccountOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, [accountOpen]);
+
+  const handleSignOutClick = useCallback(() => {
+    setAccountOpen(false);
+    setConfirmOpen(true);
+  }, []);
+
+  const handleConfirmLogout = useCallback(() => {
     logout();
     navigate('/login');
   }, [logout, navigate]);
@@ -47,61 +66,89 @@ export default function TopBar({
   const headerName = activeWorkspace ? activeWorkspace.name : '';
 
   return (
-    <div className="top-bar">
-      <div className="top-bar-sidebar-space" style={{ width: sidebarWidth }}>
-        <div className="ws-header" onClick={() => setDropdownOpen(o => !o)}>
-          <div className="ws-avatar">{headerName.charAt(0).toUpperCase()}</div>
-          <span className="ws-name">{headerName}</span>
-          <FaChevronDown className="ws-caret" />
+    <>
+      <div className="top-bar">
+        <div className="top-bar-sidebar-space" style={{ width: sidebarWidth }}>
+          <div className="ws-header" onClick={() => setDropdownOpen(o => !o)}>
+            <div className="ws-avatar">{headerName.charAt(0).toUpperCase()}</div>
+            <span className="ws-name">{headerName}</span>
+            <FaChevronDown className="ws-caret" />
+          </div>
+          {dropdownOpen && (
+            <WorkspaceDropdown
+              workspaces={workspaces}
+              activeWorkspace={activeWorkspace}
+              onSwitch={handleSwitch}
+              onWorkspaceCreated={handleWorkspaceCreated}
+              onWorkspaceDeleted={onWorkspaceDeleted}
+              onClose={() => setDropdownOpen(false)}
+            />
+          )}
         </div>
-        {dropdownOpen && (
-          <WorkspaceDropdown
-            workspaces={workspaces}
-            activeWorkspace={activeWorkspace}
-            onSwitch={handleSwitch}
-            onWorkspaceCreated={handleWorkspaceCreated}
-            onWorkspaceDeleted={onWorkspaceDeleted}
-            onClose={() => setDropdownOpen(false)}
-          />
-        )}
-      </div>
 
-      <div className="top-bar-tabs">
-        {openTabs.map(tab => (
-          <button
-            key={tab.id}
-            className={`top-tab ${activeTabId === tab.id ? 'top-tab-active' : 'top-tab-inactive'}`}
-            onClick={() => onTabChange(tab.id)}
-          >
-            {tab.type === 'overview' && <FaBinoculars className="top-tab-icon" />}
-            {tab.type === 'request' && (
-              <span
-                className="top-tab-method"
-                style={{ color: METHOD_COLORS[tab.method] ?? '#888' }}
-              >
-                {tab.method}
-              </span>
-            )}
-            <span className="top-tab-label">{tab.label}</span>
-            {tab.type === 'request' && (
-              <span
-                className="top-tab-close"
-                onClick={e => { e.stopPropagation(); onTabClose(tab.id); }}
-                title="Close"
-              >
-                <FaTimes />
-              </span>
-            )}
+        <div className="top-bar-tabs">
+          {openTabs.map(tab => (
+            <button
+              key={tab.id}
+              className={`top-tab ${activeTabId === tab.id ? 'top-tab-active' : 'top-tab-inactive'}`}
+              onClick={() => onTabChange(tab.id)}
+            >
+              {tab.type === 'overview' && <FaBinoculars className="top-tab-icon" />}
+              {tab.type === 'request' && (
+                <span
+                  className="top-tab-method"
+                  style={{ color: METHOD_COLORS[tab.method] ?? '#888' }}
+                >
+                  {tab.method}
+                </span>
+              )}
+              <span className="top-tab-label">{tab.label}</span>
+              {tab.type === 'request' && (
+                <span
+                  className="top-tab-close"
+                  onClick={e => { e.stopPropagation(); onTabClose(tab.id); }}
+                  title="Close"
+                >
+                  <FaTimes />
+                </span>
+              )}
+            </button>
+          ))}
+          <button className="top-tab-add" title="New tab">
+            <FaPlus />
           </button>
-        ))}
-        <button className="top-tab-add" title="New tab">
-          <FaPlus />
-        </button>
+        </div>
+
+        <div className="top-bar-profile" ref={accountRef}>
+          <button
+            className="profile-btn"
+            title="Account"
+            onClick={() => setAccountOpen(o => !o)}
+          >
+            <FaUserCircle />
+          </button>
+          {accountOpen && (
+            <div className="account-dropdown">
+              <div className="account-info">
+                <span className="account-name">{user.username}</span>
+                <span className="account-email">{user.email}</span>
+              </div>
+              <div className="account-divider" />
+              <button className="account-signout" onClick={handleSignOutClick}>
+                <FaSignOutAlt />
+                <span>Sign out</span>
+              </button>
+            </div>
+          )}
+        </div>
       </div>
 
-      <button className="top-bar-signout" title="Sign out" onClick={handleLogout}>
-        <FaSignOutAlt />
-      </button>
-    </div>
+      {confirmOpen && (
+        <SignOutModal
+          onCancel={() => setConfirmOpen(false)}
+          onConfirm={handleConfirmLogout}
+        />
+      )}
+    </>
   );
 }

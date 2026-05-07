@@ -38,6 +38,19 @@ def rename_request(request_id, new_name):
     return {'id': req.id, 'name': req.name}, None
 
 
+_VALID_METHODS = {'GET', 'POST', 'PUT', 'DELETE'}
+
+def update_request_method(request_id, method):
+    if method not in _VALID_METHODS:
+        return None, 'Invalid method'
+    req = Request.query.get(request_id)
+    if not req:
+        return None, 'Request not found'
+    req.method = method
+    db.session.commit()
+    return {'id': req.id, 'method': req.method}, None
+
+
 def delete_request(request_id):
     req = Request.query.get(request_id)
     if not req:

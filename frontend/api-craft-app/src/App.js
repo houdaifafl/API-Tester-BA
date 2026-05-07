@@ -17,7 +17,7 @@ function App() {
         <Routes>
           <Route path="/login" element={<Login />} />
           <Route path="/signup" element={<Signin />} />
-          <Route path="/main" element={<ProtectedRoute><MainPage /></ProtectedRoute>} />
+          <Route path="/workspace/:workspaceId" element={<ProtectedRoute><MainPage /></ProtectedRoute>} />
           <Route path="*" element={<Navigate to="/login" replace />} />
         </Routes>
       </BrowserRouter>

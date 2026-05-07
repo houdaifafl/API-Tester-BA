@@ -58,6 +58,17 @@ export async function renameRequest(requestId, newName) {
   return data;
 }
 
+export async function updateRequestMethod(requestId, method) {
+  const res = await fetch(`${BASE_URL}/api/requests/${requestId}`, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ method }),
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error);
+  return data;
+}
+
 export async function deleteRequest(requestId) {
   const res = await fetch(`${BASE_URL}/api/requests/${requestId}`, {
     method: 'DELETE',
