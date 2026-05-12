@@ -7,31 +7,15 @@ api_client_bp = Blueprint("api_client", __name__)
 def handle_execute():
     data = request.json if request.is_json else {}
 
-    # Extract data
-    method = data.get("method") or request.args.get("method")
-    url = data.get("url") or request.args.get("url")
-    # Validation
+    method = data.get("method")
+    url    = data.get("url")
+
     if not method or not url:
         return jsonify({"error": "Method and URL are required"}), 400
 
-    method = method.upper()
+    headers = data.get("headers") or {}
+    params  = data.get("params")  or {}
+    body    = data.get("body")
 
-    headers = data.get("headers")
-    if not headers:
-        allowed_headers = ["Authorization", "Content-Type"]
-        headers = {
-            key: value
-            for key, value in request.headers.items()
-            if key in allowed_headers
-        }
-
-    params = data.get("params")
-    if not params:
-        params = {
-            key: value
-            for key, value in request.args.items()
-            if key not in ["method", "url"]
-        }
-
-    result = execute_request(method, url, params, headers)
+    result = execute_request(method.upper(), url, params, headers, body)
     return result

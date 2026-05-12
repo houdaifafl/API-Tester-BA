@@ -8,4 +8,4 @@ class Collection(db.Model):
     workspace_id = db.Column(db.Integer, db.ForeignKey('workspaces.id'), nullable=True)
     is_default = db.Column(db.Boolean, nullable=False, default=False)
 
-    requests = db.relationship('Request', backref='collection', lazy=True)
+    requests = db.relationship('Request', backref='collection', lazy=True, cascade='all, delete-orphan')

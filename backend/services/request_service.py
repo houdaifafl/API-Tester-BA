@@ -51,6 +51,19 @@ def update_request_method(request_id, method):
     return {'id': req.id, 'method': req.method}, None
 
 
+def save_request(request_id, data):
+    req = Request.query.get(request_id)
+    if not req:
+        return None, 'Request not found'
+    if 'url'     in data: req.url     = data['url']
+    if 'params'  in data: req.params  = data['params']
+    if 'headers' in data: req.headers = data['headers']
+    if 'body'    in data: req.body    = data['body']
+    if 'auth'    in data: req.auth    = data['auth']
+    db.session.commit()
+    return {'id': req.id}, None
+
+
 def delete_request(request_id):
     req = Request.query.get(request_id)
     if not req:

@@ -10,14 +10,12 @@ const METHOD_COLORS = {
 
 const METHODS = ['GET', 'POST', 'PUT', 'DELETE'];
 
-export default function RequestBar({ method: initialMethod = 'GET', onMethodChange }) {
-  const [method, setMethod] = useState(initialMethod);
+export default function RequestBar({ method: initialMethod = 'GET', onMethodChange, url, onUrlChange, onSend, loading }) {
+  const [method, setMethod]           = useState(initialMethod);
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const wrapperRef = useRef(null);
 
-  useEffect(() => {
-    setMethod(initialMethod);
-  }, [initialMethod]);
+  useEffect(() => { setMethod(initialMethod); }, [initialMethod]);
 
   useEffect(() => {
     if (!dropdownOpen) return;
@@ -35,6 +33,10 @@ export default function RequestBar({ method: initialMethod = 'GET', onMethodChan
     setDropdownOpen(false);
     onMethodChange?.(m);
   }, [onMethodChange]);
+
+  const handleKeyDown = (e) => {
+    if (e.key === 'Enter') onSend?.();
+  };
 
   return (
     <div className="req-bar">
@@ -64,8 +66,17 @@ export default function RequestBar({ method: initialMethod = 'GET', onMethodChan
       <input
         className="req-url-input"
         placeholder="Enter URL or paste text"
+        value={url}
+        onChange={e => onUrlChange?.(e.target.value)}
+        onKeyDown={handleKeyDown}
       />
-      <button className="req-send-btn">Send</button>
+      <button
+        className="req-send-btn"
+        onClick={onSend}
+        disabled={loading}
+      >
+        {loading ? 'Sending…' : 'Send'}
+      </button>
     </div>
   );
 }

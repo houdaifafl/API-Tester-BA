@@ -1,5 +1,5 @@
 from flask import Blueprint, jsonify, request as flask_request
-from services.request_service import create_request, rename_request, delete_request, update_request_method
+from services.request_service import create_request, rename_request, delete_request, update_request_method, save_request
 
 request_bp = Blueprint('request', __name__)
 
@@ -32,7 +32,14 @@ def update_request_route(request_id):
             return jsonify({'error': error}), status
         return jsonify(result), 200
 
-    return jsonify({'error': 'name or method is required'}), 400
+    save_fields = {'url', 'params', 'headers', 'body', 'auth'}
+    if save_fields & data.keys():
+        result, error = save_request(request_id, data)
+        if error:
+            return jsonify({'error': error}), 404
+        return jsonify(result), 200
+
+    return jsonify({'error': 'No valid fields provided'}), 400
 
 
 @request_bp.route('/api/requests/<int:request_id>', methods=['DELETE'])

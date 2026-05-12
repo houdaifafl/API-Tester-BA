@@ -69,6 +69,17 @@ export async function updateRequestMethod(requestId, method) {
   return data;
 }
 
+export async function saveRequest(requestId, data) {
+  const res = await fetch(`${BASE_URL}/api/requests/${requestId}`, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(data),
+  });
+  const responseData = await res.json();
+  if (!res.ok) throw new Error(responseData.error);
+  return responseData;
+}
+
 export async function deleteRequest(requestId) {
   const res = await fetch(`${BASE_URL}/api/requests/${requestId}`, {
     method: 'DELETE',

@@ -4,7 +4,7 @@ import TopBar from './TopBar';
 import Sidebar from './Sidebar';
 import MainPanel from './MainPanel';
 import { getWorkspaces, getWorkspaceById } from '../../services/workspaceService';
-import { getCollections, addCollection, renameCollection, deleteCollection, createRequest, renameRequest, deleteRequest, updateRequestMethod } from '../../services/collectionService';
+import { getCollections, addCollection, renameCollection, deleteCollection, createRequest, renameRequest, deleteRequest, updateRequestMethod, saveRequest } from '../../services/collectionService';
 import { useAuth } from '../../contexts/AuthContext';
 import './MainPage.css';
 
@@ -38,8 +38,18 @@ export default function MainPage() {
   const requestStates  = useRef({});
   const collectionsRef = useRef([]);
 
+  // Refs used to capture current tab state before a workspace switch
+  const openTabsRef     = useRef([OVERVIEW_TAB]);
+  const activeTabIdRef  = useRef('overview');
+  const workspaceTabsCache = useRef({});
+  const prevWorkspaceIdRef = useRef(null);
+
   // Keep collectionsRef in sync so async callbacks can read current state
   useEffect(() => { collectionsRef.current = collections; }, [collections]);
+
+  // Keep capture refs in sync with React state
+  useEffect(() => { openTabsRef.current = openTabs; }, [openTabs]);
+  useEffect(() => { activeTabIdRef.current = activeTabId; }, [activeTabId]);
 
   // Load all workspaces for the user once
   useEffect(() => {
@@ -68,6 +78,38 @@ export default function MainPage() {
         setWorkspaceLoading(false);
       });
   }, [workspaceIdParam, userId]);
+
+  // Save tabs for the outgoing workspace; restore (or reset) tabs for the incoming workspace
+  useEffect(() => {
+    if (!workspaceIdParam) return;
+    const prev = prevWorkspaceIdRef.current;
+    if (prev !== null && prev !== workspaceIdParam) {
+      const requestStatesSnapshot = {};
+      Object.entries(requestStates.current).forEach(([k, v]) => {
+        const { response: _r, ...rest } = v || {};
+        requestStatesSnapshot[k] = rest;
+      });
+      workspaceTabsCache.current[prev] = {
+        openTabs: openTabsRef.current,
+        activeTabId: activeTabIdRef.current,
+        requestStates: requestStatesSnapshot,
+        responseHeights: { ...responseHeights.current },
+      };
+      const saved = workspaceTabsCache.current[workspaceIdParam];
+      if (saved) {
+        setOpenTabs(saved.openTabs);
+        setActiveTabId(saved.activeTabId);
+        requestStates.current = { ...saved.requestStates };
+        responseHeights.current = { ...saved.responseHeights };
+      } else {
+        setOpenTabs([OVERVIEW_TAB]);
+        setActiveTabId('overview');
+        requestStates.current = {};
+        responseHeights.current = {};
+      }
+    }
+    prevWorkspaceIdRef.current = workspaceIdParam;
+  }, [workspaceIdParam]);
 
   // Reload collections whenever the active workspace changes
   const activeWorkspaceId = activeWorkspace?.id ?? null;
@@ -104,6 +146,17 @@ export default function MainPage() {
 
   const handleRequestOpen = useCallback((request) => {
     const tabId = `req-${request.id}`;
+    // Seed from DB data the first time this request is opened in the session.
+    // If the tab is already open (or was opened earlier), the in-session state is kept.
+    if (!requestStates.current[request.id]) {
+      requestStates.current[request.id] = {
+        url:     request.url     ?? '',
+        params:  request.params  ?? null,
+        headers: request.headers ?? null,
+        body:    request.body    ?? null,
+        auth:    request.auth    ?? null,
+      };
+    }
     setOpenTabs(prev => {
       if (prev.find(t => t.id === tabId)) return prev;
       return [...prev, {
@@ -116,6 +169,15 @@ export default function MainPage() {
       }];
     });
     setActiveTabId(tabId);
+  }, []);
+
+  const handleSaveRequest = useCallback(async (requestId, data) => {
+    await saveRequest(requestId, data);
+    // Keep collections state in sync so reopening the tab seeds from saved data
+    setCollections(prev => prev.map(col => ({
+      ...col,
+      requests: col.requests.map(r => r.id === requestId ? { ...r, ...data } : r),
+    })));
   }, []);
 
   const handleTabChange = useCallback((tabId) => {
@@ -301,6 +363,7 @@ export default function MainPage() {
           responseHeights={responseHeights}
           requestStates={requestStates}
           onMethodChange={handleRequestMethodChange}
+          onSaveRequest={handleSaveRequest}
         />
       </div>
     </div>

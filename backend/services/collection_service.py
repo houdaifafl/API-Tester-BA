@@ -9,7 +9,16 @@ def _serialize(c):
         'name': c.name,
         'is_default': c.is_default,
         'requests': [
-            {'id': r.id, 'name': r.name, 'method': r.method, 'url': r.url}
+            {
+                'id':      r.id,
+                'name':    r.name,
+                'method':  r.method,
+                'url':     r.url or '',
+                'params':  r.params,
+                'headers': r.headers,
+                'body':    r.body,
+                'auth':    r.auth,
+            }
             for r in c.requests
         ],
     }

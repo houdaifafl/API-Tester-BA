@@ -1,5 +1,6 @@
 from flask import Flask
 from flask_cors import CORS
+from sqlalchemy import text
 from models.base import db
 from routes.collection_routes import collection_bp
 from routes.api_client_routes import api_client_bp
@@ -20,8 +21,14 @@ def create_app():
     db.init_app(app)
 
     with app.app_context():
-        db.drop_all()
         db.create_all()
+        # Add auth column to requests table if it was created before this column existed
+        with db.engine.connect() as conn:
+            try:
+                conn.execute(text('ALTER TABLE requests ADD auth NVARCHAR(MAX) NULL'))
+                conn.commit()
+            except Exception:
+                pass  # Column already exists
 
     # Register Blueprints
     app.register_blueprint(api_client_bp)

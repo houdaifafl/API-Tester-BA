@@ -11,6 +11,7 @@ class Request(db.Model):
     params = db.Column(db.JSON)
     headers = db.Column(db.JSON)
     body = db.Column(db.JSON)
+    auth = db.Column(db.JSON)
 
     collection_id = db.Column(
         db.Integer,

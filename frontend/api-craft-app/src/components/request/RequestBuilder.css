@@ -225,24 +225,36 @@
 /* ── Docs tab ──────────────────────────────────────────────────── */
 .docs-content {
   width: 100%;
-  max-width: 560px;
+  max-width: 620px;
   padding: 24px 32px;
+  display: flex;
+  flex-direction: column;
 }
 
-.docs-content p {
+.docs-textarea {
+  width: 100%;
+  min-height: 200px;
+  resize: none;
+  border: none;
+  border-bottom: 1px solid transparent;
+  padding: 4px 0;
   font-size: 13.5px;
-  color: #444;
+  font-family: inherit;
+  color: #333;
   line-height: 1.7;
-  margin-bottom: 14px;
+  background: transparent;
+  outline: none;
+  transition: border-color 0.15s;
+  user-select: text;
+  cursor: text;
 }
 
-.docs-content code {
-  font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
-  font-size: 12.5px;
-  background: rgba(0, 0, 0, 0.06);
-  padding: 1px 5px;
-  border-radius: 4px;
-  color: #1a1a1a;
+.docs-textarea:focus {
+  border-bottom-color: #e0e0e0;
+}
+
+.docs-textarea::placeholder {
+  color: #bbb;
 }
 
 /* ── Response panel ────────────────────────────────────────────── */
@@ -315,4 +327,73 @@
 .response-body {
   flex: 1;
   overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ── Response content ──────────────────────────────────────────── */
+.resp-empty {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  color: #aaa;
+  padding: 16px;
+  text-align: center;
+}
+
+.resp-meta {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 14px;
+  border-bottom: 1px solid #f0f0f0;
+  flex-shrink: 0;
+}
+
+.resp-status {
+  font-size: 12px;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 4px;
+}
+
+.resp-status-ok          { color: #27ae60; background: #eafaf1; }
+.resp-status-redirect    { color: #d68910; background: #fef9e7; }
+.resp-status-client-err  { color: #e74c3c; background: #fdf2f2; }
+.resp-status-server-err  { color: #c0392b; background: #fdf2f2; }
+
+.resp-time {
+  font-size: 12px;
+  color: #888;
+}
+
+.resp-data {
+  flex: 1;
+  overflow-y: auto;
+  padding: 10px 14px;
+}
+
+.resp-pre {
+  margin: 0;
+  font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+  font-size: 12px;
+  line-height: 1.6;
+  white-space: pre-wrap;
+  word-break: break-all;
+  color: #333;
+}
+
+.resp-error-wrap {
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.resp-error-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: #e74c3c;
 }
