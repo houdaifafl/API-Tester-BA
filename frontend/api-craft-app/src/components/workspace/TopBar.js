@@ -4,14 +4,8 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import WorkspaceDropdown from './WorkspaceDropdown';
 import SignOutModal from './SignOutModal';
+import { METHOD_COLORS } from '../../constants';
 import './TopBar.css';
-
-const METHOD_COLORS = {
-  GET:    '#49cc90',
-  POST:   '#e74c3c',
-  PUT:    '#4a90e2',
-  DELETE: '#795548',
-};
 
 export default function TopBar({
   sidebarWidth,

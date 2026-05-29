@@ -1,6 +1,5 @@
 import React, { useState, useCallback, useRef, useEffect } from 'react';
-import { FaTimes } from 'react-icons/fa';
-import './ParamsTab.css';
+import KeyValueTable from '../shared/KeyValueTable';
 import './BodyTab.css';
 
 const createFormRow  = () => ({ id: Date.now() + Math.random(), key: '', value: '', description: '', valueType: 'text' });
@@ -92,20 +91,24 @@ export default function BodyTab({ initialBody, onBodyChange }) {
       )}
 
       {body.bodyType === 'form-data' && (
-        <BodyTable
-          rows={body.formData}
-          showTypeSelector
-          onRowChange={(id, field, val) => handleTableChange('formData', id, field, val)}
-          onRowDelete={(id) => handleTableDelete('formData', id)}
-        />
+        <div className="body-table-wrap">
+          <KeyValueTable
+            rows={body.formData}
+            showTypeSelector
+            onRowChange={(id, field, val) => handleTableChange('formData', id, field, val)}
+            onRowDelete={(id) => handleTableDelete('formData', id)}
+          />
+        </div>
       )}
 
       {body.bodyType === 'x-www-form-urlencoded' && (
-        <BodyTable
-          rows={body.urlEncoded}
-          onRowChange={(id, field, val) => handleTableChange('urlEncoded', id, field, val)}
-          onRowDelete={(id) => handleTableDelete('urlEncoded', id)}
-        />
+        <div className="body-table-wrap">
+          <KeyValueTable
+            rows={body.urlEncoded}
+            onRowChange={(id, field, val) => handleTableChange('urlEncoded', id, field, val)}
+            onRowDelete={(id) => handleTableDelete('urlEncoded', id)}
+          />
+        </div>
       )}
 
       {body.bodyType === 'raw' && (
@@ -120,83 +123,6 @@ export default function BodyTab({ initialBody, onBodyChange }) {
         </div>
       )}
 
-    </div>
-  );
-}
-
-function BodyTable({ rows, showTypeSelector = false, onRowChange, onRowDelete }) {
-  return (
-    <div className="body-table-wrap">
-      <table className="params-table">
-        <thead>
-          <tr>
-            <th>Key</th>
-            <th>Value</th>
-            <th>Description</th>
-            <th />
-          </tr>
-        </thead>
-        <tbody>
-          {rows.map(row => (
-            <tr key={row.id} className="params-row">
-              <td>
-                <div className={showTypeSelector ? 'body-key-cell' : undefined}>
-                  <input
-                    className="params-input"
-                    placeholder="Key"
-                    value={row.key}
-                    onChange={e => onRowChange(row.id, 'key', e.target.value)}
-                  />
-                  {showTypeSelector && (
-                    <select
-                      className="body-value-type"
-                      value={row.valueType}
-                      onChange={e => onRowChange(row.id, 'valueType', e.target.value)}
-                    >
-                      <option value="text">Text</option>
-                      <option value="file">File</option>
-                    </select>
-                  )}
-                </div>
-              </td>
-
-              <td>
-                {showTypeSelector && row.valueType === 'file' ? (
-                  <span className="body-file-placeholder">Select file</span>
-                ) : (
-                  <input
-                    className="params-input"
-                    placeholder="Value"
-                    value={row.value}
-                    onChange={e => onRowChange(row.id, 'value', e.target.value)}
-                  />
-                )}
-              </td>
-
-              <td>
-                <input
-                  className="params-input"
-                  placeholder="Description"
-                  value={row.description}
-                  onChange={e => onRowChange(row.id, 'description', e.target.value)}
-                />
-              </td>
-
-              <td className="params-delete-cell">
-                {rows.length > 1 && (
-                  <button
-                    className="params-delete-btn"
-                    onClick={() => onRowDelete(row.id)}
-                    title="Remove row"
-                  >
-                    <FaTimes />
-                  </button>
-                )}
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
     </div>
   );
 }

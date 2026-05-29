@@ -72,47 +72,6 @@
   align-self: flex-start;
 }
 
-/* ── Key cell with inline type selector ────────────────────────── */
-.body-key-cell {
-  display: flex;
-  align-items: center;
-}
-
-.body-key-cell .params-input {
-  flex: 1;
-  min-width: 0;
-}
-
-.body-value-type {
-  flex-shrink: 0;
-  font-size: 11.5px;
-  color: #666;
-  background: rgba(0, 0, 0, 0.03);
-  border: none;
-  border-left: 1px solid rgba(0, 0, 0, 0.1);
-  border-radius: 0;
-  padding: 6px 8px;
-  cursor: pointer;
-  outline: none;
-  user-select: none;
-  height: 100%;
-  transition: background 0.15s;
-}
-
-.body-value-type:hover {
-  background: rgba(0, 0, 0, 0.06);
-}
-
-/* ── File placeholder ──────────────────────────────────────────── */
-.body-file-placeholder {
-  display: block;
-  padding: 6px 8px;
-  font-size: 12.5px;
-  color: #bbb;
-  font-style: italic;
-  user-select: none;
-}
-
 /* ── Raw editor box ────────────────────────────────────────────── */
 .body-raw-wrap {
   flex: 1;

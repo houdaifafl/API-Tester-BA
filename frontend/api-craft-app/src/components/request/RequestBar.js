@@ -1,12 +1,6 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { FaChevronDown } from 'react-icons/fa';
-
-const METHOD_COLORS = {
-  GET:    '#49cc90',
-  POST:   '#e74c3c',
-  PUT:    '#4a90e2',
-  DELETE: '#795548',
-};
+import { METHOD_COLORS } from '../../constants';
 
 const METHODS = ['GET', 'POST', 'PUT', 'DELETE'];
 
