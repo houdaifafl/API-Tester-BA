@@ -87,7 +87,9 @@ class TestLogin:
         })
         assert res.status_code == 200
         assert res.get_json()['message'] == 'Login successful'
-        assert res.get_json()['first_name'] == registered_user['first_name']
+        assert res.get_json()['username'] == registered_user['username']
+        assert 'user_id' in res.get_json()
+        assert 'default_workspace_id' in res.get_json()
 
     def test_wrong_password(self, client, registered_user):
         res = client.post('/api/auth/login', json={

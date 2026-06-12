@@ -7,3 +7,5 @@ class Workspace(db.Model):
     name = db.Column(db.String(100), nullable=False)
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
     is_default = db.Column(db.Boolean, nullable=False, default=False, server_default='0')
+
+    collections = db.relationship('Collection', backref='workspace', lazy=True, cascade='all, delete-orphan')
