@@ -1,9 +1,13 @@
 from flask import Flask
-from sqlalchemy import create_engine
-from backend.models.base import db
-from backend.routes.collection_routes import collection_bp
+from flask_cors import CORS
+from sqlalchemy import text
+from models.base import db
+from routes.collection_routes import collection_bp
 from routes.api_client_routes import api_client_bp
-from backend.models import collection_model, request_model
+from routes.auth_routes import auth_bp
+from routes.workspace_routes import workspace_bp
+from routes.request_routes import request_bp
+from models import collection_model, request_model, user_model, workspace_model
 
 def create_app():
     app = Flask(__name__)
@@ -12,14 +16,26 @@ def create_app():
         'SQLALCHEMY_DATABASE_URI'] = ("mssql+pyodbc://@MSI\\SQLEXPRESS01/"
                                       "API_tester?driver=ODBC+Driver+17+"
                                       "for+SQL+Server")
+    app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+    CORS(app)
     db.init_app(app)
 
     with app.app_context():
         db.create_all()
+        # Add auth column to requests table if it was created before this column existed
+        with db.engine.connect() as conn:
+            try:
+                conn.execute(text('ALTER TABLE requests ADD auth NVARCHAR(MAX) NULL'))
+                conn.commit()
+            except Exception:
+                pass  # Column already exists
 
     # Register Blueprints
     app.register_blueprint(api_client_bp)
     app.register_blueprint(collection_bp)
+    app.register_blueprint(auth_bp)
+    app.register_blueprint(workspace_bp)
+    app.register_blueprint(request_bp)
 
     # Simple test route
     @app.route("/")

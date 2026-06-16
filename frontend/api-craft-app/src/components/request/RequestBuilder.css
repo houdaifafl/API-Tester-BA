@@ -1,0 +1,399 @@
+/* ── Request Builder root ─────────────────────────────────────── */
+.request-builder {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  background: #ffffff;
+  user-select: none;
+  cursor: default;
+}
+
+/* ── Breadcrumb row ───────────────────────────────────────────── */
+.req-breadcrumb-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 16px;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+  flex-shrink: 0;
+}
+
+.req-breadcrumb {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12.5px;
+}
+
+.breadcrumb-collection {
+  color: #666;
+}
+
+.breadcrumb-sep {
+  color: #bbb;
+}
+
+.breadcrumb-request {
+  color: #1a1a1a;
+  font-weight: 500;
+}
+
+.req-save-btn {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 12px;
+  font-size: 12.5px;
+  font-weight: 500;
+  color: #555;
+  background: transparent;
+  border: 1px solid rgba(0, 0, 0, 0.15);
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+
+.req-save-btn:hover {
+  background: rgba(0, 0, 0, 0.05);
+  color: #1a1a1a;
+}
+
+.save-icon {
+  font-size: 11px;
+}
+
+/* ── URL bar ───────────────────────────────────────────────────── */
+.req-bar {
+  display: flex;
+  align-items: center;
+  padding: 10px 16px;
+  flex-shrink: 0;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+.req-method-wrapper {
+  position: relative;
+  flex-shrink: 0;
+}
+
+.req-method-btn {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+  min-width: 92px;
+  border: 1px solid rgba(0, 0, 0, 0.18);
+  border-right: none;
+  border-radius: 6px 0 0 6px;
+  padding: 7px 10px;
+  font-size: 12.5px;
+  font-weight: 700;
+  background: #f7f7f7;
+  outline: none;
+  cursor: pointer;
+  user-select: none;
+  transition: background 0.12s;
+}
+
+.req-method-btn:hover {
+  background: #efefef;
+}
+
+.req-method-caret {
+  font-size: 9px;
+  color: #999;
+  flex-shrink: 0;
+}
+
+.req-method-dropdown {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  background: #fff;
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  border-radius: 8px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+  z-index: 100;
+  min-width: 110px;
+  user-select: none;
+  cursor: default;
+}
+
+.req-method-option {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  padding: 8px 14px;
+  background: transparent;
+  border: none;
+  font-size: 12.5px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.1s;
+  user-select: none;
+}
+
+.req-method-option:hover {
+  background: rgba(0, 0, 0, 0.04);
+}
+
+.req-method-option-active {
+  background: rgba(0, 0, 0, 0.06);
+}
+
+.req-url-input {
+  flex: 1;
+  border: 1px solid rgba(0, 0, 0, 0.18);
+  border-radius: 0;
+  padding: 7px 12px;
+  font-size: 13px;
+  color: #1a1a1a;
+  outline: none;
+  background: #fff;
+  user-select: text;
+  cursor: text;
+  min-width: 0;
+}
+
+.req-url-input:focus {
+  border-color: rgba(0, 0, 0, 0.3);
+}
+
+.req-url-input::placeholder {
+  color: #aaa;
+}
+
+.req-send-btn {
+  border: none;
+  border-radius: 0 6px 6px 0;
+  padding: 7.5px 22px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #fff;
+  background: #1a73e8;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: background 0.15s;
+}
+
+.req-send-btn:hover {
+  background: #1565c0;
+}
+
+/* ── Request tabs ──────────────────────────────────────────────── */
+.req-tabs {
+  display: flex;
+  padding: 0 16px;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+  flex-shrink: 0;
+}
+
+.req-tab {
+  padding: 9px 14px;
+  font-size: 12.5px;
+  font-weight: 500;
+  color: #666;
+  background: transparent;
+  border: none;
+  border-bottom: 2px solid transparent;
+  cursor: pointer;
+  transition: color 0.15s, border-color 0.15s;
+  margin-bottom: -1px;
+}
+
+.req-tab:hover {
+  color: #1a1a1a;
+}
+
+.req-tab.active {
+  color: #1a1a1a;
+  border-bottom-color: #1a73e8;
+  font-weight: 600;
+}
+
+/* ── Content area ──────────────────────────────────────────────── */
+.req-content {
+  flex: 1;
+  overflow-y: auto;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+}
+
+/* ── Docs tab ──────────────────────────────────────────────────── */
+.docs-content {
+  width: 100%;
+  max-width: 620px;
+  padding: 24px 32px;
+  display: flex;
+  flex-direction: column;
+}
+
+.docs-textarea {
+  width: 100%;
+  min-height: 200px;
+  resize: none;
+  border: none;
+  border-bottom: 1px solid transparent;
+  padding: 4px 0;
+  font-size: 13.5px;
+  font-family: inherit;
+  color: #333;
+  line-height: 1.7;
+  background: transparent;
+  outline: none;
+  transition: border-color 0.15s;
+  user-select: text;
+  cursor: text;
+}
+
+.docs-textarea:focus {
+  border-bottom-color: #e0e0e0;
+}
+
+.docs-textarea::placeholder {
+  color: #bbb;
+}
+
+/* ── Response panel ────────────────────────────────────────────── */
+.response-panel {
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  position: relative;
+}
+
+/* drag handle sits at the very top of the panel */
+.response-resize-handle {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 5px;
+  cursor: row-resize;
+  z-index: 5;
+  border-top: 1px solid rgba(0, 0, 0, 0.1);
+  transition: background 0.15s, border-color 0.15s;
+}
+
+.response-resize-handle:hover,
+.response-resize-handle:active {
+  background: rgba(26, 115, 232, 0.15);
+  border-top-color: rgba(26, 115, 232, 0.45);
+}
+
+.response-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 16px 8px;
+}
+
+.response-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: #1a1a1a;
+}
+
+.history-btn {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 10px;
+  font-size: 12px;
+  color: #555;
+  background: transparent;
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.history-btn:hover {
+  background: rgba(0, 0, 0, 0.05);
+}
+
+.history-icon {
+  font-size: 11px;
+}
+
+.history-caret {
+  font-size: 9px;
+}
+
+.response-body {
+  flex: 1;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ── Response content ──────────────────────────────────────────── */
+.resp-empty {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  color: #aaa;
+  padding: 16px;
+  text-align: center;
+}
+
+.resp-meta {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 14px;
+  border-bottom: 1px solid #f0f0f0;
+  flex-shrink: 0;
+}
+
+.resp-status {
+  font-size: 12px;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 4px;
+}
+
+.resp-status-ok          { color: #27ae60; background: #eafaf1; }
+.resp-status-redirect    { color: #d68910; background: #fef9e7; }
+.resp-status-client-err  { color: #e74c3c; background: #fdf2f2; }
+.resp-status-server-err  { color: #c0392b; background: #fdf2f2; }
+
+.resp-time {
+  font-size: 12px;
+  color: #888;
+}
+
+.resp-data {
+  flex: 1;
+  overflow-y: auto;
+  padding: 10px 14px;
+}
+
+.resp-pre {
+  margin: 0;
+  font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+  font-size: 12px;
+  line-height: 1.6;
+  white-space: pre-wrap;
+  word-break: break-all;
+  color: #333;
+}
+
+.resp-error-wrap {
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.resp-error-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: #e74c3c;
+}

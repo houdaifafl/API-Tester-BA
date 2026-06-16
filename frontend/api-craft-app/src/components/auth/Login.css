@@ -1,0 +1,146 @@
+.login-page {
+  height: 100vh;
+  overflow: hidden;
+  background-color: #E9E3E3;
+}
+
+.login-card {
+  width: 100%;
+  max-width: 310px;
+  border-radius: 12px;
+  border: none;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+}
+
+@media (min-width: 1280px) {
+  .login-card {
+    max-width: 380px;
+    padding-top: 3rem !important;
+  }
+}
+
+@media (max-height: 768px) {
+  .login-card {
+    zoom: 0.88;
+    padding-bottom: 1rem !important;
+  }
+}
+
+@media (max-height: 700px) {
+  .login-card {
+    zoom: 0.80;
+  }
+}
+
+@media (max-height: 620px) {
+  .login-card {
+    zoom: 0.72;
+  }
+}
+
+.login-title {
+  font-family: 'Lalezar', sans-serif;
+  font-size: 2rem;
+  color: #1a1a1a;
+  margin-top: -1rem;
+}
+
+.input-underline {
+  border: none;
+  border-bottom: 1.5px solid #aaa;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+  padding-left: 0.25rem;
+}
+
+.input-underline:focus {
+  border-bottom: 1.5px solid #4A4A4A;
+  box-shadow: none;
+  background: transparent;
+}
+
+.password-underline .input-underline,
+.password-underline .input-underline:focus {
+  border-bottom: none;
+}
+
+.password-underline {
+  border-bottom: 1.5px solid #aaa;
+}
+
+.password-underline:focus-within {
+  border-bottom: 1.5px solid #4A4A4A;
+}
+
+.input-icon {
+  color: #aaa;
+  font-size: 1rem;
+}
+
+.eye-toggle {
+  background: none;
+  border: none;
+  padding: 0;
+  color: #aaa;
+  font-size: 1rem;
+  cursor: pointer;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+.eye-toggle:hover {
+  color: #4A4A4A;
+}
+
+.forgot-password {
+  font-size: 0.82rem;
+  color: #888;
+}
+
+.btn-login {
+  background-color: #E9E3E3;
+  color: #4A4A4A;
+  border: none;
+  border-radius: 50px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  padding: 0.55rem 1rem;
+}
+
+.btn-login:hover {
+  background-color: #ddd6d6;
+}
+
+.signup-text {
+  font-size: 0.85rem;
+  color: #888;
+}
+
+.signup-link {
+  font-size: 0.85rem;
+  color: #4A4A4A;
+  font-weight: 600;
+  text-decoration: underline;
+}
+
+.signup-link:hover {
+  color: #1a1a1a;
+}
+
+.login-page,
+.login-card {
+  user-select: none;
+  cursor: default;
+}
+
+.login-title,
+.signup-text,
+.forgot-password {
+  user-select: none;
+}
+
+.input-underline {
+  user-select: text;
+  cursor: text;
+}

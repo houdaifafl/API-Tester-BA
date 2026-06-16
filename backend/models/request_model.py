@@ -1,4 +1,4 @@
-from backend.models.base import db
+from models.base import db
 class Request(db.Model):
     __tablename__ = 'requests'
 
@@ -11,6 +11,7 @@ class Request(db.Model):
     params = db.Column(db.JSON)
     headers = db.Column(db.JSON)
     body = db.Column(db.JSON)
+    auth = db.Column(db.JSON)
 
     collection_id = db.Column(
         db.Integer,

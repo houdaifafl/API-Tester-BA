@@ -1,0 +1,178 @@
+/* ── Two-panel layout ──────────────────────────────────────────── */
+.auth-tab {
+  display: flex;
+  align-self: stretch;
+  width: 100%;
+  overflow: hidden;
+}
+
+.auth-left {
+  width: 320px;
+  flex-shrink: 0;
+  padding: 20px 24px;
+  user-select: none;
+}
+
+.auth-divider {
+  width: 1px;
+  background: rgba(0, 0, 0, 0.08);
+  flex-shrink: 0;
+}
+
+.auth-right {
+  flex: 1;
+  padding: 20px 24px;
+  overflow-y: auto;
+}
+
+/* ── Section label ─────────────────────────────────────────────── */
+.auth-label {
+  font-size: 11.5px;
+  font-weight: 600;
+  color: #777;
+  margin: 0 0 10px 0;
+  letter-spacing: 0.02em;
+}
+
+/* ── Auth type dropdown ────────────────────────────────────────── */
+.auth-dropdown {
+  position: relative;
+}
+
+.auth-dropdown-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 160px;
+  padding: 6px 12px;
+  font-size: 13px;
+  color: #1a1a1a;
+  background: #fff;
+  border: 1px solid rgba(0, 0, 0, 0.18);
+  border-radius: 20px;
+  cursor: pointer;
+  user-select: none;
+  gap: 8px;
+  transition: border-color 0.15s;
+}
+
+.auth-dropdown-toggle:hover {
+  border-color: rgba(0, 0, 0, 0.3);
+}
+
+.auth-dropdown-caret {
+  font-size: 10px;
+  color: #888;
+  flex-shrink: 0;
+  transition: transform 0.15s;
+}
+
+.auth-dropdown-caret.open {
+  transform: rotate(180deg);
+}
+
+.auth-dropdown-menu {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  width: 160px;
+  background: #fff;
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  border-radius: 8px;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.1);
+  list-style: none;
+  margin: 0;
+  padding: 4px;
+  z-index: 20;
+}
+
+.auth-dropdown-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 7px 10px;
+  font-size: 13px;
+  color: #1a1a1a;
+  border-radius: 5px;
+  cursor: pointer;
+  user-select: none;
+}
+
+.auth-dropdown-item:hover {
+  background: rgba(0, 0, 0, 0.05);
+}
+
+.auth-dropdown-item.selected {
+  font-weight: 500;
+}
+
+.auth-check-icon {
+  font-size: 10px;
+  color: #555;
+}
+
+/* ── No Auth message ───────────────────────────────────────────── */
+.auth-no-auth {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  gap: 6px;
+  user-select: none;
+}
+
+.auth-no-auth-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: #1a1a1a;
+  margin: 0;
+}
+
+.auth-no-auth-desc {
+  font-size: 13px;
+  color: #888;
+  margin: 0;
+}
+
+/* ── Auth input fields ─────────────────────────────────────────── */
+.auth-fields {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding-top: 2px;
+}
+
+.auth-field-label {
+  font-size: 11.5px;
+  font-weight: 600;
+  color: #777;
+  margin: 0 0 5px 0;
+  display: block;
+  user-select: none;
+  letter-spacing: 0.02em;
+}
+
+.auth-field-input {
+  display: block;
+  width: 100%;
+  max-width: 280px;
+  border: 1px solid rgba(0, 0, 0, 0.18);
+  border-radius: 20px;
+  padding: 7px 14px;
+  font-size: 13px;
+  color: #1a1a1a;
+  outline: none;
+  background: #fff;
+  user-select: text;
+  cursor: text;
+  transition: border-color 0.15s;
+}
+
+.auth-field-input:focus {
+  border-color: rgba(0, 0, 0, 0.32);
+}
+
+.auth-field-input::placeholder {
+  color: #ccc;
+}

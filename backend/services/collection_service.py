@@ -1,17 +1,68 @@
-from backend.models.collection_model import Collection
-from backend.models.base import db
+from models.collection_model import Collection
+from models.request_model import Request
+from models.base import db
 
-def create_collection(name):
-    try:
-        new_collection = Collection(name=name)
 
-        db.session.add(new_collection)
+def _serialize(c):
+    return {
+        'id': c.id,
+        'name': c.name,
+        'is_default': c.is_default,
+        'requests': [
+            {
+                'id':      r.id,
+                'name':    r.name,
+                'method':  r.method,
+                'url':     r.url or '',
+                'params':  r.params,
+                'headers': r.headers,
+                'body':    r.body,
+                'auth':    r.auth,
+            }
+            for r in c.requests
+        ],
+    }
+
+
+def ensure_default_collection(workspace_id):
+    exists = Collection.query.filter_by(workspace_id=workspace_id).first()
+    if not exists:
+        collection = Collection(name='My Collection', workspace_id=workspace_id, is_default=True)
+        db.session.add(collection)
+        db.session.flush()
+        db.session.add(Request(name='Get data',  method='GET',  url='', collection_id=collection.id))
+        db.session.add(Request(name='Post data', method='POST', url='', collection_id=collection.id))
         db.session.commit()
 
-        return {
-            'id': new_collection.id,
-            'name': new_collection.name,
-        }
-    except Exception as e:
-        db.session.rollback()
-        return None
+
+def get_collections_by_workspace(workspace_id):
+    ensure_default_collection(workspace_id)
+    collections = Collection.query.filter_by(workspace_id=workspace_id).all()
+    return [_serialize(c) for c in collections]
+
+
+def add_collection(workspace_id):
+    collection = Collection(name='New Collection', workspace_id=workspace_id, is_default=False)
+    db.session.add(collection)
+    db.session.commit()
+    return _serialize(collection), None
+
+
+def rename_collection(collection_id, new_name):
+    col = Collection.query.get(collection_id)
+    if not col:
+        return None, 'Collection not found'
+    col.name = new_name
+    db.session.commit()
+    return _serialize(col), None
+
+
+def delete_collection(collection_id):
+    col = Collection.query.get(collection_id)
+    if not col:
+        return None, 'Collection not found'
+    if col.is_default:
+        return None, 'Cannot delete the default collection'
+    db.session.delete(col)
+    db.session.commit()
+    return True, None
