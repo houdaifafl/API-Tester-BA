@@ -1,6 +1,6 @@
 from models.user_model import User
-from models.workspace_model import Workspace
 from models.base import db
+from services.workspace_service import create_workspace
 from sqlalchemy import or_
 from flask import current_app
 import bcrypt
@@ -19,9 +19,7 @@ def signup_user(username, first_name, email, password):
     user = User(username=username, first_name=first_name, email=email, password=hashed)
     db.session.add(user)
     db.session.flush()
-    default_workspace = Workspace(name=f"{first_name}'s Space", user_id=user.id, is_default=True)
-    db.session.add(default_workspace)
-    db.session.commit()
+    create_workspace(user.id, f"{first_name}'s Space", is_default=True)
     return user, None
 
 def login_user(username, password):

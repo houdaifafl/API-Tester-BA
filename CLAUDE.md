@@ -93,3 +93,18 @@ API tester/
 - Broken saved request loading
 - Incorrect response parsing (non-JSON responses)
 - Inconsistent ORM relationships
+
+## Known Design Decisions & Future Considerations
+
+### PATCH /api/requests/<id> — Single-operation dispatch
+The request update route uses a priority-based dispatch chain: `name` → `method` → save fields (`url`, `params`, `headers`, `body`, `auth`). Only the first matching branch executes and returns — subsequent branches are skipped. This means a payload containing both `name` and `method` will rename the request but silently ignore the method change.
+
+This is intentional for the current frontend, which always sends one operation type per call (rename, method change, and field saves are separate UI interactions). The silent drop is never triggered in normal app usage.
+
+**If this API is ever exposed publicly or consumed by a third-party client**, the route should be refactored to process all applicable branches in a single call rather than returning after the first match. At that point, the response shape will also need to be reconsidered (currently each branch returns a different subset of fields).
+
+### SQLAlchemy `Query.get()` deprecation
+`collection_service.py` and `request_service.py` use `Model.query.get(id)`, which is deprecated in SQLAlchemy 2.0 and raises `LegacyAPIWarning`. These should be updated to `db.session.get(Model, id)` before upgrading SQLAlchemy.
+
+### Non-JSON request body handling
+Routes that read `flask_request.json if flask_request.is_json else {}` silently treat non-JSON bodies (wrong `Content-Type`, plain text, form data) as empty — returning 400 "No valid fields provided". This code path is untested. When expanding test coverage to cover different request content types (e.g. `multipart/form-data`, `text/plain`, no content-type), add tests that verify each route correctly rejects or handles bodies sent without `Content-Type: application/json`.

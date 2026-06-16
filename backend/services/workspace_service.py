@@ -6,8 +6,8 @@ def get_user_workspaces(user_id):
     workspaces = Workspace.query.filter_by(user_id=user_id).all()
     return [{'id': w.id, 'name': w.name, 'is_default': w.is_default} for w in workspaces]
 
-def create_workspace(user_id, name):
-    workspace = Workspace(name=name, user_id=user_id)
+def create_workspace(user_id, name, is_default=False):
+    workspace = Workspace(name=name, user_id=user_id, is_default=is_default)
     db.session.add(workspace)
     db.session.flush()  # obtain workspace.id before seeding the default collection
     ensure_default_collection(workspace.id)  # creates collection + default requests and commits
