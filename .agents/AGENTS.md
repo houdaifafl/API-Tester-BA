@@ -213,7 +213,16 @@ Every input, textarea, and editable element MUST explicitly restore:
 
 ## 8. TESTING RULES
 
-### 8.1 Backend Tests (pytest)
+The project enforces a **three-tier testing strategy**. Each tier targets a distinct class of
+problem and is applied at a different scope. No tier replaces another.
+
+| Tier | Tool | Scope | Cost |
+|------|------|-------|------|
+| 1 — Backend integration | pytest | Every new endpoint | Medium |
+| 2 — Component smoke test | `@testing-library/react` | Every new component | Very low (~5 lines) |
+| 3 — Browser E2E verification | Browser (full stack) | Every UI-touching feature | Medium |
+
+### 8.1 Backend Tests (pytest) — Tier 1
 - All new backend endpoints MUST have corresponding pytest tests in `backend/tests/`.
 - Tests follow the **integration test style**: use the Flask test client, hit actual HTTP endpoints,
   verify status codes and response JSON shapes.
@@ -234,11 +243,15 @@ When a test fails, the agent MUST follow this reasoning protocol **before making
 
 The agent MUST NOT blindly change implementation to match a failing test without this analysis.
 
-### 8.3 Frontend Tests
+### 8.3 Frontend Smoke Tests (Tier 2)
+- Required for **every new frontend component** introduced by a feature.
 - Frontend test files MUST use `@testing-library/react` and be placed alongside the component
   in `src/components/<feature>/`.
 - Test files follow the naming pattern `<ComponentName>.test.js`.
-- New components introduced by features MUST have at least one smoke test (renders without crash).
+- The minimum requirement is a **smoke test**: assert the component renders without crashing
+  when given its required props. This catches import errors, broken JSX, and missing props
+  before the browser is opened.
+- Cost is intentionally kept very low (~5 lines). Dropping it to save tokens is not justified.
 
 ### 8.4 Requirement-Driven Test Coverage (CRITICAL)
 - Tests MUST be derived from the **feature's requirements**, not from the implementation.
@@ -252,6 +265,20 @@ The agent MUST NOT blindly change implementation to match a failing test without
   corresponding test — even if all existing tests pass.
 - This rule is enforced at the **Implementer level only**. The Reviewer does not re-check
   requirement coverage — doing so would be redundant and wasteful.
+
+### 8.5 Browser-Based End-to-End Verification (Tier 3)
+- Required for every feature that **touches the user interface**. Backend-only changes are exempt.
+- The Implementer MUST perform the following steps in order:
+  1. Start the Flask backend (`python app.py` or equivalent).
+  2. Start the React frontend (`npm start`).
+  3. Open a browser and navigate to the relevant page.
+  4. Interact with the feature exactly as a user would.
+  5. Verify: correct routing/redirects, UI state updates, error messages, and API responses.
+  6. Take at least one screenshot per verified behavior and attach it to the `walkthrough.md`.
+- This tier catches problems that unit tests and integration tests cannot: routing failures,
+  CSS rendering issues, actual HTTP call behavior, and cross-component interaction bugs.
+- Screenshots serve as **visual verification artifacts** for the thesis and the walkthrough.
+- The Implementer MUST document the E2E results (pass/fail per step) in `walkthrough.md`.
 
 ---
 
@@ -436,12 +463,16 @@ these rules are always active.
 
 ### 12.8 Verification and Walkthrough
 - After completing all implementation tasks, the Implementer MUST:
-  1. Run all relevant tests and confirm they pass.
-  2. Verify the frontend builds without errors (`npm run build`).
-  3. Verify the backend starts without errors.
-  4. Produce a `walkthrough.md` artifact summarizing:
+  1. Run all relevant backend pytest tests and confirm they pass.
+  2. Run all frontend smoke tests and confirm they pass.
+  3. Verify the frontend builds without errors (`npm run build`).
+  4. Verify the backend starts without errors.
+  5. **For UI-touching features**: perform Browser-Based E2E Verification per §8.5 —
+     start the full stack, interact with the feature, take screenshots, document results.
+  6. Produce a `walkthrough.md` artifact summarizing:
      - What was implemented (files created and modified)
-     - What was tested and the results
+     - What was tested and the results (all three tiers)
+     - Browser E2E screenshots (if applicable)
      - Any deviations from the plan (with justification)
      - Any new weaknesses discovered (to be added to Section 9)
 
