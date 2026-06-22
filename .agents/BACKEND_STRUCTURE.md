@@ -1,0 +1,156 @@
+# APICraft — Backend Structure Map
+
+This document provides a living map of the APICraft backend application (`backend/`). It details the factory layout, routing structure, database models, service layers, integration tests, and configuration details.
+
+---
+
+## 1. Application Factory Pattern
+
+The backend utilizes the Flask application factory pattern. The server entry point is managed inside [app.py](file:///c:/Users/hlanj/Bachelor%20info/Bachelor%20Arbeit/API%20tester/backend/app.py):
+
+* **`create_app()` Function**:
+  * Initializes the Flask application.
+  * Configures the Database URI (currently points to SQL Server LocalDB/Express: `mssql+pyodbc://@MSI\\SQLEXPRESS01/API_tester?driver=ODBC+Driver+17+for+SQL+Server`).
+  * Enables CORS (cross-origin resource sharing) for wildcard origins.
+  * Binds and initializes the Flask-SQLAlchemy `db` context.
+  * Hot-patches SQL Server database instances automatically during startup (e.g., adding `auth NVARCHAR(MAX) NULL` to the `requests` table if missing).
+  * Registers all blueprints.
+* **Blueprints Registered**:
+  * `api_client_bp` -> Handles proxied HTTP request execution.
+  * `collection_bp` -> Handles CRUD actions for collection organization.
+  * `auth_bp` -> Handles user login and signup actions.
+  * `workspace_bp` -> Handles workspace dashboard operations.
+  * `request_bp` -> Handles CRUD actions for saved request configurations.
+
+---
+
+## 2. Database Schema & ORM Models
+
+All database models reside inside `backend/models/` and extend from SQLAlchemy's base [base.py](file:///c:/Users/hlanj/Bachelor%20info/Bachelor%20Arbeit/API%20tester/backend/models/base.py) declarative mapping class:
+
+```
+                  ┌──────────────┐
+                  │     User     │
+                  └──────┬───────┘
+                         │ 1
+                         │
+                         │ *
+                  ┌──────▼───────┐
+                  │  Workspace   │
+                  └──────┬───────┘
+                         │ 1
+                         │
+                         │ * (nullable FK)
+                  ┌──────▼───────┐
+                  │  Collection  │
+                  └──────┬───────┘
+                         │ 1
+                         │
+                         │ *
+                  ┌──────▼───────┐
+                  │   Request    │
+                  └──────────────┘
+```
+
+### 2.1 Model Registry (`backend/models/`)
+* **[user_model.py](file:///c:/Users/hlanj/Bachelor%20info/Bachelor%20Arbeit/API%20tester/backend/models/user_model.py) (`User` model)**:
+  * Table: `users`
+  * Columns: `id` (PK, Integer), `username` (Unique, String), `first_name` (String), `email` (Unique, String), `password` (String, bcrypt hash).
+  * Relationships: `workspaces` (one-to-many relationship mapping to `Workspace` model via `owner` backref).
+* **[workspace_model.py](file:///c:/Users/hlanj/Bachelor%20info/Bachelor%20Arbeit/API%20tester/backend/models/workspace_model.py) (`Workspace` model)**:
+  * Table: `workspaces`
+  * Columns: `id` (PK, Integer), `name` (String), `user_id` (FK to `users.id`, nullable=False), `is_default` (Boolean, defaults to False).
+  * Relationships: `collections` (one-to-many relationship mapping to `Collection` model via `workspace` backref; configured with cascade delete).
+* **[collection_model.py](file:///c:/Users/hlanj/Bachelor%20info/Bachelor%20Arbeit/API%20tester/backend/models/collection_model.py) (`Collection` model)**:
+  * Table: `collections`
+  * Columns: `id` (PK, Integer), `name` (String), `workspace_id` (FK to `workspaces.id`, nullable=True — *known violation*), `is_default` (Boolean, defaults to False).
+  * Relationships: `requests` (one-to-many relationship mapping to `Request` model via `collection` backref; configured with cascade delete).
+* **[request_model.py](file:///c:/Users/hlanj/Bachelor%20info/Bachelor%20Arbeit/API%20tester/backend/models/request_model.py) (`Request` model)**:
+  * Table: `requests`
+  * Columns: `id` (PK, Integer), `name` (String), `method` (String, nullable=False), `url` (String, nullable=False), `params` (JSON), `headers` (JSON), `body` (JSON), `auth` (JSON), `collection_id` (FK to `collections.id`, nullable=False).
+
+---
+
+## 3. Blueprint-per-Domain Routing Map
+
+Routes are thin orchestrators that digest JSON requests, delegate logic to services, and return JSON payloads.
+
+| Blueprint | HTTP Method | Route Path | Service Delegation | Success | Error Status |
+|---|---|---|---|---|---|
+| **Auth** | `POST` | `/api/auth/signup` | `signup_user()` | 201 | 400 (missing fields), 409 (conflict) |
+| | `POST` | `/api/auth/login` | `login_user()`, `get_user_workspaces()` | 200 | 400 (missing fields), 401 (invalid auth) |
+| **Workspace**| `GET` | `/api/workspaces` | `get_user_workspaces()` | 200 | 400 (missing user_id) |
+| | `POST` | `/api/workspaces` | `create_workspace()` | 201 | 400 (missing user_id / name) |
+| | `GET` | `/api/workspaces/<workspace_id>` | `get_workspace_by_id()` | 200 | 400 (invalid ID), 403 (forbidden), 404 (not found) |
+| | `DELETE`| `/api/workspaces/<workspace_id>` | `delete_workspace()` | 200 | 400 (missing user_id), 403 (default ws), 404 (not found) |
+| **Collection**| `GET` | `/api/workspaces/<workspace_id>/collections`| `get_collections_by_workspace()` | 200 | (auto-creates default if missing) |
+| | `POST` | `/api/workspaces/<workspace_id>/collections`| `add_collection()` | 201 | 400 (invalid workspace) |
+| | `PATCH`| `/api/collections/<collection_id>` | `rename_collection()` | 200 | 400 (missing name), 404 (not found) |
+| | `DELETE`| `/api/collections/<collection_id>` | `delete_collection()` | 200 | 403 (default collection), 404 (not found) |
+| **Request** | `POST` | `/api/collections/<collection_id>/requests` | `create_request()` | 201 | 404 (collection not found) |
+| | `PATCH`| `/api/requests/<request_id>` | `rename_request()`, `update_request_method()`, `save_request()` | 200 | 400 (invalid payload), 404 (not found) |
+| | `DELETE`| `/api/requests/<request_id>` | `delete_request()` | 200 | 404 (not found) |
+| **API Client**| `POST` | `/api/execute` | `execute_request()` | 200 | 400 (missing URL/method), 500 (API error), 504 (timeout) |
+
+---
+
+## 4. Service Layer Design
+
+All business logic, database queries, and transaction commits are isolated in service modules under `backend/services/`.
+
+### 4.1 Service Function Map
+* **[auth_service.py](file:///c:/Users/hlanj/Bachelor%20info/Bachelor%20Arbeit/API%20tester/backend/services/auth_service.py)**:
+  * `signup_user(username, first_name, email, password)`: Hashes passwords with `bcrypt` (4 rounds in tests, 12 rounds in production) and calls `create_workspace` to initialize default workspace.
+  * `login_user(username, password)`: Queries user record and verifies password match.
+* **[workspace_service.py](file:///c:/Users/hlanj/Bachelor%20info/Bachelor%20Arbeit/API%20tester/backend/services/workspace_service.py)**:
+  * `get_user_workspaces(user_id)`: Fetches workspaces owned by `user_id`.
+  * `create_workspace(user_id, name, is_default)`: Persists new workspace and invokes `ensure_default_collection`.
+  * `get_workspace_by_id(workspace_id, user_id)`: Fetches workspace metadata and verifies ownership.
+  * `delete_workspace(workspace_id, user_id)`: Deletes workspace if ownership matches and workspace is not default.
+* **[collection_service.py](file:///c:/Users/hlanj/Bachelor%20info/Bachelor%20Arbeit/API%20tester/backend/services/collection_service.py)**:
+  * `ensure_default_collection(workspace_id)`: Automatically seeds "My Collection" containing two default request items ("Get data", "Post data") if the workspace has no collections.
+  * `get_collections_by_workspace(workspace_id)`: Returns all collections (and serialized nested requests) inside the workspace.
+  * `add_collection(workspace_id)`: Creates a new collection named "New Collection".
+  * `rename_collection(collection_id, new_name)`: Renames custom collection.
+  * `delete_collection(collection_id)`: Deletes collection unless it is default.
+* **[request_service.py](file:///c:/Users/hlanj/Bachelor%20info/Bachelor%20Arbeit/API%20tester/backend/services/request_service.py)**:
+  * `create_request(collection_id)`: Seeds a blank GET request.
+  * `rename_request(request_id, new_name)`: Updates request display name.
+  * `update_request_method(request_id, method)`: Changes request HTTP method (GET, POST, PUT, DELETE).
+  * `save_request(request_id, data)`: Saves URL, query params, headers, body, or auth settings to the DB.
+  * `delete_request(request_id)`: Deletes saved request configuration.
+* **[api_client_service.py](file:///c:/Users/hlanj/Bachelor%20info/Bachelor%20Arbeit/API%20tester/backend/services/api_client_service.py)**:
+  * `execute_request(method, url, params, headers, body)`: Constructs and executes a proxied HTTP request using the Python `requests` library. Calculates round-trip response time and parses output. *Note: directly returns Flask `jsonify()` responses (known violation).*
+
+---
+
+## 5. Testing Architecture
+
+Backend integration tests reside inside `backend/tests/`. The test environment uses an in-memory SQLite database setup.
+
+### 5.1 Test Fixtures ([conftest.py](file:///c:/Users/hlanj/Bachelor%20info/Bachelor%20Arbeit/API%20tester/backend/tests/conftest.py))
+* `app`: Creates a clean in-memory SQLite Flask application context (`sqlite:///:memory:`), creates all tables, and tears them down after each test.
+* `client`: Exposes the Flask test client interface for hitting endpoints.
+* `registered_user`: Seeds a mock user record.
+* `auth_data`: Seeds a mock user, logs them in, and returns workspace metadata.
+
+### 5.2 Test Suites
+* **[test_auth.py](file:///c:/Users/hlanj/Bachelor%20info/Bachelor%20Arbeit/API%20tester/backend/tests/test_auth.py)**: Asserts signup validation, signup duplication errors, and login behavior.
+* **[test_workspaces.py](file:///c:/Users/hlanj/Bachelor%20info/Bachelor%20Arbeit/API%20tester/backend/tests/test_workspaces.py)**: Verifies workspace listings, default workspaces, custom workspace creation, access controls (403 forbidden vs 404 not found), and delete constraints.
+* **[test_collections.py](file:///c:/Users/hlanj/Bachelor%20info/Bachelor%20Arbeit/API%20tester/backend/tests/test_collections.py)**: Asserts auto-seeding of collections, adding collection, renaming collection, and default collection delete limits.
+* **[test_requests.py](file:///c:/Users/hlanj/Bachelor%20info/Bachelor%20Arbeit/API%20tester/backend/tests/test_requests.py)**: Tests request creation, method updates, parameter patching (URL, headers, params, body, auth), deletion, and invalid path validations.
+* **[test_execute.py](file:///c:/Users/hlanj/Bachelor%20info/Bachelor%20Arbeit/API%20tester/backend/tests/test_execute.py)**: Verifies the proxy client behavior (GET, POST JSON parsing, error handling, request timeouts).
+
+---
+
+## 6. Cross-Cutting Concerns
+
+* **Authentication (Current State)**:
+  * There are no active session cookies or JWT verification tokens enforced on API endpoints.
+  * Endpoints like workspaces expect `user_id` parameter directly via headers, body, or URL query parameters to identify the client.
+* **SQL Server vs SQLite compatibility**:
+  * Development and Production use SQL Server (ODBC Driver 17).
+  * Testing uses an in-memory SQLite database. Avoid using database-specific syntax (e.g., MSSQL dialect features) to keep migrations compatible.
+* **Legacy SQL Query Syntax**:
+  * The codebase heavily relies on legacy Flask-SQLAlchemy `Model.query.filter_by()` or `Model.query.get(id)` syntax.
+  * Target style for any new code should use SQLAlchemy 2.0 styled `db.session.get(Model, id)` and `db.session.execute(db.select(Model))` transactions.
