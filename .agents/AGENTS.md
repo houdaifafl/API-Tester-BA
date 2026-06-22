@@ -469,7 +469,8 @@ these rules are always active.
   4. Verify the backend starts without errors.
   5. **For UI-touching features**: perform Browser-Based E2E Verification per §8.5 —
      start the full stack, interact with the feature, take screenshots, document results.
-  6. Produce a `walkthrough.md` artifact summarizing:
+  6. **Update Structure Maps**: If any files, routes, hooks, services, or models were created, modified, renamed, or deleted, update `.agents/FRONTEND_STRUCTURE.md` and/or `.agents/BACKEND_STRUCTURE.md` accordingly.
+  7. Produce a `walkthrough.md` artifact summarizing:
      - What was implemented (files created and modified)
      - What was tested and the results (all three tiers)
      - Browser E2E screenshots (if applicable)
@@ -489,6 +490,12 @@ these rules are always active.
 - ❌ Leaving stub UI with no handler
 - ❌ Silently fixing unrelated bugs without documenting them
 - ❌ Marking a task complete while tests are failing
+- ❌ Neglecting to keep FRONTEND_STRUCTURE.md or BACKEND_STRUCTURE.md synchronized with structural changes
+
+### 12.10 Structure Maps Maintenance (MANDATORY)
+The codebase structure maps (`.agents/FRONTEND_STRUCTURE.md` and `.agents/BACKEND_STRUCTURE.md`) are living documents:
+- Any implementation task that adds, renames, deletes, or changes the responsibility of files, routes, hooks, services, models, or global states MUST update these files.
+- The update MUST accurately represent the final codebase structure, state flow, or API contract so that subsequent agents do not read stale information.
 
 ---
 
