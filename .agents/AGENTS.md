@@ -240,6 +240,19 @@ The agent MUST NOT blindly change implementation to match a failing test without
 - Test files follow the naming pattern `<ComponentName>.test.js`.
 - New components introduced by features MUST have at least one smoke test (renders without crash).
 
+### 8.4 Requirement-Driven Test Coverage (CRITICAL)
+- Tests MUST be derived from the **feature's requirements**, not from the implementation.
+- For every requirement bullet listed in the `implementation_plan.md` feature summary, the
+  Implementer MUST write at least one test that directly verifies it.
+- Each test suite MUST cover three scenario types:
+  - **Happy path**: the requirement works correctly under normal conditions.
+  - **Error path**: the system responds correctly when the input is invalid or unauthorized.
+  - **Boundary condition**: any edge case explicitly mentioned in the feature request.
+- The Implementer MUST NOT mark a feature complete if any requirement bullet has no
+  corresponding test — even if all existing tests pass.
+- This rule is enforced at the **Implementer level only**. The Reviewer does not re-check
+  requirement coverage — doing so would be redundant and wasteful.
+
 ---
 
 ## 9. KNOWN ARCHITECTURAL WEAKNESSES
