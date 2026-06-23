@@ -19,6 +19,8 @@ src/
 │   └── AuthContext.js         # Global Auth Context & Hook
 │
 ├── hooks/
+│   ├── useWorkspace.js        # Workspace selection, validation, loading hook
+│   ├── useCollections.js      # Collections/Requests CRUD state management hook
 │   └── useWorkspaceTabs.js    # Workspace tab and state cache hook
 │
 ├── services/
@@ -183,6 +185,33 @@ Coordinates and retains active layout state for request and documentation tabs w
   * `handleTabChange(tabId)`: Sets active focus tab.
   * `handleTabClose(tabId)`: Safely discards tab and purges height and state cache entries.
   * `updateTabMethod`, `updateTabLabel`, `updateTabCollectionName`, `removeTabsByRequestIds`: Workspace sidebar callback wrappers ensuring synchronization between tree changes and open tabs.
+
+### 5.2 `useWorkspace()`
+Coordinates workspaces list loading, active workspace ownership validation, creation/deletion routing redirects, and error handling states.
+
+* **Exposed API**:
+  * `workspaces`: Array of workspaces owned by the user.
+  * `activeWorkspace`: Currently active workspace metadata.
+  * `workspaceLoading`: Boolean indicating if workspace validation is in progress.
+  * `workspaceError`: Error string ('invalid', 'not_found', 'forbidden') or null.
+  * `workspaceIdParam`: The current workspace ID parameter from the URL.
+  * `handleSwitch(workspace)`: Switches the current route to target workspace.
+  * `handleWorkspaceCreated(workspace)`: Adds a newly created workspace and routes to it.
+  * `handleWorkspaceDeleted(workspaceId)`: Deletes workspace from local list, falling back to default or next workspace if current is deleted.
+
+### 5.3 `useCollections({ activeWorkspaceId, handleRequestOpen, ... })`
+Encapsulates CRUD operations and state synchronization for collections and requests under the active workspace.
+
+* **Exposed API**:
+  * `collections`: Nested array of collections and requests in the active workspace.
+  * `handleSaveRequest(requestId, data)`: Persists request updates to the database and syncs local collections state.
+  * `handleRequestMethodChange(requestId, newMethod)`: Synchronizes request method updates with database and active tabs.
+  * `handleRequestRename(requestId, newName)`: Renames request inside collection state and active tabs.
+  * `handleRequestDelete(requestId)`: Deletes request and removes related open tabs.
+  * `handleRequestAdd(collectionId)`: Seeds and opens a new request under target collection.
+  * `handleCollectionAdd()`: Adds a new collection under the active workspace.
+  * `handleCollectionRename(collectionId, newName)`: Renames collection and cascades tab collectionName metadata.
+  * `handleCollectionDelete(collectionId)`: Deletes collection, cascading request deletion and removing their tabs.
 
 ---
 

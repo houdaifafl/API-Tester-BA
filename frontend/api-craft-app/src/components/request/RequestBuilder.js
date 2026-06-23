@@ -122,7 +122,7 @@ export default function RequestBuilder({ request, initialResponseHeight, onRespo
     } finally {
       setLoading(false);
     }
-  }, [url, request.method]);
+  }, [url, request.method, onStateChange]);
 
   return (
     <div className="request-builder">

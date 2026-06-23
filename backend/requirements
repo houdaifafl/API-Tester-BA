@@ -1,0 +1,8 @@
+Flask
+Flask-Cors
+Flask-SQLAlchemy
+SQLAlchemy
+pyodbc
+bcrypt
+requests
+pytest

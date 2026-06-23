@@ -289,7 +289,7 @@ Each should be addressed incrementally when touching the affected file.
 
 | # | Location | Weakness | Resolution |
 |---|----------|----------|------------|
-| 1 | `MainPage.js` (261 lines) | God component - owns too many responsibilities | Extract state/logic into hooks |
+| 1 | ~~`MainPage.js` (261 lines)~~ | ~~God component - owns too many responsibilities~~ | **Resolved**: Extracted state/logic into `useWorkspace` and `useCollections` hooks |
 | 2 | `app.py` | No JWT/session - `user_id` passed as query param | Implement JWT (future milestone) |
 | 3 | `AuthContext.js` | User identity stored in `localStorage` (XSS risk) | Move to httpOnly cookies (future) |
 | 4 | `app.py` | Hardcoded DB connection string | Move to environment variable |
