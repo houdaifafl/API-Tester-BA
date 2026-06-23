@@ -79,18 +79,18 @@ Routes are thin orchestrators that digest JSON requests, delegate logic to servi
 |---|---|---|---|---|---|
 | **Auth** | `POST` | `/api/auth/signup` | `signup_user()` | 201 | 400 (missing fields), 409 (conflict) |
 | | `POST` | `/api/auth/login` | `login_user()`, `get_user_workspaces()` | 200 | 400 (missing fields), 401 (invalid auth) |
-| **Workspace**| `GET` | `/api/workspaces` | `get_user_workspaces()` | 200 | 400 (missing user_id) |
-| | `POST` | `/api/workspaces` | `create_workspace()` | 201 | 400 (missing user_id / name) |
-| | `GET` | `/api/workspaces/<workspace_id>` | `get_workspace_by_id()` | 200 | 400 (invalid ID), 403 (forbidden), 404 (not found) |
-| | `DELETE`| `/api/workspaces/<workspace_id>` | `delete_workspace()` | 200 | 400 (missing user_id), 403 (default ws), 404 (not found) |
-| **Collection**| `GET` | `/api/workspaces/<workspace_id>/collections`| `get_collections_by_workspace()` | 200 | (auto-creates default if missing) |
-| | `POST` | `/api/workspaces/<workspace_id>/collections`| `add_collection()` | 201 | 400 (invalid workspace) |
-| | `PATCH`| `/api/collections/<collection_id>` | `rename_collection()` | 200 | 400 (missing name), 404 (not found) |
-| | `DELETE`| `/api/collections/<collection_id>` | `delete_collection()` | 200 | 403 (default collection), 404 (not found) |
-| **Request** | `POST` | `/api/collections/<collection_id>/requests` | `create_request()` | 201 | 404 (collection not found) |
-| | `PATCH`| `/api/requests/<request_id>` | `rename_request()`, `update_request_method()`, `save_request()` | 200 | 400 (invalid payload), 404 (not found) |
-| | `DELETE`| `/api/requests/<request_id>` | `delete_request()` | 200 | 404 (not found) |
-| **API Client**| `POST` | `/api/execute` | `execute_request()` | 200 | 400 (missing URL/method), 500 (API error), 504 (timeout) |
+| **Workspace**| `GET` | `/api/workspaces` (JWT) | `get_user_workspaces()` | 200 | 401 (unauthorized) |
+| | `POST` | `/api/workspaces` (JWT) | `create_workspace()` | 201 | 400 (missing name), 401 (unauthorized) |
+| | `GET` | `/api/workspaces/<workspace_id>` (JWT) | `get_workspace_by_id()` | 200 | 400 (invalid ID), 401 (unauthorized), 403 (forbidden), 404 (not found) |
+| | `DELETE`| `/api/workspaces/<workspace_id>` (JWT) | `delete_workspace()` | 200 | 401 (unauthorized), 403 (default ws), 404 (not found) |
+| **Collection**| `GET` | `/api/workspaces/<workspace_id>/collections` (JWT)| `get_collections_by_workspace()` | 200 | 401 (unauthorized) |
+| | `POST` | `/api/workspaces/<workspace_id>/collections` (JWT)| `add_collection()` | 201 | 401 (unauthorized), 404 (invalid workspace) |
+| | `PATCH`| `/api/collections/<collection_id>` (JWT) | `rename_collection()` | 200 | 400 (missing name), 401 (unauthorized), 404 (not found) |
+| | `DELETE`| `/api/collections/<collection_id>` (JWT) | `delete_collection()` | 200 | 401 (unauthorized), 403 (default collection), 404 (not found) |
+| **Request** | `POST` | `/api/collections/<collection_id>/requests` (JWT) | `create_request()` | 201 | 401 (unauthorized), 404 (collection not found) |
+| | `PATCH`| `/api/requests/<request_id>` (JWT) | `rename_request()`, `update_request_method()`, `save_request()` | 200 | 400 (invalid payload), 401 (unauthorized), 404 (not found) |
+| | `DELETE`| `/api/requests/<request_id>` (JWT) | `delete_request()` | 200 | 401 (unauthorized), 404 (not found) |
+| **API Client**| `POST` | `/api/execute` (JWT) | `execute_request()` | 200 | 400 (missing URL/method), 401 (unauthorized), 500 (API error), 504 (timeout) |
 
 ---
 
@@ -99,6 +99,10 @@ Routes are thin orchestrators that digest JSON requests, delegate logic to servi
 All business logic, database queries, and transaction commits are isolated in service modules under `backend/services/`.
 
 ### 4.1 Service Function Map
+* **[jwt_service.py](file:///c:/Users/hlanj/Bachelor%20info/Bachelor%20Arbeit/API%20tester/backend/services/jwt_service.py)**:
+  * `encode_token(payload, expires_in)`: Encodes a JSON payload into a secure HMAC-SHA256 JWT signature using custom base64url coding.
+  * `decode_token(token)`: Decodes and verifies a JWT token signature and expiration.
+  * `token_required(f)`: Flask route decorator to enforce token verification via the `Authorization` header.
 * **[auth_service.py](file:///c:/Users/hlanj/Bachelor%20info/Bachelor%20Arbeit/API%20tester/backend/services/auth_service.py)**:
   * `signup_user(username, first_name, email, password)`: Hashes passwords with `bcrypt` (4 rounds in tests, 12 rounds in production) and calls `create_workspace` to initialize default workspace.
   * `login_user(username, password)`: Queries user record and verifies password match.
@@ -146,8 +150,9 @@ Backend integration tests reside inside `backend/tests/`. The test environment u
 ## 6. Cross-Cutting Concerns
 
 * **Authentication (Current State)**:
-  * There are no active session cookies or JWT verification tokens enforced on API endpoints.
-  * Endpoints like workspaces expect `user_id` parameter directly via headers, body, or URL query parameters to identify the client.
+  * Secure JWT-based token authentication is enforced on all protected API routes (workspaces, collections, requests, execute).
+  * JWT tokens are passed via the standard `Authorization: Bearer <token>` header.
+  * Tokens are generated upon login and verified against a custom SHA256 signature in the backend middleware decorator.
 * **SQL Server vs SQLite compatibility**:
   * Development and Production use SQL Server (ODBC Driver 17).
   * Testing uses an in-memory SQLite database. Avoid using database-specific syntax (e.g., MSSQL dialect features) to keep migrations compatible.

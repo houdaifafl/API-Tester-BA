@@ -7,13 +7,15 @@ export function AuthProvider({ children }) {
     userId: localStorage.getItem('userId'),
     email: localStorage.getItem('email'),
     username: localStorage.getItem('username'),
+    token: localStorage.getItem('token'),
   });
 
   const logout = useCallback(() => {
     localStorage.removeItem('userId');
     localStorage.removeItem('email');
     localStorage.removeItem('username');
-    setUser({ userId: null, email: null, username: null });
+    localStorage.removeItem('token');
+    setUser({ userId: null, email: null, username: null, token: null });
   }, []);
 
   const value = useMemo(() => ({ user, setUser, logout }), [user, logout]);

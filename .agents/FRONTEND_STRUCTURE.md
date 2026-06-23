@@ -78,10 +78,10 @@ All routing is defined in [App.js](file:///c:/Users/hlanj/Bachelor%20info/Bachel
 ### 3.1 Global Layer (User Identity)
 * **Mechanism**: React Context API via `AuthProvider` and `useAuth()` in [AuthContext.js](file:///c:/Users/hlanj/Bachelor%20info/Bachelor%20Arbeit/API%20tester/frontend/api-craft-app/src/contexts/AuthContext.js).
 * **State Values**:
-  * `user`: Object containing `userId`, `email`, and `username` retrieved from/persisted in `localStorage`.
+  * `user`: Object containing `userId`, `email`, `username`, and JWT `token` retrieved from/persisted in `localStorage`.
 * **Actions**:
   * `setUser(userData)`: Updates user identity state.
-  * `logout()`: Clears `localStorage` and resets `user` to null values.
+  * `logout()`: Clears `localStorage` (including JWT `token`) and resets `user` to null values.
 
 ### 3.2 Feature-Level Layer (Workspace & Tabs)
 * **Mechanism**: Handled in [MainPage.js](file:///c:/Users/hlanj/Bachelor%20info/Bachelor%20Arbeit/API%20tester/frontend/api-craft-app/src/components/workspace/MainPage.js) and coordinated via the custom hook [useWorkspaceTabs.js](file:///c:/Users/hlanj/Bachelor%20info/Bachelor%20Arbeit/API%20tester/frontend/api-craft-app/src/hooks/useWorkspaceTabs.js).
@@ -217,33 +217,30 @@ Encapsulates CRUD operations and state synchronization for collections and reque
 
 ## 6. Service Layer Map (`src/services/`)
 
-All HTTP communication utilizes standard `fetch` syntax. Base configuration is established via [api.js](file:///c:/Users/hlanj/Bachelor%20info/Bachelor%20Arbeit/API%20tester/frontend/api-craft-app/src/services/api.js):
-```javascript
-const BASE_URL = 'http://localhost:5000';
-export default BASE_URL;
-```
+All HTTP communication uses the custom `authFetch` wrapper or standard `fetch` syntax. Base configuration is established via [api.js](file:///c:/Users/hlanj/Bachelor%20info/Bachelor%20Arbeit/API%20tester/frontend/api-craft-app/src/services/api.js):
+* **`authFetch(endpoint, options)`**: Prepends `BASE_URL` and automatically injects the `Authorization: Bearer <token>` header retrieved from `localStorage` (if present).
 
 ### 6.1 Services Listing
 * **[authService.js](file:///c:/Users/hlanj/Bachelor%20info/Bachelor%20Arbeit/API%20tester/frontend/api-craft-app/src/services/authService.js)**:
   * `login(username, password)` -> `POST /api/auth/login`
   * `signup(username, firstName, email, password)` -> `POST /api/auth/signup`
 * **[workspaceService.js](file:///c:/Users/hlanj/Bachelor%20info/Bachelor%20Arbeit/API%20tester/frontend/api-craft-app/src/services/workspaceService.js)**:
-  * `getWorkspaces(userId)` -> `GET /api/workspaces?user_id={id}`
-  * `createWorkspace(userId, name)` -> `POST /api/workspaces`
-  * `getWorkspaceById(workspaceId, userId)` -> `GET /api/workspaces/{id}?user_id={id}` (attaches `.status` code to thrown `Error` for handling 403 vs 404 client rendering).
-  * `deleteWorkspace(workspaceId, userId)` -> `DELETE /api/workspaces/{id}?user_id={id}`
+  * `getWorkspaces()` -> `GET /api/workspaces` (via `authFetch`, JWT protected)
+  * `createWorkspace(userId, name)` -> `POST /api/workspaces` (via `authFetch`, JWT protected, body `name` only)
+  * `getWorkspaceById(workspaceId)` -> `GET /api/workspaces/{id}` (via `authFetch`, JWT protected, attaches `.status` code to thrown `Error` for handling 403 vs 404 client rendering).
+  * `deleteWorkspace(workspaceId)` -> `DELETE /api/workspaces/{id}` (via `authFetch`, JWT protected)
 * **[collectionService.js](file:///c:/Users/hlanj/Bachelor%20info/Bachelor%20Arbeit/API%20tester/frontend/api-craft-app/src/services/collectionService.js)**:
-  * `getCollections(workspaceId)` -> `GET /api/workspaces/{id}/collections`
-  * `addCollection(workspaceId)` -> `POST /api/workspaces/{id}/collections`
-  * `renameCollection(collectionId, name)` -> `PATCH /api/collections/{id}`
-  * `deleteCollection(collectionId)` -> `DELETE /api/collections/{id}`
+  * `getCollections(workspaceId)` -> `GET /api/workspaces/{id}/collections` (via `authFetch`, JWT protected)
+  * `addCollection(workspaceId)` -> `POST /api/workspaces/{id}/collections` (via `authFetch`, JWT protected)
+  * `renameCollection(collectionId, name)` -> `PATCH /api/collections/{id}` (via `authFetch`, JWT protected)
+  * `deleteCollection(collectionId)` -> `DELETE /api/collections/{id}` (via `authFetch`, JWT protected)
 * **[requestService.js](file:///c:/Users/hlanj/Bachelor%20info/Bachelor%20Arbeit/API%20tester/frontend/api-craft-app/src/services/requestService.js)**:
-  * `createRequest(collectionId)` -> `POST /api/collections/{id}/requests`
-  * `renameRequest(requestId, name)` -> `PATCH /api/requests/{id}`
-  * `updateRequestMethod(requestId, method)` -> `PATCH /api/requests/{id}`
-  * `saveRequest(requestId, payload)` -> `PATCH /api/requests/{id}`
-  * `deleteRequest(requestId)` -> `DELETE /api/requests/{id}`
-  * `executeRequest(payload)` -> `POST /api/execute` (sends method, URL, formatted parameters/headers/body to backend proxy agent). Note: throws raw error dictionary instead of standard `Error` instances.
+  * `createRequest(collectionId)` -> `POST /api/collections/{id}/requests` (via `authFetch`, JWT protected)
+  * `renameRequest(requestId, name)` -> `PATCH /api/requests/{id}` (via `authFetch`, JWT protected)
+  * `updateRequestMethod(requestId, method)` -> `PATCH /api/requests/{id}` (via `authFetch`, JWT protected)
+  * `saveRequest(requestId, payload)` -> `PATCH /api/requests/{id}` (via `authFetch`, JWT protected)
+  * `deleteRequest(requestId)` -> `DELETE /api/requests/{id}` (via `authFetch`, JWT protected)
+  * `executeRequest(payload)` -> `POST /api/execute` (via `authFetch`, JWT protected, sends method, URL, formatted parameters/headers/body to backend proxy agent). Note: throws raw error dictionary instead of standard `Error` instances.
 
 ---
 

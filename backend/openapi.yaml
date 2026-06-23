@@ -1,0 +1,385 @@
+openapi: 3.0.3
+info:
+  title: APICraft API
+  description: API documentation for APICraft backend services.
+  version: 1.0.0
+servers:
+  - url: http://localhost:5000
+    description: Local development server
+paths:
+  /api/auth/signup:
+    post:
+      summary: Register a new user
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - username
+                - first_name
+                - email
+                - password
+              properties:
+                username:
+                  type: string
+                first_name:
+                  type: string
+                email:
+                  type: string
+                password:
+                  type: string
+      responses:
+        '201':
+          description: User registered successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                  user_id:
+                    type: integer
+        '400':
+          description: Bad request (e.g. username/email already exists)
+
+  /api/auth/login:
+    post:
+      summary: Authenticate a user and get a JWT token
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - username
+                - password
+              properties:
+                username:
+                  type: string
+                password:
+                  type: string
+      responses:
+        '200':
+          description: Login successful
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                  token:
+                    type: string
+                  username:
+                    type: string
+                  user_id:
+                    type: integer
+                  email:
+                    type: string
+                  default_workspace_id:
+                    type: integer
+        '401':
+          description: Invalid username or password
+
+  /api/workspaces:
+    get:
+      summary: Retrieve all workspaces for the authenticated user
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: A list of workspaces
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Workspace'
+        '401':
+          $ref: '#/components/responses/401Unauthorized'
+    post:
+      summary: Create a new workspace
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - name
+              properties:
+                name:
+                  type: string
+      responses:
+        '201':
+          description: Workspace created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Workspace'
+        '400':
+          description: Workspace name is required
+        '401':
+          $ref: '#/components/responses/401Unauthorized'
+
+  /api/workspaces/{workspace_id}:
+    get:
+      summary: Retrieve a single workspace
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: workspace_id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Workspace details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Workspace'
+        '401':
+          $ref: '#/components/responses/401Unauthorized'
+        '403':
+          description: Forbidden access to this workspace
+        '404':
+          description: Workspace not found
+    delete:
+      summary: Delete a workspace
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: workspace_id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Workspace deleted
+        '401':
+          $ref: '#/components/responses/401Unauthorized'
+        '403':
+          description: Cannot delete default workspace
+        '404':
+          description: Workspace not found
+
+  /api/workspaces/{workspace_id}/collections:
+    get:
+      summary: Get all collections in a workspace
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: workspace_id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: A list of collections
+        '401':
+          $ref: '#/components/responses/401Unauthorized'
+    post:
+      summary: Create a collection in a workspace
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: workspace_id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '201':
+          description: Collection created
+        '401':
+          $ref: '#/components/responses/401Unauthorized'
+
+  /api/collections/{collection_id}:
+    patch:
+      summary: Rename a collection
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: collection_id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - name
+              properties:
+                name:
+                  type: string
+      responses:
+        '200':
+          description: Collection renamed
+        '401':
+          $ref: '#/components/responses/401Unauthorized'
+    delete:
+      summary: Delete a collection
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: collection_id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Collection deleted
+        '401':
+          $ref: '#/components/responses/401Unauthorized'
+
+  /api/collections/{collection_id}/requests:
+    post:
+      summary: Create a request in a collection
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: collection_id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '201':
+          description: Request created
+        '401':
+          $ref: '#/components/responses/401Unauthorized'
+
+  /api/requests/{request_id}:
+    patch:
+      summary: Update a request (rename, method, or save headers/params/body)
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: request_id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                method:
+                  type: string
+                url:
+                  type: string
+                headers:
+                  type: array
+                  items:
+                    type: object
+                params:
+                  type: array
+                  items:
+                    type: object
+                body_type:
+                  type: string
+                body_raw:
+                  type: string
+      responses:
+        '200':
+          description: Request updated
+        '401':
+          $ref: '#/components/responses/401Unauthorized'
+    delete:
+      summary: Delete a request
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: request_id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Request deleted
+        '401':
+          $ref: '#/components/responses/401Unauthorized'
+
+  /api/execute:
+    post:
+      summary: Execute an HTTP request
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - url
+                - method
+              properties:
+                url:
+                  type: string
+                method:
+                  type: string
+                headers:
+                  type: array
+                  items:
+                    type: object
+                body_type:
+                  type: string
+                body_raw:
+                  type: string
+      responses:
+        '200':
+          description: Request execution results
+        '401':
+          $ref: '#/components/responses/401Unauthorized'
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  responses:
+    401Unauthorized:
+      description: Unauthorized - Token is missing or invalid
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+                example: "Unauthorized: Token is missing or invalid"
+  schemas:
+    Workspace:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        is_default:
+          type: boolean
+        owner_id:
+          type: integer

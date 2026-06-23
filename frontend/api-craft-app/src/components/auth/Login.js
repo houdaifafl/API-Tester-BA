@@ -21,7 +21,8 @@ function Login() {
       localStorage.setItem('username', data.username);
       localStorage.setItem('userId', data.user_id);
       localStorage.setItem('email', data.email);
-      setUser({ userId: data.user_id, email: data.email, username: data.username });
+      localStorage.setItem('token', data.token);
+      setUser({ userId: data.user_id, email: data.email, username: data.username, token: data.token });
       navigate(`/workspace/${data.default_workspace_id}`);
     } catch (err) {
       setError(err.message || 'Could not connect to the server.');

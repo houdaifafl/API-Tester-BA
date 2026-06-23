@@ -69,3 +69,40 @@ def signup_and_login(client, username, email):
     })
     res = client.post('/api/auth/login', json={'username': username, 'password': 'pass123'})
     return res.get_json()
+
+
+@pytest.fixture
+def auth_client(client, auth_data):
+    token = auth_data['token']
+    class AuthenticatedClient:
+        def __init__(self, client, token):
+            self.client = client
+            self.token = token
+            self.headers = {'Authorization': f'Bearer {token}'}
+
+        def _add_headers(self, kwargs):
+            headers = kwargs.get('headers', {})
+            if isinstance(headers, list):
+                headers = dict(headers)
+            else:
+                headers = dict(headers)
+            headers.update(self.headers)
+            kwargs['headers'] = headers
+
+        def get(self, *args, **kwargs):
+            self._add_headers(kwargs)
+            return self.client.get(*args, **kwargs)
+
+        def post(self, *args, **kwargs):
+            self._add_headers(kwargs)
+            return self.client.post(*args, **kwargs)
+
+        def patch(self, *args, **kwargs):
+            self._add_headers(kwargs)
+            return self.client.patch(*args, **kwargs)
+
+        def delete(self, *args, **kwargs):
+            self._add_headers(kwargs)
+            return self.client.delete(*args, **kwargs)
+
+    return AuthenticatedClient(client, token)

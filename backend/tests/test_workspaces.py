@@ -3,91 +3,93 @@ from tests.conftest import signup_and_login
 
 class TestListWorkspaces:
 
-    def test_returns_default_workspace_after_signup(self, client, auth_data):
-        res = client.get(f'/api/workspaces?user_id={auth_data["user_id"]}')
+    def test_returns_default_workspace_after_signup(self, auth_client):
+        res = auth_client.get('/api/workspaces')
         assert res.status_code == 200
         workspaces = res.get_json()
         assert len(workspaces) == 1
         assert workspaces[0]['is_default'] is True
 
-    def test_missing_user_id_returns_400(self, client):
+    def test_missing_token_returns_401(self, client):
         res = client.get('/api/workspaces')
-        assert res.status_code == 400
-        assert res.get_json()['error'] == 'user_id is required'
+        assert res.status_code == 401
+        assert 'token is missing' in res.get_json()['error'].lower()
 
     def test_unknown_user_returns_empty_list(self, client):
-        res = client.get('/api/workspaces?user_id=9999')
+        from services.jwt_service import encode_token
+        token = encode_token({'user_id': 9999})
+        res = client.get('/api/workspaces', headers={'Authorization': f'Bearer {token}'})
         assert res.status_code == 200
         assert res.get_json() == []
 
-    def test_returns_all_workspaces_for_user(self, client, auth_data):
-        client.post('/api/workspaces', json={'user_id': auth_data['user_id'], 'name': 'Second WS'})
-        client.post('/api/workspaces', json={'user_id': auth_data['user_id'], 'name': 'Third WS'})
-        res = client.get(f'/api/workspaces?user_id={auth_data["user_id"]}')
+    def test_returns_all_workspaces_for_user(self, auth_client):
+        auth_client.post('/api/workspaces', json={'name': 'Second WS'})
+        auth_client.post('/api/workspaces', json={'name': 'Third WS'})
+        res = auth_client.get('/api/workspaces')
         assert res.status_code == 200
         assert len(res.get_json()) == 3
 
-    def test_does_not_return_other_users_workspaces(self, client, auth_data):
+    def test_does_not_return_other_users_workspaces(self, client, auth_client):
         other = signup_and_login(client, 'other', 'other@example.com')
-        client.post('/api/workspaces', json={'user_id': other['user_id'], 'name': 'Other WS'})
-        res = client.get(f'/api/workspaces?user_id={auth_data["user_id"]}')
+        other_token = other['token']
+        client.post('/api/workspaces', json={'name': 'Other WS'}, headers={'Authorization': f'Bearer {other_token}'})
+        res = auth_client.get('/api/workspaces')
         names = [w['name'] for w in res.get_json()]
         assert 'Other WS' not in names
 
-    def test_list_items_contain_all_fields(self, client, auth_data):
-        workspaces = client.get(f'/api/workspaces?user_id={auth_data["user_id"]}').get_json()
+    def test_list_items_contain_all_fields(self, auth_client):
+        workspaces = auth_client.get('/api/workspaces').get_json()
         for w in workspaces:
             assert 'id' in w
             assert 'name' in w
             assert 'is_default' in w
 
-    def test_non_integer_user_id_returns_400(self, client):
-        res = client.get('/api/workspaces?user_id=abc')
-        assert res.status_code == 400
-        assert res.get_json()['error'] == 'user_id is required'
+    def test_invalid_token_returns_401(self, client):
+        res = client.get('/api/workspaces', headers={'Authorization': 'Bearer invalid'})
+        assert res.status_code == 401
+        assert 'unauthorized' in res.get_json()['error'].lower()
 
 
 class TestCreateWorkspace:
 
-    def test_creates_workspace_with_correct_fields(self, client, auth_data):
-        res = client.post('/api/workspaces', json={'user_id': auth_data['user_id'], 'name': 'My API Tests'})
+    def test_creates_workspace_with_correct_fields(self, auth_client):
+        res = auth_client.post('/api/workspaces', json={'name': 'My API Tests'})
         assert res.status_code == 201
         data = res.get_json()
         assert data['name'] == 'My API Tests'
         assert data['is_default'] is False
         assert 'id' in data
 
-    def test_new_workspace_appears_in_list(self, client, auth_data):
-        client.post('/api/workspaces', json={'user_id': auth_data['user_id'], 'name': 'Second WS'})
-        res = client.get(f'/api/workspaces?user_id={auth_data["user_id"]}')
+    def test_new_workspace_appears_in_list(self, auth_client):
+        auth_client.post('/api/workspaces', json={'name': 'Second WS'})
+        res = auth_client.get('/api/workspaces')
         assert len(res.get_json()) == 2
 
-    def test_missing_user_id_returns_400(self, client):
+    def test_missing_token_returns_401(self, client):
         res = client.post('/api/workspaces', json={'name': 'No User'})
-        assert res.status_code == 400
-        assert res.get_json()['error'] == 'user_id is required'
+        assert res.status_code == 401
 
-    def test_missing_name_returns_400(self, client, auth_data):
-        res = client.post('/api/workspaces', json={'user_id': auth_data['user_id']})
+    def test_missing_name_returns_400(self, auth_client):
+        res = auth_client.post('/api/workspaces', json={})
         assert res.status_code == 400
         assert res.get_json()['error'] == 'Workspace name is required'
 
-    def test_empty_body_returns_400(self, client):
-        res = client.post('/api/workspaces', json={})
+    def test_empty_body_returns_400(self, auth_client):
+        res = auth_client.post('/api/workspaces', json={})
         assert res.status_code == 400
 
-    def test_new_workspace_seeds_default_collection(self, client, auth_data):
-        create_res = client.post('/api/workspaces', json={'user_id': auth_data['user_id'], 'name': 'New WS'})
+    def test_new_workspace_seeds_default_collection(self, auth_client):
+        create_res = auth_client.post('/api/workspaces', json={'name': 'New WS'})
         ws_id = create_res.get_json()['id']
-        cols = client.get(f'/api/workspaces/{ws_id}/collections').get_json()
+        cols = auth_client.get(f'/api/workspaces/{ws_id}/collections').get_json()
         assert len(cols) == 1
         assert cols[0]['name'] == 'My Collection'
         assert cols[0]['is_default'] is True
 
-    def test_seeded_collection_contains_default_requests(self, client, auth_data):
-        create_res = client.post('/api/workspaces', json={'user_id': auth_data['user_id'], 'name': 'New WS'})
+    def test_seeded_collection_contains_default_requests(self, auth_client):
+        create_res = auth_client.post('/api/workspaces', json={'name': 'New WS'})
         ws_id = create_res.get_json()['id']
-        col = client.get(f'/api/workspaces/{ws_id}/collections').get_json()[0]
+        col = auth_client.get(f'/api/workspaces/{ws_id}/collections').get_json()[0]
         request_names = [r['name'] for r in col['requests']]
         request_methods = [r['method'] for r in col['requests']]
         assert len(col['requests']) == 2
@@ -99,9 +101,9 @@ class TestCreateWorkspace:
 
 class TestGetWorkspace:
 
-    def test_returns_correct_workspace(self, client, auth_data):
+    def test_returns_correct_workspace(self, auth_client, auth_data):
         ws_id = auth_data['default_workspace_id']
-        res = client.get(f'/api/workspaces/{ws_id}?user_id={auth_data["user_id"]}')
+        res = auth_client.get(f'/api/workspaces/{ws_id}')
         assert res.status_code == 200
         data = res.get_json()
         assert data['id'] == ws_id
@@ -109,79 +111,78 @@ class TestGetWorkspace:
         assert 'name' in data
         assert isinstance(data['name'], str) and len(data['name']) > 0
 
-    def test_not_found_returns_404(self, client, auth_data):
-        res = client.get(f'/api/workspaces/9999?user_id={auth_data["user_id"]}')
+    def test_not_found_returns_404(self, auth_client):
+        res = auth_client.get('/api/workspaces/9999')
         assert res.status_code == 404
         assert res.get_json()['error'] == 'Workspace not found'
 
     def test_other_users_workspace_returns_403(self, client, auth_data):
         other = signup_and_login(client, 'other', 'other@example.com')
+        other_token = other['token']
         ws_id = auth_data['default_workspace_id']
-        res = client.get(f'/api/workspaces/{ws_id}?user_id={other["user_id"]}')
+        res = client.get(f'/api/workspaces/{ws_id}', headers={'Authorization': f'Bearer {other_token}'})
         assert res.status_code == 403
         assert res.get_json()['error'] == 'Forbidden'
 
-    def test_missing_user_id_returns_400(self, client, auth_data):
+    def test_missing_token_returns_401(self, client, auth_data):
         ws_id = auth_data['default_workspace_id']
         res = client.get(f'/api/workspaces/{ws_id}')
-        assert res.status_code == 400
-        assert res.get_json()['error'] == 'user_id is required'
+        assert res.status_code == 401
 
-    def test_invalid_id_format_returns_400(self, client, auth_data):
-        res = client.get(f'/api/workspaces/abc?user_id={auth_data["user_id"]}')
+    def test_invalid_id_format_returns_400(self, auth_client):
+        res = auth_client.get('/api/workspaces/abc')
         assert res.status_code == 400
         assert res.get_json()['error'] == 'Invalid workspace ID'
 
 
 class TestDeleteWorkspace:
 
-    def test_deletes_non_default_workspace(self, client, auth_data):
-        create_res = client.post('/api/workspaces', json={'user_id': auth_data['user_id'], 'name': 'Temp WS'})
+    def test_deletes_non_default_workspace(self, auth_client):
+        create_res = auth_client.post('/api/workspaces', json={'name': 'Temp WS'})
         ws_id = create_res.get_json()['id']
-        res = client.delete(f'/api/workspaces/{ws_id}?user_id={auth_data["user_id"]}')
+        res = auth_client.delete(f'/api/workspaces/{ws_id}')
         assert res.status_code == 200
         assert res.get_json()['message'] == 'Workspace deleted'
 
-    def test_deleted_workspace_no_longer_listed(self, client, auth_data):
-        create_res = client.post('/api/workspaces', json={'user_id': auth_data['user_id'], 'name': 'Temp WS'})
+    def test_deleted_workspace_no_longer_listed(self, auth_client):
+        create_res = auth_client.post('/api/workspaces', json={'name': 'Temp WS'})
         ws_id = create_res.get_json()['id']
-        client.delete(f'/api/workspaces/{ws_id}?user_id={auth_data["user_id"]}')
-        listed_ids = [w['id'] for w in client.get(f'/api/workspaces?user_id={auth_data["user_id"]}').get_json()]
+        auth_client.delete(f'/api/workspaces/{ws_id}')
+        listed_ids = [w['id'] for w in auth_client.get('/api/workspaces').get_json()]
         assert ws_id not in listed_ids
 
-    def test_cannot_delete_default_workspace(self, client, auth_data):
+    def test_cannot_delete_default_workspace(self, auth_client, auth_data):
         ws_id = auth_data['default_workspace_id']
-        res = client.delete(f'/api/workspaces/{ws_id}?user_id={auth_data["user_id"]}')
+        res = auth_client.delete(f'/api/workspaces/{ws_id}')
         assert res.status_code == 403
         assert 'default' in res.get_json()['error'].lower()
 
-    def test_not_found_returns_404(self, client, auth_data):
-        res = client.delete(f'/api/workspaces/9999?user_id={auth_data["user_id"]}')
+    def test_not_found_returns_404(self, auth_client):
+        res = auth_client.delete('/api/workspaces/9999')
         assert res.status_code == 404
 
-    def test_wrong_user_cannot_delete(self, client, auth_data):
+    def test_wrong_user_cannot_delete(self, client, auth_client, auth_data):
         other = signup_and_login(client, 'other', 'other@example.com')
-        create_res = client.post('/api/workspaces', json={'user_id': auth_data['user_id'], 'name': 'Protected WS'})
+        other_token = other['token']
+        create_res = auth_client.post('/api/workspaces', json={'name': 'Protected WS'})
         ws_id = create_res.get_json()['id']
-        res = client.delete(f'/api/workspaces/{ws_id}?user_id={other["user_id"]}')
+        res = client.delete(f'/api/workspaces/{ws_id}', headers={'Authorization': f'Bearer {other_token}'})
         assert res.status_code == 404
 
-    def test_missing_user_id_returns_400(self, client, auth_data):
+    def test_missing_token_returns_401(self, client, auth_data):
         ws_id = auth_data['default_workspace_id']
         res = client.delete(f'/api/workspaces/{ws_id}')
-        assert res.status_code == 400
-        assert res.get_json()['error'] == 'user_id is required'
+        assert res.status_code == 401
 
-    def test_non_integer_user_id_returns_400(self, client, auth_data):
+    def test_invalid_token_returns_401(self, client, auth_data):
         ws_id = auth_data['default_workspace_id']
-        res = client.delete(f'/api/workspaces/{ws_id}?user_id=abc')
-        assert res.status_code == 400
-        assert res.get_json()['error'] == 'user_id is required'
+        res = client.delete(f'/api/workspaces/{ws_id}', headers={'Authorization': 'Bearer invalid'})
+        assert res.status_code == 401
 
-    def test_deleting_workspace_cascades_to_collections(self, client, auth_data):
-        create_res = client.post('/api/workspaces', json={'user_id': auth_data['user_id'], 'name': 'Temp WS'})
+    def test_deleting_workspace_cascades_to_collections(self, auth_client):
+        create_res = auth_client.post('/api/workspaces', json={'name': 'Temp WS'})
         ws_id = create_res.get_json()['id']
-        col_id = client.get(f'/api/workspaces/{ws_id}/collections').get_json()[0]['id']
-        client.delete(f'/api/workspaces/{ws_id}?user_id={auth_data["user_id"]}')
-        res = client.patch(f'/api/collections/{col_id}', json={'name': 'ghost'})
+        col_id = auth_client.get(f'/api/workspaces/{ws_id}/collections').get_json()[0]['id']
+        auth_client.delete(f'/api/workspaces/{ws_id}')
+        res = auth_client.patch(f'/api/collections/{col_id}', json={'name': 'ghost'})
         assert res.status_code == 404

@@ -1,7 +1,7 @@
-import BASE_URL from './api';
+import { authFetch } from './api';
 
 export async function executeRequest(payload) {
-  const res = await fetch(`${BASE_URL}/api/execute`, {
+  const res = await authFetch(`/api/execute`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(payload),
@@ -12,7 +12,7 @@ export async function executeRequest(payload) {
 }
 
 export async function createRequest(collectionId) {
-  const res = await fetch(`${BASE_URL}/api/collections/${collectionId}/requests`, {
+  const res = await authFetch(`/api/collections/${collectionId}/requests`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
   });
@@ -22,7 +22,7 @@ export async function createRequest(collectionId) {
 }
 
 export async function renameRequest(requestId, newName) {
-  const res = await fetch(`${BASE_URL}/api/requests/${requestId}`, {
+  const res = await authFetch(`/api/requests/${requestId}`, {
     method: 'PATCH',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ name: newName }),
@@ -33,7 +33,7 @@ export async function renameRequest(requestId, newName) {
 }
 
 export async function updateRequestMethod(requestId, method) {
-  const res = await fetch(`${BASE_URL}/api/requests/${requestId}`, {
+  const res = await authFetch(`/api/requests/${requestId}`, {
     method: 'PATCH',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ method }),
@@ -44,7 +44,7 @@ export async function updateRequestMethod(requestId, method) {
 }
 
 export async function saveRequest(requestId, data) {
-  const res = await fetch(`${BASE_URL}/api/requests/${requestId}`, {
+  const res = await authFetch(`/api/requests/${requestId}`, {
     method: 'PATCH',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(data),
@@ -55,7 +55,7 @@ export async function saveRequest(requestId, data) {
 }
 
 export async function deleteRequest(requestId) {
-  const res = await fetch(`${BASE_URL}/api/requests/${requestId}`, {
+  const res = await authFetch(`/api/requests/${requestId}`, {
     method: 'DELETE',
   });
   const data = await res.json();

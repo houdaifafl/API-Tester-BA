@@ -1,17 +1,17 @@
-import BASE_URL from './api';
+import { authFetch } from './api';
 
 export async function getWorkspaces(userId) {
-  const res = await fetch(`${BASE_URL}/api/workspaces?user_id=${userId}`);
+  const res = await authFetch(`/api/workspaces`);
   const data = await res.json();
   if (!res.ok) throw new Error(data.error);
   return data;
 }
 
 export async function createWorkspace(userId, name) {
-  const res = await fetch(`${BASE_URL}/api/workspaces`, {
+  const res = await authFetch(`/api/workspaces`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ user_id: Number(userId), name }),
+    body: JSON.stringify({ name }),
   });
   const data = await res.json();
   if (!res.ok) throw new Error(data.error);
@@ -19,7 +19,7 @@ export async function createWorkspace(userId, name) {
 }
 
 export async function getWorkspaceById(workspaceId, userId) {
-  const res = await fetch(`${BASE_URL}/api/workspaces/${workspaceId}?user_id=${userId}`);
+  const res = await authFetch(`/api/workspaces/${workspaceId}`);
   let data;
   try {
     data = await res.json();
@@ -37,7 +37,7 @@ export async function getWorkspaceById(workspaceId, userId) {
 }
 
 export async function deleteWorkspace(workspaceId, userId) {
-  const res = await fetch(`${BASE_URL}/api/workspaces/${workspaceId}?user_id=${userId}`, {
+  const res = await authFetch(`/api/workspaces/${workspaceId}`, {
     method: 'DELETE',
   });
   const data = await res.json();
