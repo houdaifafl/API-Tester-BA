@@ -5,6 +5,7 @@ import MainPanel from './MainPanel';
 import useWorkspace from '../../hooks/useWorkspace';
 import useCollections from '../../hooks/useCollections';
 import useWorkspaceTabs from '../../hooks/useWorkspaceTabs';
+import useHistory from '../../hooks/useHistory';
 import './MainPage.css';
 
 const MIN_SIDEBAR_WIDTH = 150;
@@ -30,6 +31,7 @@ export default function MainPage() {
     requestStates,
     responseHeights,
     handleRequestOpen,
+    handleHistoryOpen,
     handleTabChange,
     handleTabClose,
     updateTabMethod,
@@ -39,6 +41,11 @@ export default function MainPage() {
   } = useWorkspaceTabs(workspaceIdParam);
 
   const activeWorkspaceId = activeWorkspace?.id ?? null;
+
+  const {
+    history,
+    addHistoryItem,
+  } = useHistory(activeWorkspaceId);
 
   const {
     collections,
@@ -88,6 +95,7 @@ export default function MainPage() {
   const activeTab = openTabs.find(t => t.id === activeTabId)
     ?? { id: 'overview', type: 'overview', label: 'Overview', method: null, requestId: null, collectionName: null };
   const activeRequestId = activeTab.type === 'request' ? activeTab.requestId : null;
+  const activeHistoryId = activeTab.type === 'history' ? activeTab.historyId : null;
 
   if (workspaceLoading || workspaceError) {
     return (
@@ -130,6 +138,9 @@ export default function MainPage() {
           onCollectionAdd={handleCollectionAdd}
           onCollectionRename={handleCollectionRename}
           onCollectionDelete={handleCollectionDelete}
+          history={history}
+          onHistoryOpen={handleHistoryOpen}
+          activeHistoryId={activeHistoryId}
         />
         <MainPanel
           activeTab={activeTab}
@@ -137,6 +148,7 @@ export default function MainPage() {
           requestStates={requestStates}
           onMethodChange={handleRequestMethodChange}
           onSaveRequest={handleSaveRequest}
+          onExecute={addHistoryItem}
         />
       </div>
     </div>

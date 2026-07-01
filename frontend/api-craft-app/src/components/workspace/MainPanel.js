@@ -2,25 +2,26 @@ import React from 'react';
 import RequestBuilder from '../request/RequestBuilder';
 import OverviewPanel from './OverviewPanel';
 
-export default function MainPanel({ activeTab, responseHeights, requestStates, onMethodChange, onSaveRequest }) {
-  if (activeTab.type === 'request') {
-    const rid = activeTab.requestId;
-    const savedState = requestStates.current[rid];
+export default function MainPanel({ activeTab, responseHeights, requestStates, onMethodChange, onSaveRequest, onExecute }) {
+  if (activeTab.type === 'request' || activeTab.type === 'history') {
+    const tabId = activeTab.id;
+    const savedState = requestStates.current[tabId];
     const handleStateChange = (patch) => {
-      requestStates.current[rid] = { ...requestStates.current[rid], ...patch };
+      requestStates.current[tabId] = { ...requestStates.current[tabId], ...patch };
     };
 
     return (
       <main className="main-panel">
         <RequestBuilder
-          key={rid}
+          key={tabId}
           request={activeTab}
-          initialResponseHeight={responseHeights.current[rid]}
-          onResponseHeightChange={(h) => { responseHeights.current[rid] = h; }}
+          initialResponseHeight={responseHeights.current[tabId]}
+          onResponseHeightChange={(h) => { responseHeights.current[tabId] = h; }}
           savedState={savedState}
           onStateChange={handleStateChange}
           onMethodChange={onMethodChange}
           onSaveRequest={onSaveRequest}
+          onExecute={onExecute}
         />
       </main>
     );

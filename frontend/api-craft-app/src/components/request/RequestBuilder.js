@@ -55,12 +55,13 @@ function buildBody(bodyState) {
   return Object.keys(out).length ? out : null;
 }
 
-export default function RequestBuilder({ request, initialResponseHeight, onResponseHeightChange, savedState, onStateChange, onMethodChange, onSaveRequest }) {
+export default function RequestBuilder({ request, initialResponseHeight, onResponseHeightChange, savedState, onStateChange, onMethodChange, onSaveRequest, onExecute }) {
   const [activeTab, setActiveTab] = useState(savedState?.activeSubTab ?? 'Docs');
   const [url, setUrl]             = useState(savedState?.url ?? '');
   const [response, setResponse]   = useState(savedState?.response ?? null);
   const [loading, setLoading]     = useState(false);
   const [saving, setSaving]       = useState(false);
+  const [method, setMethod]       = useState(request.method);
 
   const tabState = useRef({
     params:  savedState?.params  ?? null,
@@ -86,6 +87,13 @@ export default function RequestBuilder({ request, initialResponseHeight, onRespo
   const handleBodyChange    = (body)    => { tabState.current.body    = body;    onStateChange?.({ body });    };
   const handleDocsChange    = (docs)    => { tabState.current.docs    = docs;    onStateChange?.({ docs });    };
 
+  const handleMethodChange = useCallback((m) => {
+    setMethod(m);
+    if (request.type !== 'history') {
+      onMethodChange?.(request.requestId, m);
+    }
+  }, [request.type, request.requestId, onMethodChange]);
+
   const handleSave = useCallback(async () => {
     setSaving(true);
     try {
@@ -107,7 +115,7 @@ export default function RequestBuilder({ request, initialResponseHeight, onRespo
     setResponse(null);
     try {
       const result = await executeRequest({
-        method:  request.method,
+        method,
         url:     url.trim(),
         params:  buildParams(tabState.current.params),
         headers: buildHeaders(tabState.current.headers, tabState.current.auth),
@@ -115,14 +123,27 @@ export default function RequestBuilder({ request, initialResponseHeight, onRespo
       });
       setResponse(result);
       onStateChange?.({ response: result });
+
+      if (onExecute) {
+        await onExecute({
+          method,
+          url: url.trim(),
+          params: tabState.current.params,
+          headers: tabState.current.headers,
+          body: tabState.current.body,
+          auth: tabState.current.auth,
+        });
+      }
     } catch (err) {
-      const errResponse = { error: err.error || 'Request failed' };
+      const errorInstance = err instanceof Error ? err : new Error(err.error || 'Request failed');
+      const errResponse = { error: errorInstance.message };
       setResponse(errResponse);
       onStateChange?.({ response: errResponse });
+      throw errorInstance;
     } finally {
       setLoading(false);
     }
-  }, [url, request.method, onStateChange]);
+  }, [url, method, onStateChange, onExecute]);
 
   return (
     <div className="request-builder">
@@ -132,15 +153,17 @@ export default function RequestBuilder({ request, initialResponseHeight, onRespo
           <span className="breadcrumb-sep">›</span>
           <span className="breadcrumb-request">{request.label}</span>
         </div>
-        <button className="req-save-btn" onClick={handleSave} disabled={saving}>
-          <FaSave className="save-icon" />
-          {saving ? 'Saving…' : 'Save'}
-        </button>
+        {request.type !== 'history' && (
+          <button className="req-save-btn" onClick={handleSave} disabled={saving}>
+            <FaSave className="save-icon" />
+            {saving ? 'Saving…' : 'Save'}
+          </button>
+        )}
       </div>
 
       <RequestBar
-        method={request.method}
-        onMethodChange={(m) => onMethodChange?.(request.requestId, m)}
+        method={method}
+        onMethodChange={handleMethodChange}
         url={url}
         onUrlChange={handleUrlChange}
         onSend={handleSend}

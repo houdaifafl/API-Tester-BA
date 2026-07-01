@@ -57,8 +57,8 @@ export default function useWorkspaceTabs(workspaceIdParam) {
 
   const handleRequestOpen = useCallback((request) => {
     const tabId = `req-${request.id}`;
-    if (!requestStates.current[request.id]) {
-      requestStates.current[request.id] = {
+    if (!requestStates.current[tabId]) {
+      requestStates.current[tabId] = {
         url:     request.url     ?? '',
         params:  request.params  ?? null,
         headers: request.headers ?? null,
@@ -80,17 +80,39 @@ export default function useWorkspaceTabs(workspaceIdParam) {
     setActiveTabId(tabId);
   }, []);
 
+  const handleHistoryOpen = useCallback((historyItem) => {
+    const tabId = `hist-${historyItem.id}`;
+    if (!requestStates.current[tabId]) {
+      requestStates.current[tabId] = {
+        url:     historyItem.url     ?? '',
+        params:  historyItem.params  ?? null,
+        headers: historyItem.headers ?? null,
+        body:    historyItem.body    ?? null,
+        auth:    historyItem.auth    ?? null,
+      };
+    }
+    setOpenTabs(prev => {
+      if (prev.find(t => t.id === tabId)) return prev;
+      return [...prev, {
+        id: tabId,
+        type: 'history',
+        label: historyItem.url || 'History Request',
+        method: historyItem.method,
+        historyId: historyItem.id,
+        collectionName: 'History',
+      }];
+    });
+    setActiveTabId(tabId);
+  }, []);
+
   const handleTabChange = useCallback((tabId) => {
     setActiveTabId(tabId);
   }, []);
 
   const handleTabClose = useCallback((tabId) => {
     setOpenTabs(prev => {
-      const tab = prev.find(t => t.id === tabId);
-      if (tab?.requestId) {
-        delete responseHeights.current[tab.requestId];
-        delete requestStates.current[tab.requestId];
-      }
+      delete responseHeights.current[tabId];
+      delete requestStates.current[tabId];
       return prev.filter(t => t.id !== tabId);
     });
     setActiveTabId(prev => (prev === tabId ? 'overview' : prev));
@@ -123,8 +145,9 @@ export default function useWorkspaceTabs(workspaceIdParam) {
       return prev;
     });
     ids.forEach(id => {
-      delete responseHeights.current[id];
-      delete requestStates.current[id];
+      const tabId = `req-${id}`;
+      delete responseHeights.current[tabId];
+      delete requestStates.current[tabId];
     });
   }, []);
 
@@ -134,6 +157,7 @@ export default function useWorkspaceTabs(workspaceIdParam) {
     requestStates,
     responseHeights,
     handleRequestOpen,
+    handleHistoryOpen,
     handleTabChange,
     handleTabClose,
     updateTabMethod,

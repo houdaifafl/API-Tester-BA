@@ -81,11 +81,6 @@
   width: 32px;
 }
 
-.ws-method-get    { color: #49cc90; }
-.ws-method-post   { color: #e74c3c; }
-.ws-method-put    { color: #4a90e2; }
-.ws-method-delete { color: #795548; }
-
 .ws-request-name {
   flex: 1;
   white-space: nowrap;
@@ -143,4 +138,81 @@
   outline: none;
   user-select: text;
   cursor: text;
+}
+
+/* ── History items ─────────────────────────────────────────────── */
+.ws-history-container {
+  padding-bottom: 8px;
+}
+
+.ws-history-group {
+  margin-top: 14px;
+}
+
+.ws-history-group-header {
+  padding: 0 12px 6px;
+  font-size: 10px;
+  font-weight: 600;
+  color: #777;
+  text-transform: uppercase;
+  user-select: none;
+  cursor: default;
+}
+
+.ws-history-item-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.ws-history-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 7px;
+  padding: 6px 12px 6px 20px;
+  font-size: 12.5px;
+  color: #333;
+  cursor: pointer;
+  user-select: none;
+}
+
+.ws-history-item:hover {
+  background: rgba(0, 0, 0, 0.05);
+}
+
+.ws-history-item.active {
+  background: rgba(0, 0, 0, 0.07);
+  color: #1a1a1a;
+  font-weight: 500;
+}
+
+.ws-history-url-info {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  flex: 1;
+}
+
+.ws-history-url {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  user-select: none;
+  cursor: default;
+}
+
+.ws-history-item:hover .ws-history-url,
+.ws-history-item:hover .ws-history-params {
+  cursor: pointer;
+}
+
+.ws-history-params {
+  font-size: 10.5px;
+  color: #888;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  user-select: none;
+  cursor: default;
+  margin-top: 2px;
 }

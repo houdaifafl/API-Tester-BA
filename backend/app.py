@@ -7,7 +7,8 @@ from routes.api_client_routes import api_client_bp
 from routes.auth_routes import auth_bp
 from routes.workspace_routes import workspace_bp
 from routes.request_routes import request_bp
-from models import collection_model, request_model, user_model, workspace_model
+from routes.history_routes import history_bp
+from models import collection_model, request_model, user_model, workspace_model, history_model
 
 def create_app():
     app = Flask(__name__)
@@ -36,6 +37,8 @@ def create_app():
     app.register_blueprint(auth_bp)
     app.register_blueprint(workspace_bp)
     app.register_blueprint(request_bp)
+    app.register_blueprint(history_bp)
+
 
     # Simple test route
     @app.route("/")

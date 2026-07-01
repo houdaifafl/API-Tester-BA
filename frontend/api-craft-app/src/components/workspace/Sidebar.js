@@ -1,7 +1,39 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { FaCube, FaHistory, FaPlus, FaChevronDown, FaChevronRight, FaEllipsisH } from 'react-icons/fa';
 import RequestContextMenu from './RequestContextMenu';
+import { METHOD_COLORS } from '../../constants';
 import './Sidebar.css';
+
+function groupHistoryByDate(historyItems) {
+  const groups = {};
+  (historyItems || []).forEach(item => {
+    if (!item.created_at) {
+      const gName = 'Older';
+      if (!groups[gName]) groups[gName] = [];
+      groups[gName].push(item);
+      return;
+    }
+    const date = new Date(item.created_at);
+    const today = new Date();
+    const yesterday = new Date();
+    yesterday.setDate(today.getDate() - 1);
+
+    let groupName = '';
+    if (date.toDateString() === today.toDateString()) {
+      groupName = 'Today';
+    } else if (date.toDateString() === yesterday.toDateString()) {
+      groupName = 'Yesterday';
+    } else {
+      groupName = date.toLocaleDateString(undefined, { month: 'long', day: 'numeric', year: 'numeric' });
+    }
+
+    if (!groups[groupName]) {
+      groups[groupName] = [];
+    }
+    groups[groupName].push(item);
+  });
+  return groups;
+}
 
 export default function Sidebar({
   sidebarWidth,
@@ -15,7 +47,11 @@ export default function Sidebar({
   onCollectionAdd,
   onCollectionRename,
   onCollectionDelete,
+  history = [],
+  onHistoryOpen,
+  activeHistoryId,
 }) {
+  const [sidebarMode, setSidebarMode]           = useState('collections');
   const [collectionsOpen, setCollectionsOpen]   = useState(true);
   const [collapsedCols, setCollapsedCols]       = useState(new Set());
   const [searchQuery, setSearchQuery]           = useState('');
@@ -74,6 +110,8 @@ export default function Sidebar({
   const allRequests = collections.flatMap(c => c.requests);
 
   const query = searchQuery.trim().toLowerCase();
+  
+  // Filter collections
   const filteredCollections = query
     ? collections.reduce((acc, col) => {
         const colMatches = col.name.toLowerCase().includes(query);
@@ -89,13 +127,34 @@ export default function Sidebar({
       }, [])
     : collections;
 
+  // Filter and group history
+  const filteredHistory = query
+    ? (history || []).filter(item => 
+        (item.url || '').toLowerCase().includes(query) ||
+        (item.method || '').toLowerCase().includes(query) ||
+        (item.params && Object.entries(item.params).some(([k, v]) => 
+          k.toLowerCase().includes(query) || String(v).toLowerCase().includes(query)
+        ))
+      )
+    : (history || []);
+
+  const groupedHistory = groupHistoryByDate(filteredHistory);
+
   return (
     <aside className="sidebar" style={{ width: sidebarWidth }}>
       <div className="ws-toolbar">
-        <button className="ws-icon-btn active" title="Collections">
+        <button
+          className={`ws-icon-btn ${sidebarMode === 'collections' ? 'active' : ''}`}
+          title="Collections"
+          onClick={() => setSidebarMode('collections')}
+        >
           <FaCube />
         </button>
-        <button className="ws-icon-btn" title="History">
+        <button
+          className={`ws-icon-btn ${sidebarMode === 'history' ? 'active' : ''}`}
+          title="History"
+          onClick={() => setSidebarMode('history')}
+        >
           <FaHistory />
         </button>
       </div>
@@ -108,131 +167,180 @@ export default function Sidebar({
           value={searchQuery}
           onChange={e => setSearchQuery(e.target.value)}
         />
-        <button
-          className="ws-search-add"
-          title="Add collection"
-          onClick={onCollectionAdd}
-        >
-          <FaPlus />
-        </button>
+        {sidebarMode === 'collections' && (
+          <button
+            className="ws-search-add"
+            title="Add collection"
+            onClick={onCollectionAdd}
+          >
+            <FaPlus />
+          </button>
+        )}
       </div>
 
       <nav className="ws-nav">
-        <div
-          className="ws-section-header"
-          onClick={() => setCollectionsOpen(o => !o)}
-        >
-          {collectionsOpen
-            ? <FaChevronDown className="ws-section-caret" />
-            : <FaChevronRight className="ws-section-caret" />}
-          Collections
-        </div>
+        {sidebarMode === 'collections' ? (
+          <>
+            <div
+              className="ws-section-header"
+              onClick={() => setCollectionsOpen(o => !o)}
+            >
+              {collectionsOpen
+                ? <FaChevronDown className="ws-section-caret" />
+                : <FaChevronRight className="ws-section-caret" />}
+              Collections
+            </div>
 
-        {collectionsOpen && (
-          <ul className="ws-collection-list">
-            {filteredCollections.length === 0 && query && (
-              <li className="ws-no-results">No results found</li>
-            )}
-            {filteredCollections.map(col => {
-              const expanded = query ? true : !collapsedCols.has(col.id);
-              const isRenamingCol = renaming?.kind === 'collection' && renaming.id === col.id;
+            {collectionsOpen && (
+              <ul className="ws-collection-list">
+                {filteredCollections.length === 0 && query && (
+                  <li className="ws-no-results">No results found</li>
+                )}
+                {filteredCollections.map(col => {
+                  const expanded = query ? true : !collapsedCols.has(col.id);
+                  const isRenamingCol = renaming?.kind === 'collection' && renaming.id === col.id;
 
-              return (
-                <li key={col.id}>
-                  <div
-                    className="ws-collection-row"
-                    onClick={() => { if (!isRenamingCol) toggleCollection(col.id); }}
-                  >
-                    {expanded
-                      ? <FaChevronDown className="ws-item-caret" />
-                      : <FaChevronRight className="ws-item-caret" />}
+                  return (
+                    <li key={col.id}>
+                      <div
+                        className="ws-collection-row"
+                        onClick={() => { if (!isRenamingCol) toggleCollection(col.id); }}
+                      >
+                        {expanded
+                          ? <FaChevronDown className="ws-item-caret" />
+                          : <FaChevronRight className="ws-item-caret" />}
 
-                    {isRenamingCol ? (
-                      <input
-                        ref={renameInputRef}
-                        className="ws-rename-input"
-                        value={renaming.value}
-                        onChange={e => setRenaming(r => ({ ...r, value: e.target.value }))}
-                        onKeyDown={e => {
-                          if (e.key === 'Enter')  commitRename(renaming.value);
-                          if (e.key === 'Escape') cancelRename();
-                        }}
-                        onBlur={() => commitRename(renaming.value)}
-                        onClick={e => e.stopPropagation()}
-                      />
-                    ) : (
-                      <span className="ws-collection-name">{col.name}</span>
-                    )}
+                        {isRenamingCol ? (
+                          <input
+                            ref={renameInputRef}
+                            className="ws-rename-input"
+                            value={renaming.value}
+                            onChange={e => setRenaming(r => ({ ...r, value: e.target.value }))}
+                            onKeyDown={e => {
+                              if (e.key === 'Enter')  commitRename(renaming.value);
+                              if (e.key === 'Escape') cancelRename();
+                            }}
+                            onBlur={() => commitRename(renaming.value)}
+                            onClick={e => e.stopPropagation()}
+                          />
+                        ) : (
+                          <span className="ws-collection-name">{col.name}</span>
+                        )}
 
-                    {!isRenamingCol && (
-                      <>
-                        <button
-                          className="ws-item-add-btn"
-                          title="Add request"
-                          onClick={e => { e.stopPropagation(); onRequestAdd(col.id); }}
-                        >
-                          <FaPlus />
-                        </button>
-                        <button
-                          className="ws-req-menu-btn"
-                          title="More actions"
-                          onClick={e => openCollectionMenu(e, col)}
-                        >
-                          <FaEllipsisH />
-                        </button>
-                      </>
-                    )}
-                  </div>
+                        {!isRenamingCol && (
+                          <>
+                            <button
+                              className="ws-item-add-btn"
+                              title="Add request"
+                              onClick={e => { e.stopPropagation(); onRequestAdd(col.id); }}
+                            >
+                              <FaPlus />
+                            </button>
+                            <button
+                              className="ws-req-menu-btn"
+                              title="More actions"
+                              onClick={e => openCollectionMenu(e, col)}
+                            >
+                              <FaEllipsisH />
+                            </button>
+                          </>
+                        )}
+                      </div>
 
-                  {expanded && (
-                    <ul className="ws-request-list">
-                      {col.requests.map(req => {
-                        const isRenamingReq = renaming?.kind === 'request' && renaming.id === req.id;
-                        return (
-                          <li
-                            key={req.id}
-                            className={`ws-request-item ${activeRequestId === req.id ? 'active' : ''}`}
-                            onClick={() => { if (!isRenamingReq) onRequestOpen(req); }}
-                          >
-                            <span className={`ws-method-badge ws-method-${req.method.toLowerCase()}`}>
-                              {req.method}
-                            </span>
-
-                            {isRenamingReq ? (
-                              <input
-                                ref={renameInputRef}
-                                className="ws-rename-input"
-                                value={renaming.value}
-                                onChange={e => setRenaming(r => ({ ...r, value: e.target.value }))}
-                                onKeyDown={e => {
-                                  if (e.key === 'Enter')  commitRename(renaming.value);
-                                  if (e.key === 'Escape') cancelRename();
-                                }}
-                                onBlur={() => commitRename(renaming.value)}
-                                onClick={e => e.stopPropagation()}
-                              />
-                            ) : (
-                              <span className="ws-request-name">{req.name}</span>
-                            )}
-
-                            {!isRenamingReq && (
-                              <button
-                                className="ws-req-menu-btn"
-                                onClick={e => openRequestMenu(e, req)}
-                                title="More actions"
+                      {expanded && (
+                        <ul className="ws-request-list">
+                          {col.requests.map(req => {
+                            const isRenamingReq = renaming?.kind === 'request' && renaming.id === req.id;
+                            return (
+                              <li
+                                key={req.id}
+                                className={`ws-request-item ${activeRequestId === req.id ? 'active' : ''}`}
+                                onClick={() => { if (!isRenamingReq) onRequestOpen(req); }}
                               >
-                                <FaEllipsisH />
-                              </button>
-                            )}
-                          </li>
-                        );
-                      })}
-                    </ul>
-                  )}
-                </li>
-              );
-            })}
-          </ul>
+                                <span className="ws-method-badge" style={{ color: METHOD_COLORS[req.method.toUpperCase()] || '#333' }}>
+                                  {req.method}
+                                </span>
+
+                                {isRenamingReq ? (
+                                  <input
+                                    ref={renameInputRef}
+                                    className="ws-rename-input"
+                                    value={renaming.value}
+                                    onChange={e => setRenaming(r => ({ ...r, value: e.target.value }))}
+                                    onKeyDown={e => {
+                                      if (e.key === 'Enter')  commitRename(renaming.value);
+                                      if (e.key === 'Escape') cancelRename();
+                                    }}
+                                    onBlur={() => commitRename(renaming.value)}
+                                    onClick={e => e.stopPropagation()}
+                                  />
+                                ) : (
+                                  <span className="ws-request-name">{req.name}</span>
+                                )}
+
+                                {!isRenamingReq && (
+                                  <button
+                                    className="ws-req-menu-btn"
+                                    onClick={e => openRequestMenu(e, req)}
+                                    title="More actions"
+                                  >
+                                    <FaEllipsisH />
+                                  </button>
+                                )}
+                              </li>
+                            );
+                          })}
+                        </ul>
+                      )}
+                    </li>
+                  );
+                })}
+              </ul>
+            )}
+          </>
+        ) : (
+          <div className="ws-history-container">
+            {Object.entries(groupedHistory).map(([dateGroup, items]) => (
+              <div key={dateGroup} className="ws-history-group">
+                <div className="ws-history-group-header">{dateGroup}</div>
+                <ul className="ws-history-item-list">
+                  {items.map(item => (
+                    <li
+                      key={item.id}
+                      className={`ws-history-item ${activeHistoryId === item.id ? 'active' : ''}`}
+                      onClick={() => onHistoryOpen?.(item)}
+                    >
+                      <span className="ws-method-badge" style={{ color: METHOD_COLORS[item.method.toUpperCase()] || '#333' }}>
+                        {item.method}
+                      </span>
+                      <div className="ws-history-url-info">
+                        <span className="ws-history-url" title={item.url}>{item.url}</span>
+                        {(() => {
+                          if (!item.params) return null;
+                          let paramsList = [];
+                          if (Array.isArray(item.params)) {
+                            paramsList = item.params.filter(p => p.key && p.key.trim()).map(p => `${p.key}=${p.value}`);
+                          } else if (typeof item.params === 'object') {
+                            paramsList = Object.entries(item.params).map(([k, v]) => `${k}=${v}`);
+                          }
+                          if (paramsList.length === 0) return null;
+                          const paramString = paramsList.join('&');
+                          return (
+                            <span className="ws-history-params" title={paramString}>
+                              {paramString}
+                            </span>
+                          );
+                        })()}
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ))}
+            {filteredHistory.length === 0 && (
+              <div className="ws-no-results">No history found</div>
+            )}
+          </div>
         )}
       </nav>
 

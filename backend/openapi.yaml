@@ -204,6 +204,84 @@ paths:
         '401':
           $ref: '#/components/responses/401Unauthorized'
 
+  /api/workspaces/{workspace_id}/history:
+    get:
+      summary: Retrieve all history entries for the workspace (limit 100)
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: workspace_id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: A list of history entries
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/History'
+        '401':
+          $ref: '#/components/responses/401Unauthorized'
+        '403':
+          description: Forbidden access to this workspace history
+        '404':
+          description: Workspace not found
+    post:
+      summary: Create a new history entry
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: workspace_id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - method
+                - url
+              properties:
+                method:
+                  type: string
+                url:
+                  type: string
+                headers:
+                  type: array
+                  items:
+                    type: object
+                params:
+                  type: array
+                  items:
+                    type: object
+                body:
+                  type: object
+                auth:
+                  type: object
+      responses:
+        '201':
+          description: History entry created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/History'
+        '400':
+          description: Validation error
+        '401':
+          $ref: '#/components/responses/401Unauthorized'
+        '403':
+          description: Forbidden access to this workspace history
+        '404':
+          description: Workspace not found
+
   /api/collections/{collection_id}:
     patch:
       summary: Rename a collection
@@ -383,3 +461,30 @@ components:
           type: boolean
         owner_id:
           type: integer
+
+    History:
+      type: object
+      properties:
+        id:
+          type: integer
+        workspace_id:
+          type: integer
+        method:
+          type: string
+        url:
+          type: string
+        params:
+          type: array
+          items:
+            type: object
+        headers:
+          type: array
+          items:
+            type: object
+        body:
+          type: object
+        auth:
+          type: object
+        created_at:
+          type: string
+          format: date-time

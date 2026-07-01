@@ -12,6 +12,7 @@ from routes.workspace_routes import workspace_bp
 from routes.collection_routes import collection_bp
 from routes.request_routes import request_bp
 from routes.api_client_routes import api_client_bp
+from routes.history_routes import history_bp
 
 
 @pytest.fixture
@@ -26,6 +27,7 @@ def app():
     test_app.register_blueprint(collection_bp)
     test_app.register_blueprint(request_bp)
     test_app.register_blueprint(api_client_bp)
+    test_app.register_blueprint(history_bp)
 
     with test_app.app_context():
         db.create_all()
