@@ -81,7 +81,7 @@ export default function useWorkspaceTabs(workspaceIdParam) {
   }, []);
 
   const handleHistoryOpen = useCallback((historyItem) => {
-    const tabId = `hist-${historyItem.id}`;
+    const tabId = `history-req-${historyItem.id}`;
     if (!requestStates.current[tabId]) {
       requestStates.current[tabId] = {
         url:     historyItem.url     ?? '',

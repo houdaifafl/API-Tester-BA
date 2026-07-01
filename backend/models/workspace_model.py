@@ -9,5 +9,5 @@ class Workspace(db.Model):
     is_default = db.Column(db.Boolean, nullable=False, default=False, server_default='0')
 
     collections = db.relationship('Collection', backref='workspace', lazy=True, cascade='all, delete-orphan')
-    history = db.relationship('History', back_populates='workspace', lazy=True, cascade='all, delete-orphan')
+    history_entries = db.relationship('History', back_populates='workspace', lazy=True, cascade='all, delete-orphan')
 

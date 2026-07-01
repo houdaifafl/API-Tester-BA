@@ -21,4 +21,4 @@ class History(db.Model):
     created_at = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
 
     # Relationship to Workspace
-    workspace = db.relationship('Workspace', back_populates='history')
+    workspace = db.relationship('Workspace', back_populates='history_entries')

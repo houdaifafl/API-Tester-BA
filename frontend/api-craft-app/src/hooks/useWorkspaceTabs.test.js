@@ -36,12 +36,12 @@ describe('useWorkspaceTabs Hook', () => {
 
     // Verify open tabs
     expect(result.current.openTabs.length).toBe(2);
-    expect(result.current.openTabs[1].id).toBe('hist-99');
+    expect(result.current.openTabs[1].id).toBe('history-req-99');
     expect(result.current.openTabs[1].type).toBe('history');
-    expect(result.current.activeTabId).toBe('hist-99');
+    expect(result.current.activeTabId).toBe('history-req-99');
 
     // Verify saved response state is restored
-    const tabState = result.current.requestStates.current['hist-99'];
+    const tabState = result.current.requestStates.current['history-req-99'];
     expect(tabState).toBeDefined();
     expect(tabState.url).toBe('http://example.com/api');
     expect(tabState.params).toEqual([{ key: 'x', value: 'y' }]);
