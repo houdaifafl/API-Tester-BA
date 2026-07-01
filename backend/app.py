@@ -10,6 +10,17 @@ from routes.request_routes import request_bp
 from routes.history_routes import history_bp
 from models import collection_model, request_model, user_model, workspace_model, history_model
 
+def safe_add_column(conn, table, column, col_type, logger):
+    try:
+        conn.execute(text(f"ALTER TABLE {table} ADD {column} {col_type} NULL"))
+        conn.commit()
+    except Exception as e:
+        err_str = str(e).lower()
+        if "2705" in err_str or "42s21" in err_str or "duplicate" in err_str or "already exists" in err_str:
+            pass  # Column already exists, safe to ignore
+        else:
+            logger.warning(f"Database migration error adding column '{column}' to '{table}': {e}")
+
 def create_app():
     app = Flask(__name__)
 
@@ -25,26 +36,10 @@ def create_app():
         db.create_all()
         # Add columns to requests and history tables if they were created before these columns existed
         with db.engine.connect() as conn:
-            try:
-                conn.execute(text('ALTER TABLE requests ADD auth NVARCHAR(MAX) NULL'))
-                conn.commit()
-            except Exception:
-                pass  # Column already exists
-            try:
-                conn.execute(text('ALTER TABLE history ADD status INT NULL'))
-                conn.commit()
-            except Exception:
-                pass
-            try:
-                conn.execute(text('ALTER TABLE history ADD response_time FLOAT NULL'))
-                conn.commit()
-            except Exception:
-                pass
-            try:
-                conn.execute(text('ALTER TABLE history ADD data NVARCHAR(MAX) NULL'))
-                conn.commit()
-            except Exception:
-                pass
+            safe_add_column(conn, 'requests', 'auth', 'NVARCHAR(MAX)', app.logger)
+            safe_add_column(conn, 'history', 'status', 'INT', app.logger)
+            safe_add_column(conn, 'history', 'response_time', 'FLOAT', app.logger)
+            safe_add_column(conn, 'history', 'data', 'NVARCHAR(MAX)', app.logger)
 
     # Register Blueprints
     app.register_blueprint(api_client_bp)
