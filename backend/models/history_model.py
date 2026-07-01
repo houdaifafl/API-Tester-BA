@@ -14,6 +14,10 @@ class History(db.Model):
     body = db.Column(db.JSON, nullable=True)
     auth = db.Column(db.JSON, nullable=True)
     
+    status = db.Column(db.Integer, nullable=True)
+    response_time = db.Column(db.Float, nullable=True)
+    data = db.Column(db.JSON, nullable=True)
+    
     created_at = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
 
     # Relationship to Workspace

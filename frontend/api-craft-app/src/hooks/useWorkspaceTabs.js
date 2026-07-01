@@ -89,6 +89,11 @@ export default function useWorkspaceTabs(workspaceIdParam) {
         headers: historyItem.headers ?? null,
         body:    historyItem.body    ?? null,
         auth:    historyItem.auth    ?? null,
+        response: historyItem.status ? {
+          status: historyItem.status,
+          response_time: historyItem.response_time,
+          data: historyItem.data,
+        } : null,
       };
     }
     setOpenTabs(prev => {

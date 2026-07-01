@@ -43,6 +43,20 @@ describe('Sidebar Component Smoke Test', () => {
         url: '/api/login',
         params: { debug: 'true' },
         created_at: new Date().toISOString()
+      },
+      {
+        id: 102,
+        method: 'GET',
+        url: '/api/search',
+        params: [{ key: 'q', value: 'react' }],
+        created_at: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString() // Yesterday
+      },
+      {
+        id: 103,
+        method: 'PUT',
+        url: '/api/settings',
+        params: [],
+        created_at: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString() // Older
       }
     ],
     onHistoryOpen: jest.fn(),
@@ -71,8 +85,16 @@ describe('Sidebar Component Smoke Test', () => {
     // Click on history tab
     fireEvent.click(historyBtn);
 
-    // Assert that the history item is rendered (URL and params)
+    // Assert that history items are rendered (URL and params)
     expect(screen.getByText('/api/login')).toBeInTheDocument();
     expect(screen.getByText('debug=true')).toBeInTheDocument();
+
+    // Assert that the array parameter format is correctly formatted
+    expect(screen.getByText('/api/search')).toBeInTheDocument();
+    expect(screen.getByText('q=react')).toBeInTheDocument();
+
+    // Assert that date categories are displayed
+    expect(screen.getByText('Today')).toBeInTheDocument();
+    expect(screen.getByText('Yesterday')).toBeInTheDocument();
   });
 });

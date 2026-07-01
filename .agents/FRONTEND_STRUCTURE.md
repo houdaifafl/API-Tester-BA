@@ -21,14 +21,18 @@ src/
 ├── hooks/
 │   ├── useWorkspace.js        # Workspace selection, validation, loading hook
 │   ├── useCollections.js      # Collections/Requests CRUD state management hook
-│   └── useWorkspaceTabs.js    # Workspace tab and state cache hook
+│   ├── useWorkspaceTabs.js    # Workspace tab and state cache hook
+│   ├── useWorkspaceTabs.test.js # Tab management hook tests
+│   ├── useHistory.js          # Custom request history management hook
+│   └── useHistory.test.js     # History hook tests
 │
 ├── services/
 │   ├── api.js                 # API base configuration (BASE_URL)
 │   ├── authService.js         # Authentication API client
 │   ├── workspaceService.js    # Workspace API client
 │   ├── collectionService.js   # Collection API client
-│   └── requestService.js      # HTTP Request execution/management client
+│   ├── requestService.js      # HTTP Request execution/management client
+│   └── historyService.js      # Workspace Request History API client
 │
 └── components/
     ├── auth/                  # Authentication pages
@@ -40,9 +44,11 @@ src/
     │
     ├── workspace/             # Layout & Workspace coordination
     │   ├── MainPage.js / .css         # God/Layout coordinator
+    │   ├── MainPage.test.js           # MainPage integration smoke tests
     │   ├── MainPanel.js               # Tab-switching panel
     │   ├── OverviewPanel.js / .css    # Workspace welcome/documentation tab
     │   ├── Sidebar.js / .css          # Workspace navigation pane
+    │   ├── Sidebar.test.js            # Sidebar component unit/smoke tests
     │   ├── TopBar.js / .css           # Top header and open tab switcher
     │   ├── WorkspaceDropdown.js/.css  # Workspace selector dropdown
     │   ├── RequestContextMenu.js/.css # Context menu for requests/collections
@@ -91,10 +97,10 @@ All routing is defined in [App.js](file:///c:/Users/hlanj/Bachelor%20info/Bachel
   * `collections` (array): Nested collections and requests in current workspace.
   * `sidebarWidth` (number): Width of resizing sidebar.
 * **useWorkspaceTabs Hook State**:
-  * `openTabs` (array): Ordered list of open tab descriptors: `{ id, type, label, method, requestId, collectionName }`.
+  * `openTabs` (array): Ordered list of open tab descriptors: `{ id, type, label, method, requestId, collectionName }`. History tabs use `id: 'hist-<id>'` and `type: 'history'`.
   * `activeTabId` (string): Active tab ID.
-  * `requestStates` (useRef object): Transient/unsaved inputs for opened request parameters/headers/body indexed by `requestId`.
-  * `responseHeights` (useRef object): Resizable height settings for each request's response panel indexed by `requestId`.
+  * `requestStates` (useRef object): Transient/unsaved inputs for opened request parameters/headers/body indexed by `tabId` (e.g. `req-<id>` or `hist-<id>`). History tabs restore execution response metadata into `requestStates.current['hist-<id>'].response`.
+  * `responseHeights` (useRef object): Resizable height settings for each request's response panel indexed by `tabId`.
   * `workspaceTabsCache` (useRef object): Caches the open tabs, active tab ID, and transient request states per workspace ID so that switching workspaces restores layout state.
 
 ### 3.3 Local UI Layer
@@ -241,6 +247,9 @@ All HTTP communication uses the custom `authFetch` wrapper or standard `fetch` s
   * `saveRequest(requestId, payload)` -> `PATCH /api/requests/{id}` (via `authFetch`, JWT protected)
   * `deleteRequest(requestId)` -> `DELETE /api/requests/{id}` (via `authFetch`, JWT protected)
   * `executeRequest(payload)` -> `POST /api/execute` (via `authFetch`, JWT protected, sends method, URL, formatted parameters/headers/body to backend proxy agent). Note: throws raw error dictionary instead of standard `Error` instances.
+* **[historyService.js](file:///c:/Users/hlanj/Bachelor%20info/Bachelor%20Arbeit/API%20tester/frontend/api-craft-app/src/services/historyService.js)**:
+  * `getHistory(workspaceId)` -> `GET /api/workspaces/{id}/history` (via `authFetch`, JWT protected)
+  * `createHistoryItem(workspaceId, payload)` -> `POST /api/workspaces/{id}/history` (via `authFetch`, JWT protected, sends request config and execution response status, response_time, data)
 
 ---
 
@@ -264,6 +273,7 @@ All HTTP communication uses the custom `authFetch` wrapper or standard `fetch` s
    * Formats body object based on type (`form-data`, `urlencoded`, `raw`).
 3. Invokes `executeRequest(payload)` in `requestService.js`.
 4. Renders execution status and parsed payload result in `ResponsePanel`. Updates transient request state.
+5. Invokes `onExecute` callback to log request configuration and response execution metadata (status, time, data) to the database workspace history.
 
 ---
 

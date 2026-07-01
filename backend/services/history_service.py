@@ -26,6 +26,9 @@ def get_history_entries(workspace_id, user_id):
             'headers': e.headers,
             'body': e.body,
             'auth': e.auth,
+            'status': e.status,
+            'response_time': e.response_time,
+            'data': e.data,
             'created_at': (e.created_at.isoformat() + 'Z') if e.created_at else None
         }
         for e in entries
@@ -57,7 +60,10 @@ def create_history_entry(workspace_id, user_id, history_data):
         params=history_data.get('params'),
         headers=history_data.get('headers'),
         body=history_data.get('body'),
-        auth=history_data.get('auth')
+        auth=history_data.get('auth'),
+        status=history_data.get('status'),
+        response_time=history_data.get('response_time'),
+        data=history_data.get('data')
     )
     db.session.add(new_entry)
     db.session.commit()
@@ -71,6 +77,9 @@ def create_history_entry(workspace_id, user_id, history_data):
         'headers': new_entry.headers,
         'body': new_entry.body,
         'auth': new_entry.auth,
+        'status': new_entry.status,
+        'response_time': new_entry.response_time,
+        'data': new_entry.data,
         'created_at': (new_entry.created_at.isoformat() + 'Z') if new_entry.created_at else None
     }
     return serialized, None

@@ -485,6 +485,15 @@ components:
           type: object
         auth:
           type: object
+        status:
+          type: integer
+          nullable: true
+        response_time:
+          type: number
+          nullable: true
+        data:
+          type: object
+          nullable: true
         created_at:
           type: string
           format: date-time

@@ -21,6 +21,7 @@ The backend utilizes the Flask application factory pattern. The server entry poi
   * `auth_bp` -> Handles user login and signup actions.
   * `workspace_bp` -> Handles workspace dashboard operations.
   * `request_bp` -> Handles CRUD actions for saved request configurations.
+  * `history_bp` -> Handles request execution history logs.
 
 ---
 
@@ -68,6 +69,10 @@ All database models reside inside `backend/models/` and extend from SQLAlchemy's
 * **[request_model.py](file:///c:/Users/hlanj/Bachelor%20info/Bachelor%20Arbeit/API%20tester/backend/models/request_model.py) (`Request` model)**:
   * Table: `requests`
   * Columns: `id` (PK, Integer), `name` (String), `method` (String, nullable=False), `url` (String, nullable=False), `params` (JSON), `headers` (JSON), `body` (JSON), `auth` (JSON), `collection_id` (FK to `collections.id`, nullable=False).
+* **[history_model.py](file:///c:/Users/hlanj/Bachelor%20info/Bachelor%20Arbeit/API%20tester/backend/models/history_model.py) (`History` model)**:
+  * Table: `history`
+  * Columns: `id` (PK, Integer), `workspace_id` (FK to `workspaces.id`, nullable=False), `method` (String, nullable=False), `url` (String, nullable=False), `params` (JSON), `headers` (JSON), `body` (JSON), `auth` (JSON), `status` (Integer), `response_time` (Float), `data` (JSON), `created_at` (DateTime).
+  * Relationships: `workspace` (many-to-one relationship mapping to `Workspace` model via `history` back_populates).
 
 ---
 
@@ -90,6 +95,8 @@ Routes are thin orchestrators that digest JSON requests, delegate logic to servi
 | **Request** | `POST` | `/api/collections/<collection_id>/requests` (JWT) | `create_request()` | 201 | 401 (unauthorized), 404 (collection not found) |
 | | `PATCH`| `/api/requests/<request_id>` (JWT) | `rename_request()`, `update_request_method()`, `save_request()` | 200 | 400 (invalid payload), 401 (unauthorized), 404 (not found) |
 | | `DELETE`| `/api/requests/<request_id>` (JWT) | `delete_request()` | 200 | 401 (unauthorized), 404 (not found) |
+| **History** | `GET` | `/api/workspaces/<workspace_id>/history` (JWT)| `get_history_entries()` | 200 | 401 (unauthorized), 403 (forbidden), 404 (not found) |
+| | `POST` | `/api/workspaces/<workspace_id>/history` (JWT)| `create_history_entry()` | 201 | 400 (validation), 401 (unauthorized), 403 (forbidden), 404 (not found) |
 | **API Client**| `POST` | `/api/execute` (JWT) | `execute_request()` | 200 | 400 (missing URL/method), 401 (unauthorized), 500 (API error), 504 (timeout) |
 
 ---
@@ -123,6 +130,9 @@ All business logic, database queries, and transaction commits are isolated in se
   * `update_request_method(request_id, method)`: Changes request HTTP method (GET, POST, PUT, DELETE).
   * `save_request(request_id, data)`: Saves URL, query params, headers, body, or auth settings to the DB.
   * `delete_request(request_id)`: Deletes saved request configuration.
+* **[history_service.py](file:///c:/Users/hlanj/Bachelor%20info/Bachelor%20Arbeit/API%20tester/backend/services/history_service.py)**:
+  * `get_history_entries(workspace_id, user_id)`: Fetches workspace's request logs (up to 100 entries, descending chronological order).
+  * `create_history_entry(workspace_id, user_id, history_data)`: Creates and persists a history entry including request configuration and execution response metadata.
 * **[api_client_service.py](file:///c:/Users/hlanj/Bachelor%20info/Bachelor%20Arbeit/API%20tester/backend/services/api_client_service.py)**:
   * `execute_request(method, url, params, headers, body)`: Constructs and executes a proxied HTTP request using the Python `requests` library. Calculates round-trip response time and parses output. *Note: directly returns Flask `jsonify()` responses (known violation).*
 
@@ -144,6 +154,7 @@ Backend integration tests reside inside `backend/tests/`. The test environment u
 * **[test_collections.py](file:///c:/Users/hlanj/Bachelor%20info/Bachelor%20Arbeit/API%20tester/backend/tests/test_collections.py)**: Asserts auto-seeding of collections, adding collection, renaming collection, and default collection delete limits.
 * **[test_requests.py](file:///c:/Users/hlanj/Bachelor%20info/Bachelor%20Arbeit/API%20tester/backend/tests/test_requests.py)**: Tests request creation, method updates, parameter patching (URL, headers, params, body, auth), deletion, and invalid path validations.
 * **[test_execute.py](file:///c:/Users/hlanj/Bachelor%20info/Bachelor%20Arbeit/API%20tester/backend/tests/test_execute.py)**: Verifies the proxy client behavior (GET, POST JSON parsing, error handling, request timeouts).
+* **[test_history.py](file:///c:/Users/hlanj/Bachelor%20info/Bachelor%20Arbeit/API%20tester/backend/tests/test_history.py)**: Tests request history creation, listings, ownership authorization limits, reverse chronological ordering, and list length caps.
 
 ---
 

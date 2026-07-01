@@ -132,6 +132,9 @@ export default function RequestBuilder({ request, initialResponseHeight, onRespo
           headers: tabState.current.headers,
           body: tabState.current.body,
           auth: tabState.current.auth,
+          status: result.status,
+          response_time: result.response_time,
+          data: result.data,
         });
       }
     } catch (err) {

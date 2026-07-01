@@ -10,7 +10,10 @@ class TestCreateHistory:
             'headers': [{'key': 'Content-Type', 'value': 'application/json'}],
             'params': [{'key': 'q', 'value': 'test'}],
             'body': {'foo': 'bar'},
-            'auth': {'type': 'bearer', 'token': 'xyz'}
+            'auth': {'type': 'bearer', 'token': 'xyz'},
+            'status': 200,
+            'response_time': 150.5,
+            'data': {'success': True}
         }
         res = auth_client.post(f'/api/workspaces/{ws_id}/history', json=payload)
         assert res.status_code == 201
@@ -23,6 +26,9 @@ class TestCreateHistory:
         assert data['params'] == [{'key': 'q', 'value': 'test'}]
         assert data['body'] == {'foo': 'bar'}
         assert data['auth'] == {'type': 'bearer', 'token': 'xyz'}
+        assert data['status'] == 200
+        assert data['response_time'] == 150.5
+        assert data['data'] == {'success': True}
         assert 'created_at' in data
 
     def test_create_history_missing_fields(self, auth_client, auth_data):
