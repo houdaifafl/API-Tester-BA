@@ -23,13 +23,28 @@ def create_app():
 
     with app.app_context():
         db.create_all()
-        # Add auth column to requests table if it was created before this column existed
+        # Add columns to requests and history tables if they were created before these columns existed
         with db.engine.connect() as conn:
             try:
                 conn.execute(text('ALTER TABLE requests ADD auth NVARCHAR(MAX) NULL'))
                 conn.commit()
             except Exception:
                 pass  # Column already exists
+            try:
+                conn.execute(text('ALTER TABLE history ADD status INT NULL'))
+                conn.commit()
+            except Exception:
+                pass
+            try:
+                conn.execute(text('ALTER TABLE history ADD response_time FLOAT NULL'))
+                conn.commit()
+            except Exception:
+                pass
+            try:
+                conn.execute(text('ALTER TABLE history ADD data NVARCHAR(MAX) NULL'))
+                conn.commit()
+            except Exception:
+                pass
 
     # Register Blueprints
     app.register_blueprint(api_client_bp)
