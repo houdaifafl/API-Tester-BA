@@ -142,7 +142,6 @@ export default function RequestBuilder({ request, initialResponseHeight, onRespo
       const errResponse = { error: errorInstance.message };
       setResponse(errResponse);
       onStateChange?.({ response: errResponse });
-      throw errorInstance;
     } finally {
       setLoading(false);
     }
