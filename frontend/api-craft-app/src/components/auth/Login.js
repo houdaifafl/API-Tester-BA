@@ -18,10 +18,10 @@ function Login() {
     setError('');
     try {
       const data = await login(username, password);
-      localStorage.setItem('username', data.username);
-      localStorage.setItem('userId', data.user_id);
-      localStorage.setItem('email', data.email);
-      localStorage.setItem('token', data.token);
+      sessionStorage.setItem('username', data.username);
+      sessionStorage.setItem('userId', data.user_id);
+      sessionStorage.setItem('email', data.email);
+      sessionStorage.setItem('token', data.token);
       setUser({ userId: data.user_id, email: data.email, username: data.username, token: data.token });
       navigate(`/workspace/${data.default_workspace_id}`);
     } catch (err) {

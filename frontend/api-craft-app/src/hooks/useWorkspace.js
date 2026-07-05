@@ -14,13 +14,20 @@ export default function useWorkspace() {
   const [workspaceError, setWorkspaceError]     = useState(null);
   const [workspaceLoading, setWorkspaceLoading] = useState(true);
 
+  const reloadWorkspaces = useCallback(() => {
+    if (!userId) return Promise.resolve([]);
+    return getWorkspaces(userId)
+      .then(data => {
+        setWorkspaces(data);
+        return data;
+      })
+      .catch(() => []);
+  }, [userId]);
+
   // Load all workspaces for the user once
   useEffect(() => {
-    if (!userId) return;
-    getWorkspaces(userId)
-      .then(data => setWorkspaces(data))
-      .catch(() => {});
-  }, [userId]);
+    reloadWorkspaces();
+  }, [reloadWorkspaces]);
 
   // Validate workspace ownership on every URL param change — no fallback allowed
   useEffect(() => {
@@ -36,11 +43,29 @@ export default function useWorkspace() {
     getWorkspaceById(workspaceIdParam, userId)
       .then(data => { setActiveWorkspace(data); setWorkspaceLoading(false); })
       .catch(err => {
-        const error = err.status === 404 ? 'not_found' : err.status === 400 ? 'invalid' : 'forbidden';
-        setWorkspaceError(error);
-        setWorkspaceLoading(false);
+        if (err.status === 403) {
+          getWorkspaces(userId)
+            .then(list => {
+              setWorkspaces(list);
+              const fallback = list.find(w => w.is_default) || list[0] || null;
+              if (fallback) {
+                navigate(`/workspace/${fallback.id}`);
+              } else {
+                setWorkspaceError('forbidden');
+              }
+              setWorkspaceLoading(false);
+            })
+            .catch(() => {
+              setWorkspaceError('forbidden');
+              setWorkspaceLoading(false);
+            });
+        } else {
+          const error = err.status === 404 ? 'not_found' : err.status === 400 ? 'invalid' : 'forbidden';
+          setWorkspaceError(error);
+          setWorkspaceLoading(false);
+        }
       });
-  }, [workspaceIdParam, userId]);
+  }, [workspaceIdParam, userId, navigate]);
 
   const handleSwitch = useCallback((ws) => {
     navigate(`/workspace/${ws.id}`);
@@ -60,14 +85,18 @@ export default function useWorkspace() {
     }
   }, [workspaces, workspaceIdParam, navigate]);
 
+  const workspaceRole = activeWorkspace ? activeWorkspace.role : 'viewer';
+
   return {
     workspaces,
     activeWorkspace,
+    workspaceRole,
     workspaceError,
     workspaceLoading,
     workspaceIdParam,
     handleSwitch,
     handleWorkspaceCreated,
     handleWorkspaceDeleted,
+    reloadWorkspaces,
   };
 }

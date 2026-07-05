@@ -24,7 +24,8 @@ src/
 │   ├── useWorkspaceTabs.js    # Workspace tab and state cache hook
 │   ├── useWorkspaceTabs.test.js # Tab management hook tests
 │   ├── useHistory.js          # Custom request history management hook
-│   └── useHistory.test.js     # History hook tests
+│   ├── useHistory.test.js     # History hook tests
+│   └── useInvitations.js      # Custom workspace invitations hook
 │
 ├── services/
 │   ├── api.js                 # API base configuration (BASE_URL)
@@ -32,7 +33,8 @@ src/
 │   ├── workspaceService.js    # Workspace API client
 │   ├── collectionService.js   # Collection API client
 │   ├── requestService.js      # HTTP Request execution/management client
-│   └── historyService.js      # Workspace Request History API client
+│   ├── historyService.js      # Workspace Request History API client
+│   └── invitationService.js   # Workspace invitations API client
 │
 └── components/
     ├── auth/                  # Authentication pages
@@ -52,7 +54,9 @@ src/
     │   ├── TopBar.js / .css           # Top header and open tab switcher
     │   ├── WorkspaceDropdown.js/.css  # Workspace selector dropdown
     │   ├── RequestContextMenu.js/.css # Context menu for requests/collections
-    │   └── SignOutModal.js / .css     # Sign-out confirmation modal
+    │   ├── SignOutModal.js / .css     # Sign-out confirmation modal
+    │   ├── InviteModal.js / .css      # Workspace invitations send modal
+    │   └── InviteModal.test.js        # InviteModal smoke/interaction tests
     │
     └── request/               # Request composition & builder tabs
         ├── RequestBuilder.js / .css   # Request builder container
@@ -193,19 +197,31 @@ Coordinates and retains active layout state for request and documentation tabs w
   * `updateTabMethod`, `updateTabLabel`, `updateTabCollectionName`, `removeTabsByRequestIds`: Workspace sidebar callback wrappers ensuring synchronization between tree changes and open tabs.
 
 ### 5.2 `useWorkspace()`
-Coordinates workspaces list loading, active workspace ownership validation, creation/deletion routing redirects, and error handling states.
+Coordinates workspaces list loading, active workspace ownership validation, creation/deletion routing redirects, role resolution, and error handling states.
 
 * **Exposed API**:
-  * `workspaces`: Array of workspaces owned by the user.
+  * `workspaces`: Array of workspaces owned by or shared with the user.
   * `activeWorkspace`: Currently active workspace metadata.
+  * `workspaceRole`: Current user's role ('owner', 'editor', 'viewer') in the active workspace.
   * `workspaceLoading`: Boolean indicating if workspace validation is in progress.
   * `workspaceError`: Error string ('invalid', 'not_found', 'forbidden') or null.
   * `workspaceIdParam`: The current workspace ID parameter from the URL.
   * `handleSwitch(workspace)`: Switches the current route to target workspace.
   * `handleWorkspaceCreated(workspace)`: Adds a newly created workspace and routes to it.
   * `handleWorkspaceDeleted(workspaceId)`: Deletes workspace from local list, falling back to default or next workspace if current is deleted.
+  * `reloadWorkspaces()`: Reloads the workspaces list from the service API.
 
-### 5.3 `useCollections({ activeWorkspaceId, handleRequestOpen, ... })`
+### 5.3 `useInvitations(onWorkspaceAccepted)`
+Coordinates loading, accepting, and declining of pending workspace invitations.
+
+* **Exposed API**:
+  * `pendingInvitations`: List of pending invitations for the logged-in user.
+  * `loading`: Boolean loading status.
+  * `handleAccept(id)`: Accepts the invitation, updates status, and triggers `onWorkspaceAccepted()`.
+  * `handleDecline(id)`: Declines the invitation.
+  * `refreshInvitations()`: Reloads pending invitations list from API.
+
+### 5.4 `useCollections({ activeWorkspaceId, handleRequestOpen, ... })`
 Encapsulates CRUD operations and state synchronization for collections and requests under the active workspace.
 
 * **Exposed API**:
@@ -250,6 +266,11 @@ All HTTP communication uses the custom `authFetch` wrapper or standard `fetch` s
 * **[historyService.js](file:///c:/Users/hlanj/Bachelor%20info/Bachelor%20Arbeit/API%20tester/frontend/api-craft-app/src/services/historyService.js)**:
   * `getHistory(workspaceId)` -> `GET /api/workspaces/{id}/history` (via `authFetch`, JWT protected)
   * `createHistoryItem(workspaceId, payload)` -> `POST /api/workspaces/{id}/history` (via `authFetch`, JWT protected, sends request config and execution response status, response_time, data)
+* **[invitationService.js](file:///c:/Users/hlanj/Bachelor%20info/Bachelor%20Arbeit/API%20tester/frontend/api-craft-app/src/services/invitationService.js)**:
+  * `inviteUserToWorkspace(workspaceId, username, role)` -> `POST /api/workspaces/{id}/invitations` (via `authFetch`, JWT protected, sends username and role)
+  * `getPendingInvitations()` -> `GET /api/invitations/pending` (via `authFetch`, JWT protected)
+  * `acceptInvitation(invitationId)` -> `POST /api/invitations/{id}/accept` (via `authFetch`, JWT protected)
+  * `declineInvitation(invitationId)` -> `POST /api/invitations/{id}/decline` (via `authFetch`, JWT protected)
 
 ---
 

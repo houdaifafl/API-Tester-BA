@@ -1,4 +1,4 @@
-from flask import Blueprint, request, jsonify
+from flask import Blueprint, request, jsonify, g
 from services.collection_service import (
     get_collections_by_workspace,
     add_collection,
@@ -19,9 +19,10 @@ def list_collections(workspace_id):
 @collection_bp.route('/api/workspaces/<int:workspace_id>/collections', methods=['POST'])
 @token_required
 def create_collection_route(workspace_id):
-    result, error = add_collection(workspace_id)
+    result, error = add_collection(workspace_id, g.user_id)
     if error:
-        return jsonify({'error': error}), 400
+        status = 403 if error == 'Forbidden' else 400
+        return jsonify({'error': error}), status
     return jsonify(result), 201
 
 
@@ -32,17 +33,20 @@ def rename_collection_route(collection_id):
     new_name = data.get('name')
     if not new_name:
         return jsonify({'error': 'name is required'}), 400
-    result, error = rename_collection(collection_id, new_name)
+    result, error = rename_collection(collection_id, new_name, g.user_id)
     if error:
-        return jsonify({'error': error}), 404
+        status = 403 if error == 'Forbidden' else 404
+        return jsonify({'error': error}), status
     return jsonify(result), 200
 
 
 @collection_bp.route('/api/collections/<int:collection_id>', methods=['DELETE'])
 @token_required
 def delete_collection_route(collection_id):
-    _, error = delete_collection(collection_id)
+    _, error = delete_collection(collection_id, g.user_id)
     if error:
+        if error == 'Forbidden':
+            return jsonify({'error': error}), 403
         status = 403 if 'default' in error else 404
         return jsonify({'error': error}), status
     return jsonify({'message': 'Collection deleted'}), 200

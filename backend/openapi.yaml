@@ -432,6 +432,107 @@ paths:
         '401':
           $ref: '#/components/responses/401Unauthorized'
 
+  /api/workspaces/{workspace_id}/invitations:
+    post:
+      summary: Send an invitation to another user
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: workspace_id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - username
+              properties:
+                username:
+                  type: string
+                role:
+                  type: string
+                  enum: [editor, viewer]
+                  default: viewer
+      responses:
+        '201':
+          description: Invitation sent successfully
+        '400':
+          description: Invalid request or validation error (e.g. user already a member, pending invitation exists)
+        '401':
+          $ref: '#/components/responses/401Unauthorized'
+        '403':
+          description: Forbidden - not a member of the workspace
+        '404':
+          description: Workspace not found
+
+  /api/invitations/pending:
+    get:
+      summary: Get all pending invitations for the authenticated user
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: List of pending invitations
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Invitation'
+        '401':
+          $ref: '#/components/responses/401Unauthorized'
+
+  /api/invitations/{invitation_id}/accept:
+    post:
+      summary: Accept a workspace invitation
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: invitation_id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Invitation accepted successfully
+        '400':
+          description: Invitation is not pending
+        '401':
+          $ref: '#/components/responses/401Unauthorized'
+        '403':
+          description: Forbidden - invitation not for current user
+        '404':
+          description: Invitation not found
+
+  /api/invitations/{invitation_id}/decline:
+    post:
+      summary: Decline a workspace invitation
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: invitation_id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Invitation declined successfully
+        '400':
+          description: Invitation is not pending
+        '401':
+          $ref: '#/components/responses/401Unauthorized'
+        '403':
+          description: Forbidden - invitation not for current user
+        '404':
+          description: Invitation not found
+
 components:
   securitySchemes:
     BearerAuth:
@@ -497,3 +598,24 @@ components:
         created_at:
           type: string
           format: date-time
+
+    Invitation:
+      type: object
+      properties:
+        id:
+          type: integer
+        workspace_id:
+          type: integer
+        workspace_name:
+          type: string
+        inviter_username:
+          type: string
+        inviter_email:
+          type: string
+        status:
+          type: string
+          example: pending
+        role:
+          type: string
+          enum: [editor, viewer]
+          example: viewer

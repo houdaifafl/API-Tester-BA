@@ -50,6 +50,7 @@ export default function Sidebar({
   history = [],
   onHistoryOpen,
   activeHistoryId,
+  workspaceRole = 'viewer',
 }) {
   const [sidebarMode, setSidebarMode]           = useState('collections');
   const [collectionsOpen, setCollectionsOpen]   = useState(true);
@@ -171,7 +172,15 @@ export default function Sidebar({
           <button
             className="ws-search-add"
             title="Add collection"
-            onClick={onCollectionAdd}
+            onClick={() => {
+              if (workspaceRole === 'viewer') {
+                window.dispatchEvent(new CustomEvent('show-unauthorized-alert', {
+                  detail: { message: "Action forbidden: Viewers cannot create collections." }
+                }));
+              } else {
+                onCollectionAdd();
+              }
+            }}
           >
             <FaPlus />
           </button>
@@ -189,6 +198,11 @@ export default function Sidebar({
                 ? <FaChevronDown className="ws-section-caret" />
                 : <FaChevronRight className="ws-section-caret" />}
               Collections
+              {workspaceRole === 'viewer' && (
+                <span className="ws-readonly-badge" style={{ marginLeft: 'auto', fontSize: '0.75rem', padding: '2px 6px', background: '#3d3d3d', borderRadius: '4px', color: '#ffc107', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                  🔒 Read-only
+                </span>
+              )}
             </div>
 
             {collectionsOpen && (
@@ -232,7 +246,16 @@ export default function Sidebar({
                             <button
                               className="ws-item-add-btn"
                               title="Add request"
-                              onClick={e => { e.stopPropagation(); onRequestAdd(col.id); }}
+                              onClick={e => {
+                                e.stopPropagation();
+                                if (workspaceRole === 'viewer') {
+                                  window.dispatchEvent(new CustomEvent('show-unauthorized-alert', {
+                                    detail: { message: "Action forbidden: Viewers cannot add requests." }
+                                  }));
+                                } else {
+                                  onRequestAdd(col.id);
+                                }
+                              }}
                             >
                               <FaPlus />
                             </button>
@@ -352,10 +375,24 @@ export default function Sidebar({
         <RequestContextMenu
           anchorRect={menuState.rect}
           onRename={() => {
-            const req = allRequests.find(r => r.id === menuState.id);
-            if (req) startRename('request', req.id, req.name);
+            if (workspaceRole === 'viewer') {
+              window.dispatchEvent(new CustomEvent('show-unauthorized-alert', {
+                detail: { message: "Action forbidden: Viewers cannot rename collections or requests." }
+              }));
+            } else {
+              const req = allRequests.find(r => r.id === menuState.id);
+              if (req) startRename('request', req.id, req.name);
+            }
           }}
-          onDelete={() => onRequestDelete(menuState.id)}
+          onDelete={() => {
+            if (workspaceRole === 'viewer') {
+              window.dispatchEvent(new CustomEvent('show-unauthorized-alert', {
+                detail: { message: "Action forbidden: Viewers cannot delete collections or requests." }
+              }));
+            } else {
+              onRequestDelete(menuState.id);
+            }
+          }}
           onClose={closeMenu}
         />
       )}
@@ -364,10 +401,24 @@ export default function Sidebar({
         <RequestContextMenu
           anchorRect={menuState.rect}
           onRename={() => {
-            const col = collections.find(c => c.id === menuState.id);
-            if (col) startRename('collection', col.id, col.name);
+            if (workspaceRole === 'viewer') {
+              window.dispatchEvent(new CustomEvent('show-unauthorized-alert', {
+                detail: { message: "Action forbidden: Viewers cannot rename collections or requests." }
+              }));
+            } else {
+              const col = collections.find(c => c.id === menuState.id);
+              if (col) startRename('collection', col.id, col.name);
+            }
           }}
-          onDelete={menuState.isDefault ? null : () => onCollectionDelete(menuState.id)}
+          onDelete={menuState.isDefault ? null : () => {
+            if (workspaceRole === 'viewer') {
+              window.dispatchEvent(new CustomEvent('show-unauthorized-alert', {
+                detail: { message: "Action forbidden: Viewers cannot delete collections or requests." }
+              }));
+            } else {
+              onCollectionDelete(menuState.id);
+            }
+          }}
           onClose={closeMenu}
         />
       )}

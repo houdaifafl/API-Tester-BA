@@ -1,16 +1,24 @@
 from models.base import db
 from models.history_model import History
 from models.workspace_model import Workspace
+from models.workspace_member_model import WorkspaceMember
 
 def get_history_entries(workspace_id, user_id):
     """
     Retrieves up to 100 history entries for a given workspace in descending chronological order.
-    Validates workspace existence and user ownership.
+    Validates workspace existence and user ownership/membership.
     """
     workspace = db.session.get(Workspace, workspace_id)
     if not workspace:
         return None, 'not_found'
-    if workspace.user_id != user_id:
+    
+    is_owner = (workspace.user_id == user_id)
+    is_member = False
+    if not is_owner:
+        member_record = WorkspaceMember.query.filter_by(workspace_id=workspace_id, user_id=user_id).first()
+        is_member = member_record is not None
+
+    if not is_owner and not is_member:
         return None, 'forbidden'
 
     # Query latest 100 history items for this workspace
@@ -38,12 +46,19 @@ def get_history_entries(workspace_id, user_id):
 def create_history_entry(workspace_id, user_id, history_data):
     """
     Creates a new history entry for a given workspace.
-    Validates workspace existence and user ownership.
+    Validates workspace existence and user ownership/membership.
     """
     workspace = db.session.get(Workspace, workspace_id)
     if not workspace:
         return None, 'not_found'
-    if workspace.user_id != user_id:
+    
+    is_owner = (workspace.user_id == user_id)
+    is_member = False
+    if not is_owner:
+        member_record = WorkspaceMember.query.filter_by(workspace_id=workspace_id, user_id=user_id).first()
+        is_member = member_record is not None
+
+    if not is_owner and not is_member:
         return None, 'forbidden'
 
     method = history_data.get('method')

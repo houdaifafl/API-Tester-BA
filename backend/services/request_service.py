@@ -3,10 +3,15 @@ from models.collection_model import Collection
 from models.base import db
 
 
-def create_request(collection_id):
-    collection = Collection.query.get(collection_id)
+def create_request(collection_id, user_id):
+    collection = db.session.get(Collection, collection_id)
     if not collection:
         return None, 'Collection not found'
+
+    from services.workspace_service import check_user_write_access
+    allowed, err = check_user_write_access(collection.workspace_id, user_id)
+    if not allowed:
+        return None, err
 
     new_request = Request(
         name='New Request',
@@ -29,10 +34,20 @@ def create_request(collection_id):
     }, None
 
 
-def rename_request(request_id, new_name):
-    req = Request.query.get(request_id)
+def rename_request(request_id, new_name, user_id):
+    req = db.session.get(Request, request_id)
     if not req:
         return None, 'Request not found'
+
+    collection = db.session.get(Collection, req.collection_id) if req.collection_id else None
+    if not collection:
+        return None, 'Collection not found'
+
+    from services.workspace_service import check_user_write_access
+    allowed, err = check_user_write_access(collection.workspace_id, user_id)
+    if not allowed:
+        return None, err
+
     req.name = new_name
     db.session.commit()
     return {'id': req.id, 'name': req.name}, None
@@ -40,21 +55,41 @@ def rename_request(request_id, new_name):
 
 _VALID_METHODS = {'GET', 'POST', 'PUT', 'DELETE'}
 
-def update_request_method(request_id, method):
+def update_request_method(request_id, method, user_id):
     if method not in _VALID_METHODS:
         return None, 'Invalid method'
-    req = Request.query.get(request_id)
+    req = db.session.get(Request, request_id)
     if not req:
         return None, 'Request not found'
+
+    collection = db.session.get(Collection, req.collection_id) if req.collection_id else None
+    if not collection:
+        return None, 'Collection not found'
+
+    from services.workspace_service import check_user_write_access
+    allowed, err = check_user_write_access(collection.workspace_id, user_id)
+    if not allowed:
+        return None, err
+
     req.method = method
     db.session.commit()
     return {'id': req.id, 'method': req.method}, None
 
 
-def save_request(request_id, data):
-    req = Request.query.get(request_id)
+def save_request(request_id, data, user_id):
+    req = db.session.get(Request, request_id)
     if not req:
         return None, 'Request not found'
+
+    collection = db.session.get(Collection, req.collection_id) if req.collection_id else None
+    if not collection:
+        return None, 'Collection not found'
+
+    from services.workspace_service import check_user_write_access
+    allowed, err = check_user_write_access(collection.workspace_id, user_id)
+    if not allowed:
+        return None, err
+
     if 'url'     in data: req.url     = data['url']
     if 'params'  in data: req.params  = data['params']
     if 'headers' in data: req.headers = data['headers']
@@ -64,10 +99,20 @@ def save_request(request_id, data):
     return {'id': req.id}, None
 
 
-def delete_request(request_id):
-    req = Request.query.get(request_id)
+def delete_request(request_id, user_id):
+    req = db.session.get(Request, request_id)
     if not req:
         return None, 'Request not found'
+
+    collection = db.session.get(Collection, req.collection_id) if req.collection_id else None
+    if not collection:
+        return None, 'Collection not found'
+
+    from services.workspace_service import check_user_write_access
+    allowed, err = check_user_write_access(collection.workspace_id, user_id)
+    if not allowed:
+        return None, err
+
     db.session.delete(req)
     db.session.commit()
     return True, None

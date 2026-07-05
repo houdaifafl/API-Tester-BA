@@ -220,3 +220,100 @@
 .wsd-new-confirm:hover {
   background: #333;
 }
+
+/* ── Pending Workspace Invitations ── */
+.wsd-section-title {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: #888;
+  padding: 8px 12px 4px;
+  user-select: none;
+  cursor: default;
+}
+
+.wsd-invitations-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  max-height: 150px;
+  overflow-y: auto;
+}
+
+.wsd-invitation-item {
+  display: flex;
+  flex-direction: column;
+  padding: 8px 12px;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+  background: #fafafa;
+  user-select: none;
+  cursor: default;
+}
+
+.wsd-invitation-item:last-child {
+  border-bottom: none;
+}
+
+.wsd-invitation-details {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 6px;
+}
+
+.wsd-invitation-ws-name {
+  font-size: 12px;
+  font-weight: 600;
+  color: #1a1a1a;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.wsd-invitation-sender {
+  font-size: 10px;
+  color: #666;
+}
+
+.wsd-invitation-actions {
+  display: flex;
+  gap: 6px;
+}
+
+.wsd-invitation-btn {
+  flex: 1;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 3px 6px;
+  border: 1px solid rgba(0, 0, 0, 0.15);
+  border-radius: 4px;
+  cursor: pointer;
+  background: #ffffff;
+  color: #333;
+  transition: all 0.2s ease;
+}
+
+.wsd-invitation-btn:hover {
+  background: #f0f0f0;
+}
+
+.wsd-invitation-btn--accept {
+  background: #28a745;
+  color: #ffffff;
+  border-color: #28a745;
+}
+
+.wsd-invitation-btn--accept:hover {
+  background: #218838;
+  border-color: #218838;
+}
+
+.wsd-invitation-btn--decline {
+  background: #dc3545;
+  color: #ffffff;
+  border-color: #dc3545;
+}
+
+.wsd-invitation-btn--decline:hover {
+  background: #c82333;
+  border-color: #c82333;
+}

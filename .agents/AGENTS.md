@@ -304,6 +304,7 @@ Each should be addressed incrementally when touching the affected file.
 | 13 | `collection_service.py`, `request_service.py` | Deprecated `Model.query.get()` | Use `db.session.get(Model, id)` |
 | 14 | Route handlers | HTTP status inferred from error string | Use explicit status code mapping |
 | 15 | Frontend | Zero test files despite deps installed | Add tests per Section 8.3 |
+| 16 | ~~`useInvitations.js`~~ | ~~Unused custom state `loading` returned by hook~~ | **Resolved**: Removed unused loading state declaration and references |
 
 ---
 

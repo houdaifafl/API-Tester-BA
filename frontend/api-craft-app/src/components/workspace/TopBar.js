@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import WorkspaceDropdown from './WorkspaceDropdown';
 import SignOutModal from './SignOutModal';
+import InviteModal from './InviteModal';
 import { METHOD_COLORS } from '../../constants';
 import './TopBar.css';
 
@@ -18,12 +19,17 @@ export default function TopBar({
   activeTabId,
   onTabChange,
   onTabClose,
+  pendingInvitations = [],
+  onAcceptInvitation,
+  onDeclineInvitation,
+  workspaceRole = 'viewer',
 }) {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [accountOpen, setAccountOpen] = useState(false);
   const [confirmOpen, setConfirmOpen] = useState(false);
+  const [inviteOpen, setInviteOpen] = useState(false);
   const accountRef = useRef(null);
 
   useEffect(() => {
@@ -57,6 +63,11 @@ export default function TopBar({
     setDropdownOpen(false);
   }, [onWorkspaceCreated]);
 
+  const handleInviteTrigger = useCallback(() => {
+    setInviteOpen(true);
+    setDropdownOpen(false);
+  }, []);
+
   const headerName = activeWorkspace ? activeWorkspace.name : '';
 
   return (
@@ -66,6 +77,11 @@ export default function TopBar({
           <div className="ws-header" onClick={() => setDropdownOpen(o => !o)}>
             <div className="ws-avatar">{headerName.charAt(0).toUpperCase()}</div>
             <span className="ws-name">{headerName}</span>
+            {workspaceRole === 'viewer' && (
+              <span className="ws-readonly-badge" style={{ fontSize: '0.65rem', padding: '1px 4px', background: '#3d3d3d', borderRadius: '3px', color: '#ffc107', marginLeft: '6px', whiteSpace: 'nowrap' }}>
+                🔒 Read-only
+              </span>
+            )}
             <FaChevronDown className="ws-caret" />
           </div>
           {dropdownOpen && (
@@ -76,6 +92,11 @@ export default function TopBar({
               onWorkspaceCreated={handleWorkspaceCreated}
               onWorkspaceDeleted={onWorkspaceDeleted}
               onClose={() => setDropdownOpen(false)}
+              pendingInvitations={pendingInvitations}
+              onAcceptInvitation={onAcceptInvitation}
+              onDeclineInvitation={onDeclineInvitation}
+              onInviteClick={handleInviteTrigger}
+              workspaceRole={workspaceRole}
             />
           )}
         </div>
@@ -141,6 +162,13 @@ export default function TopBar({
         <SignOutModal
           onCancel={() => setConfirmOpen(false)}
           onConfirm={handleConfirmLogout}
+        />
+      )}
+
+      {inviteOpen && activeWorkspace && (
+        <InviteModal
+          workspace={activeWorkspace}
+          onClose={() => setInviteOpen(false)}
         />
       )}
     </>

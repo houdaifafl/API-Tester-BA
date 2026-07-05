@@ -10,4 +10,5 @@ class Workspace(db.Model):
 
     collections = db.relationship('Collection', backref='workspace', lazy=True, cascade='all, delete-orphan')
     history_entries = db.relationship('History', back_populates='workspace', lazy=True, cascade='all, delete-orphan')
-
+    memberships = db.relationship('WorkspaceMember', back_populates='workspace', lazy=True, cascade='all, delete-orphan')
+    invitations = db.relationship('Invitation', back_populates='workspace', lazy=True, cascade='all, delete-orphan')

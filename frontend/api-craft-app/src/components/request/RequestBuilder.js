@@ -55,7 +55,7 @@ function buildBody(bodyState) {
   return Object.keys(out).length ? out : null;
 }
 
-export default function RequestBuilder({ request, initialResponseHeight, onResponseHeightChange, savedState, onStateChange, onMethodChange, onSaveRequest, onExecute }) {
+export default function RequestBuilder({ request, initialResponseHeight, onResponseHeightChange, savedState, onStateChange, onMethodChange, onSaveRequest, onExecute, workspaceRole = 'viewer' }) {
   const [activeTab, setActiveTab] = useState(savedState?.activeSubTab ?? 'Docs');
   const [url, setUrl]             = useState(savedState?.url ?? '');
   const [response, setResponse]   = useState(savedState?.response ?? null);
@@ -156,7 +156,19 @@ export default function RequestBuilder({ request, initialResponseHeight, onRespo
           <span className="breadcrumb-request">{request.label}</span>
         </div>
         {request.type !== 'history' && (
-          <button className="req-save-btn" onClick={handleSave} disabled={saving}>
+          <button
+            className="req-save-btn"
+            onClick={() => {
+              if (workspaceRole === 'viewer') {
+                window.dispatchEvent(new CustomEvent('show-unauthorized-alert', {
+                  detail: { message: "Action forbidden: Viewers cannot save request changes." }
+                }));
+              } else {
+                handleSave();
+              }
+            }}
+            disabled={saving}
+          >
             <FaSave className="save-icon" />
             {saving ? 'Saving…' : 'Save'}
           </button>

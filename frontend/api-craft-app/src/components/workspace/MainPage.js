@@ -2,10 +2,12 @@ import React, { useState, useRef, useEffect, useCallback } from 'react';
 import TopBar from './TopBar';
 import Sidebar from './Sidebar';
 import MainPanel from './MainPanel';
+import AlertModal from '../shared/AlertModal';
 import useWorkspace from '../../hooks/useWorkspace';
 import useCollections from '../../hooks/useCollections';
 import useWorkspaceTabs from '../../hooks/useWorkspaceTabs';
 import useHistory from '../../hooks/useHistory';
+import useInvitations from '../../hooks/useInvitations';
 import './MainPage.css';
 
 const MIN_SIDEBAR_WIDTH = 150;
@@ -13,17 +15,34 @@ const MIN_SIDEBAR_WIDTH = 150;
 export default function MainPage() {
   const [sidebarWidth, setSidebarWidth] = useState(() => window.innerWidth * 0.17);
   const isResizing = useRef(false);
+  const [alertMessage, setAlertMessage] = useState(null);
+
+  useEffect(() => {
+    const handleAlert = (e) => {
+      setAlertMessage(e.detail.message);
+    };
+    window.addEventListener('show-unauthorized-alert', handleAlert);
+    return () => window.removeEventListener('show-unauthorized-alert', handleAlert);
+  }, []);
 
   const {
     workspaces,
     activeWorkspace,
+    workspaceRole,
     workspaceError,
     workspaceLoading,
     workspaceIdParam,
     handleSwitch,
     handleWorkspaceCreated,
     handleWorkspaceDeleted,
+    reloadWorkspaces,
   } = useWorkspace();
+
+  const {
+    pendingInvitations,
+    handleAccept,
+    handleDecline,
+  } = useInvitations(reloadWorkspaces);
 
   const {
     openTabs,
@@ -124,6 +143,10 @@ export default function MainPage() {
         activeTabId={activeTabId}
         onTabChange={handleTabChange}
         onTabClose={handleTabClose}
+        pendingInvitations={pendingInvitations}
+        onAcceptInvitation={handleAccept}
+        onDeclineInvitation={handleDecline}
+        workspaceRole={workspaceRole}
       />
       <div className="workspace-body">
         <Sidebar
@@ -141,6 +164,7 @@ export default function MainPage() {
           history={history}
           onHistoryOpen={handleHistoryOpen}
           activeHistoryId={activeHistoryId}
+          workspaceRole={workspaceRole}
         />
         <MainPanel
           activeTab={activeTab}
@@ -149,9 +173,10 @@ export default function MainPage() {
           onMethodChange={handleRequestMethodChange}
           onSaveRequest={handleSaveRequest}
           onExecute={addHistoryItem}
+          workspaceRole={workspaceRole}
         />
       </div>
+      <AlertModal message={alertMessage} onClose={() => setAlertMessage(null)} />
     </div>
   );
 }
-

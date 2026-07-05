@@ -4,7 +4,19 @@ import { createWorkspace, deleteWorkspace } from '../../services/workspaceServic
 import { useAuth } from '../../contexts/AuthContext';
 import './WorkspaceDropdown.css';
 
-export default function WorkspaceDropdown({ workspaces, activeWorkspace, onSwitch, onWorkspaceCreated, onWorkspaceDeleted, onClose }) {
+export default function WorkspaceDropdown({
+  workspaces,
+  activeWorkspace,
+  onSwitch,
+  onWorkspaceCreated,
+  onWorkspaceDeleted,
+  onClose,
+  pendingInvitations = [],
+  onAcceptInvitation,
+  onDeclineInvitation,
+  onInviteClick,
+  workspaceRole = 'viewer',
+}) {
   const { user } = useAuth();
   const { email, userId } = user;
 
@@ -51,8 +63,32 @@ export default function WorkspaceDropdown({ workspaces, activeWorkspace, onSwitc
 
       {/* Action buttons */}
       <div className="wsd-actions">
-        <button className="wsd-action-btn"><FaCog className="wsd-action-icon" /> Settings</button>
-        <button className="wsd-action-btn"><FaUserFriends className="wsd-action-icon" /> Invite members</button>
+        <button
+          className="wsd-action-btn"
+          onClick={() => {
+            if (workspaceRole !== 'owner') {
+              window.dispatchEvent(new CustomEvent('show-unauthorized-alert', {
+                detail: { message: "Action forbidden: Only workspace owners can modify settings." }
+              }));
+            }
+          }}
+        >
+          <FaCog className="wsd-action-icon" /> Settings
+        </button>
+        <button
+          className="wsd-action-btn"
+          onClick={(e) => {
+            if (workspaceRole !== 'owner') {
+              window.dispatchEvent(new CustomEvent('show-unauthorized-alert', {
+                detail: { message: "Action forbidden: Only workspace owners can invite members." }
+              }));
+            } else {
+              onInviteClick(e);
+            }
+          }}
+        >
+          <FaUserFriends className="wsd-action-icon" /> Invite members
+        </button>
       </div>
 
       <hr className="wsd-divider" />
@@ -67,7 +103,20 @@ export default function WorkspaceDropdown({ workspaces, activeWorkspace, onSwitc
             <div className="wsd-item-avatar">{ws.name.charAt(0).toUpperCase()}</div>
             <span className="wsd-item-name">{ws.name}</span>
             {!ws.is_default && (
-              <button className="wsd-delete-btn" onClick={(e) => handleDelete(e, ws)} title="Delete workspace">
+              <button
+                className="wsd-delete-btn"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  if (!ws.is_owner) {
+                    window.dispatchEvent(new CustomEvent('show-unauthorized-alert', {
+                      detail: { message: "Action forbidden: Only workspace owners can delete workspaces." }
+                    }));
+                  } else {
+                    handleDelete(e, ws);
+                  }
+                }}
+                title="Delete workspace"
+              >
                 <FaMinus />
               </button>
             )}
@@ -95,6 +144,48 @@ export default function WorkspaceDropdown({ workspaces, activeWorkspace, onSwitc
         <button className="wsd-new-btn" onClick={() => setCreating(true)}>
           <FaPlus className="wsd-new-icon" /> New workspace
         </button>
+      )}
+
+      {/* Pending Workspace Invitations */}
+      {pendingInvitations.length > 0 && (
+        <>
+          <hr className="wsd-divider" />
+          <div className="wsd-section-title">Pending Invitations</div>
+          <ul className="wsd-invitations-list">
+            {pendingInvitations.map(inv => (
+              <li key={inv.id} className="wsd-invitation-item">
+                <div className="wsd-invitation-details">
+                  <span className="wsd-invitation-ws-name" title={inv.workspace_name}>
+                    {inv.workspace_name}
+                  </span>
+                  <span className="wsd-invitation-sender">
+                    invited by {inv.inviter_username}
+                  </span>
+                </div>
+                <div className="wsd-invitation-actions">
+                  <button
+                    className="wsd-invitation-btn wsd-invitation-btn--accept"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onAcceptInvitation(inv.id);
+                    }}
+                  >
+                    Accept
+                  </button>
+                  <button
+                    className="wsd-invitation-btn wsd-invitation-btn--decline"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onDeclineInvitation(inv.id);
+                    }}
+                  >
+                    Decline
+                  </button>
+                </div>
+              </li>
+            ))}
+          </ul>
+        </>
       )}
 
     </div>

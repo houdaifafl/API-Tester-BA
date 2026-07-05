@@ -8,7 +8,8 @@ from routes.auth_routes import auth_bp
 from routes.workspace_routes import workspace_bp
 from routes.request_routes import request_bp
 from routes.history_routes import history_bp
-from models import collection_model, request_model, user_model, workspace_model, history_model
+from routes.invitation_routes import invitation_bp
+from models import collection_model, request_model, user_model, workspace_model, history_model, workspace_member_model, invitation_model
 
 def safe_add_column(conn, table, column, col_type, logger):
     try:
@@ -36,10 +37,27 @@ def create_app():
         db.create_all()
         # Add columns to requests and history tables if they were created before these columns existed
         with db.engine.connect() as conn:
+            # Purge legacy invitations
+            try:
+                conn.execute(text("DELETE FROM invitations"))
+                conn.commit()
+            except Exception as e:
+                app.logger.warning(f"Error purging legacy invitations: {e}")
+
             safe_add_column(conn, 'requests', 'auth', 'NVARCHAR(MAX)', app.logger)
             safe_add_column(conn, 'history', 'status', 'INT', app.logger)
             safe_add_column(conn, 'history', 'response_time', 'FLOAT', app.logger)
             safe_add_column(conn, 'history', 'data', 'NVARCHAR(MAX)', app.logger)
+            safe_add_column(conn, 'invitations', 'role', 'VARCHAR(20)', app.logger)
+            safe_add_column(conn, 'workspace_members', 'role', 'VARCHAR(20)', app.logger)
+
+            # Backfill existing NULL roles
+            try:
+                conn.execute(text("UPDATE workspace_members SET role = 'viewer' WHERE role IS NULL"))
+                conn.execute(text("UPDATE invitations SET role = 'viewer' WHERE role IS NULL"))
+                conn.commit()
+            except Exception as e:
+                app.logger.warning(f"Error backfilling roles: {e}")
 
     # Register Blueprints
     app.register_blueprint(api_client_bp)
@@ -48,6 +66,7 @@ def create_app():
     app.register_blueprint(workspace_bp)
     app.register_blueprint(request_bp)
     app.register_blueprint(history_bp)
+    app.register_blueprint(invitation_bp)
 
 
     # Simple test route

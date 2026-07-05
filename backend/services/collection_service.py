@@ -41,28 +41,45 @@ def get_collections_by_workspace(workspace_id):
     return [_serialize(c) for c in collections]
 
 
-def add_collection(workspace_id):
+def add_collection(workspace_id, user_id):
+    from services.workspace_service import check_user_write_access
+    allowed, err = check_user_write_access(workspace_id, user_id)
+    if not allowed:
+        return None, err
+
     collection = Collection(name='New Collection', workspace_id=workspace_id, is_default=False)
     db.session.add(collection)
     db.session.commit()
     return _serialize(collection), None
 
 
-def rename_collection(collection_id, new_name):
-    col = Collection.query.get(collection_id)
+def rename_collection(collection_id, new_name, user_id):
+    col = db.session.get(Collection, collection_id)
     if not col:
         return None, 'Collection not found'
+
+    from services.workspace_service import check_user_write_access
+    allowed, err = check_user_write_access(col.workspace_id, user_id)
+    if not allowed:
+        return None, err
+
     col.name = new_name
     db.session.commit()
     return _serialize(col), None
 
 
-def delete_collection(collection_id):
-    col = Collection.query.get(collection_id)
+def delete_collection(collection_id, user_id):
+    col = db.session.get(Collection, collection_id)
     if not col:
         return None, 'Collection not found'
     if col.is_default:
         return None, 'Cannot delete the default collection'
+
+    from services.workspace_service import check_user_write_access
+    allowed, err = check_user_write_access(col.workspace_id, user_id)
+    if not allowed:
+        return None, err
+
     db.session.delete(col)
     db.session.commit()
     return True, None

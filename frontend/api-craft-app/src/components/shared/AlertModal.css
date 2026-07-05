@@ -1,0 +1,98 @@
+.alert-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background-color: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(4px);
+  z-index: 99999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: alertFadeIn 0.2s ease-out;
+}
+
+.alert-modal-content {
+  background: #1e1e1e;
+  border: 1px solid #ffc107;
+  border-radius: 8px;
+  padding: 20px 24px;
+  min-width: 320px;
+  max-width: 420px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+  animation: alertSlideUp 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  color: #fff;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  user-select: none;
+  cursor: default;
+}
+
+.alert-modal-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.alert-modal-icon {
+  color: #ffc107;
+  font-size: 1.5rem;
+}
+
+.alert-modal-title {
+  margin: 0;
+  font-size: 1.15rem;
+  font-weight: 600;
+  color: #ffc107;
+}
+
+.alert-modal-message {
+  margin: 0 0 24px 0;
+  font-size: 0.95rem;
+  line-height: 1.5;
+  color: #dddddd;
+  user-select: text;
+  cursor: text;
+}
+
+.alert-modal-actions {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.alert-modal-btn {
+  background: #ffc107;
+  color: #000;
+  border: none;
+  padding: 8px 20px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background 0.2s ease, transform 0.1s ease;
+}
+
+.alert-modal-btn:hover {
+  background: #e0a800;
+}
+
+.alert-modal-btn:active {
+  transform: scale(0.97);
+}
+
+@keyframes alertFadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes alertSlideUp {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
