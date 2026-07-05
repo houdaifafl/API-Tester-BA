@@ -1,169 +1,151 @@
-# Implement Workspace-Level Roles and Permissions
+# Implement Leave Workspace (Member Self-Removal)
 
-This plan details the implementation of Workspace-Level Roles (Owner, Editor, Viewer) and the visual and functional authorization restrictions required for standard collaborative workspaces.
+A member (Editor or Viewer) who accepted a workspace invitation must be able to voluntarily leave that workspace at any time. Leaving removes their `WorkspaceMember` record and revokes all access to that workspace immediately.
 
 ---
 
 ## User Review Required
 
 > [!IMPORTANT]
-> **Database Migration Cleanup**: All existing invitation records in the `invitations` table must be deleted during database migration/startup to ensure data integrity and avoid schema issues with the new `role` field.
+> **Owner cannot leave**: The workspace owner (`Workspace.user_id`) must not be able to leave their own workspace — only delete it. The backend must enforce this.
 >
-> **Visual Indicator**: The frontend will render a visible "Read-only" badge icon next to the workspace selection name if the user's role is `viewer`.
+> **Immediate Effect**: Once a member leaves, the frontend must remove the workspace from their list and navigate them to their next available workspace.
 >
-> **UI Actions Restrictions & User Alerts**:
-> * All buttons and options (e.g. "+" add buttons, Save buttons, context menus, Settings, Invite members, and delete buttons) will remain visible in the UI for all roles to keep the interface identical.
-> * If a user tries to perform a restricted action (e.g. Viewer clicks Save or "+", or Editor/Viewer clicks Invite members or Settings/Delete Workspace), the app will intercept the click and display a popup alert (Meldung) informing them of the restriction.
-> * If the user encounters a `403 Forbidden` on loading a workspace (e.g. by typing a forbidden workspace ID in the browser URL), the app will show the popup alert and immediately revert/navigate the user back to their active/default workspace rather than loading a blank "Access denied" page at the forbidden URL.
+> **UI Placement**: The "Leave workspace" action should be visible inside the `WorkspaceDropdown` for non-owners (Editor and Viewer), displayed next to the workspace entry in the workspace list — distinct from the existing delete (🗑) button shown to owners.
 
 ---
 
-## Workspace Role Authorization Edge Cases (Triggering Alert Popup)
+## Design Review
 
-For any user (specifically Viewers trying to bypass UI restrictions, or non-owners trying to perform admin tasks), the following actions are checked at the database/service layer and will return a `403 Forbidden` response, triggering the global frontend popup alert:
+### 2.1 Architecture Rationale
+A new `DELETE /api/workspaces/<workspace_id>/leave` endpoint is the cleanest fit. It acts on the calling user's own membership row — no resource ID needed other than the workspace itself (already in the URL). This keeps the route thin and the service focused.
 
-1. **Adding a Collection**: Trying to call `POST /api/workspaces/{workspace_id}/collections` on a workspace where the user is a Viewer.
-2. **Renaming a Collection**: Trying to call `PATCH /api/collections/{collection_id}` where the user is a Viewer.
-3. **Deleting a Collection**: Trying to call `DELETE /api/collections/{collection_id}` where the user is a Viewer.
-4. **Creating a Request**: Trying to call `POST /api/collections/{collection_id}/requests` where the user is a Viewer.
-5. **Saving a Request Configuration**: Trying to call `PATCH /api/requests/{request_id}` to save method, URL, params, headers, or body where the user is a Viewer.
-6. **Renaming a Request**: Trying to call `PATCH /api/requests/{request_id}` to change the label where the user is a Viewer.
-7. **Deleting a Request**: Trying to call `DELETE /api/requests/{request_id}` where the user is a Viewer.
-8. **Sending Workspace Invitations**: Trying to call `POST /api/workspaces/{workspace_id}/invitations` where the user is a Viewer or Editor (only Owners are authorized).
-9. **Deleting a Workspace**: Trying to call `DELETE /api/workspaces/{workspace_id}` where the user is not the Owner (Editors/Viewers cannot delete workspaces).
-10. **Accessing a Forbidden Workspace**: Trying to load `GET /api/workspaces/{workspace_id}` for a workspace the user is not a member or owner of. In this specific case, the alert popup is displayed, and the frontend automatically reverts the browser URL back to the user's default active workspace.
+The route lives in the existing `workspace_bp` blueprint because leaving is a workspace-level membership operation. No new blueprint is needed.
+
+### 2.2 State Ownership
+| State | Owner | Layer |
+|---|---|---|
+| `workspaces` list | `useWorkspace` hook | Feature-level |
+| Navigation after leave | `useWorkspace.handleWorkspaceDeleted` | Feature-level |
+| Leave confirmation state | `WorkspaceDropdown` | Local UI |
+
+`handleWorkspaceDeleted` already handles removing a workspace from the local list and navigating to the fallback. We reuse it on the frontend after a successful leave.
+
+### 2.3 Service Ownership
+- **Backend**: New `leave_workspace(workspace_id, user_id)` function in `workspace_service.py`. Finds and deletes the calling user's `WorkspaceMember` row. Returns error if the user is the owner or not a member.
+- **Frontend**: New `leaveWorkspace(workspaceId)` function in `workspaceService.js` calling `DELETE /api/workspaces/{id}/leave`.
+
+### 2.4 Testing Strategy
+- **Happy path**: Editor leaves workspace → 200, membership row deleted.
+- **Error path**: Owner tries to leave → 403 Forbidden.
+- **Error path**: Non-member tries to leave → 404 Not Found.
+- **Frontend**: Smoke test that `WorkspaceDropdown` renders the leave button for non-owners.
+
+### 2.5 Scalability Concerns
+None significant. The delete is a single-row operation on `workspace_members` by `(workspace_id, user_id)` index. No cascades.
 
 ---
 
 ## Open Questions
-
-None. The user has confirmed the requirements regarding legacy invitation deletion and visual badges.
+None.
 
 ---
 
 ## Proposed Changes
 
-### Database Layer
-
-#### [MODIFY] [invitation_model.py](file:///c:/Users/hlanj/Bachelor%20info/Bachelor%20Arbeit/API%20tester/backend/models/invitation_model.py)
-* Add `role = db.Column(db.String(20), nullable=False, default='viewer')` column.
-
-#### [MODIFY] [workspace_member_model.py](file:///c:/Users/hlanj/Bachelor%20info/Bachelor%20Arbeit/API%20tester/backend/models/workspace_member_model.py)
-* Add `role = db.Column(db.String(20), nullable=False, default='viewer')` column.
-
-#### [MODIFY] [app.py](file:///c:/Users/hlanj/Bachelor%20info/Bachelor%20Arbeit/API%20tester/backend/app.py)
-* Add database startup logic inside `create_app()`:
-  * Purge all pre-existing records in the `invitations` table before applying schema additions.
-  * Auto-patch SQLite / SQL Server schemas to add the `role` column to `invitations` and `workspace_members`.
-
----
-
 ### Backend Service Layer
 
-#### [MODIFY] [invitation_service.py](file:///c:/Users/hlanj/Bachelor%20info/Bachelor%20Arbeit/API%20tester/backend/services/invitation_service.py)
-* Update `create_invitation(workspace_id, inviter_id, invitee_username, role='viewer')`: Validate that `role` is either `'editor'` or `'viewer'`. Write the role value.
-* Update `get_pending_invitations(user_id)`: Include the invitation `role` in the returned payload.
-* Update `accept_invitation(invitation_id, user_id)`: Extract `role` from invitation and add to the created `WorkspaceMember` instance.
-
 #### [MODIFY] [workspace_service.py](file:///c:/Users/hlanj/Bachelor%20info/Bachelor%20Arbeit/API%20tester/backend/services/workspace_service.py)
-* Update `get_workspace_by_id(workspace_id, user_id)`: Query `WorkspaceMember` for members, or return `'owner'` if the user matches `workspace.user_id`. Include `role` in the returned workspace dict.
+* Add `leave_workspace(workspace_id, user_id)`:
+  * Fetch the workspace. If the calling user is the owner (`workspace.user_id == user_id`), return error: owners cannot leave.
+  * Query `WorkspaceMember` for `(workspace_id, user_id)`. If not found, return 404 error.
+  * Delete the membership row and commit.
 
 ---
 
 ### Backend Route Layer
 
-#### [MODIFY] [invitation_routes.py](file:///c:/Users/hlanj/Bachelor%20info/Bachelor%20Arbeit/API%20tester/backend/routes/invitation_routes.py)
-* Update `create_invitation_route(workspace_id)`: Parse `role` from JSON request body, default to `'viewer'`, and validate value before invoking service.
+#### [MODIFY] [workspace_routes.py](file:///c:/Users/hlanj/Bachelor%20info/Bachelor%20Arbeit/API%20tester/backend/routes/workspace_routes.py)
+* Add `DELETE /api/workspaces/<workspace_id>/leave` (JWT protected):
+  * Call `leave_workspace(workspace_id, user_id)`.
+  * Return 200 on success, 403 if owner, 404 if not a member.
 
-#### [MODIFY] [collection_routes.py](file:///c:/Users/hlanj/Bachelor%20info/Bachelor%20Arbeit/API%20tester/backend/routes/collection_routes.py)
-* Add permission check: Deny collection write/edit actions (`POST`, `PATCH`, `DELETE`) with `403 Forbidden` if user is a viewer.
+---
 
-#### [MODIFY] [request_routes.py](file:///c:/Users/hlanj/Bachelor%20info/Bachelor%20Arbeit/API%20tester/backend/routes/request_routes.py)
-* Add permission check: Deny request write/edit/rename actions (`POST`, `PATCH`, `DELETE`) with `403 Forbidden` if user is a viewer.
+### Backend OpenAPI
+
+#### [MODIFY] [openapi.yaml](file:///c:/Users/hlanj/Bachelor%20info/Bachelor%20Arbeit/API%20tester/backend/openapi.yaml)
+* Add entry for `DELETE /api/workspaces/{workspace_id}/leave` with 200, 403, 404 responses.
 
 ---
 
 ### Frontend Service Layer
 
-#### [MODIFY] [api.js](file:///c:/Users/hlanj/Bachelor%20info/Bachelor%20Arbeit/API%20tester/frontend/api-craft-app/src/services/api.js)
-* Update `authFetch` to intercept any backend response with a status code of `403`. Dispatch a custom `'show-unauthorized-alert'` window event containing the error message to trigger the application's Alert Modal.
-
-#### [MODIFY] [invitationService.js](file:///c:/Users/hlanj/Bachelor%20info/Bachelor%20Arbeit/API%20tester/frontend/api-craft-app/src/services/invitationService.js)
-* Update `inviteUserToWorkspace(workspaceId, username, role)`: Send `role` inside the payload.
-
----
-
-### Frontend Hook & State Layer
-
-#### [MODIFY] [useWorkspace.js](file:///c:/Users/hlanj/Bachelor%20info/Bachelor%20Arbeit/API%20tester/frontend/api-craft-app/src/hooks/useWorkspace.js)
-* Retrieve and expose `workspaceRole` from active workspace metadata.
-* Update `getWorkspaceById` catch block: if error status is `403`, trigger fallback workspace list loading, and automatically navigate/revert the user back to their default or first available workspace.
+#### [MODIFY] [workspaceService.js](file:///c:/Users/hlanj/Bachelor%20info/Bachelor%20Arbeit/API%20tester/frontend/api-craft-app/src/services/workspaceService.js)
+* Add `leaveWorkspace(workspaceId)` → `DELETE /api/workspaces/{id}/leave` (via `authFetch`, JWT protected).
 
 ---
 
 ### Frontend UI Components
 
-#### [NEW] [AlertModal.js](file:///c:/Users/hlanj/Bachelor%20info/Bachelor%20Arbeit/API%20tester/frontend/api-craft-app/src/components/shared/AlertModal.js)
-#### [NEW] [AlertModal.css](file:///c:/Users/hlanj/Bachelor%20info/Bachelor%20Arbeit/API%20tester/frontend/api-craft-app/src/components/shared/AlertModal.css)
-* Build a custom modal React component styled with dark glassmorphism styling, a warning triangle icon, clear error messages, and a dismiss button.
-
-#### [MODIFY] [MainPage.js](file:///c:/Users/hlanj/Bachelor%20info/Bachelor%20Arbeit/API%20tester/frontend/api-craft-app/src/components/workspace/MainPage.js)
-* Setup a listener for the `'show-unauthorized-alert'` custom event on mount, store the message in an active state, and render the custom `<AlertModal>` when the state is active.
-
-#### [MODIFY] [InviteModal.js](file:///c:/Users/hlanj/Bachelor%20info/Bachelor%20Arbeit/API%20tester/frontend/api-craft-app/src/components/workspace/InviteModal.js)
-* Add role selection select/dropdown (options: "Editor", "Viewer") default value "editor".
-
 #### [MODIFY] [WorkspaceDropdown.js](file:///c:/Users/hlanj/Bachelor%20info/Bachelor%20Arbeit/API%20tester/frontend/api-craft-app/src/components/workspace/WorkspaceDropdown.js)
-* Keep "Invite members" and "Settings" buttons always visible.
-* Keep workspace delete buttons always visible.
-* If a user with `workspaceRole !== 'owner'` clicks "Invite members", "Settings", or deletes a workspace, intercept and trigger the custom `'show-unauthorized-alert'` event.
+* For each workspace in the list where `ws.is_owner === false`, show a **"Leave"** button (e.g. `FaSignOutAlt` icon) next to the workspace name — distinct from the delete (🗑) button shown to owners.
+* On click, show a confirmation prompt using our custom `AlertModal` or a simple inline confirmation state, then call `leaveWorkspace(ws.id)` and invoke `onWorkspaceDeleted(ws.id)` on success.
 
-#### [MODIFY] [Sidebar.js](file:///c:/Users/hlanj/Bachelor%20info/Bachelor%20Arbeit/API%20tester/frontend/api-craft-app/src/components/workspace/Sidebar.js)
-* Keep collection and request "+" add buttons always visible.
-* Keep context menus (Rename/Delete) always visible.
-* If `workspaceRole === 'viewer'`:
-  * Intercept collection/request creation clicks, renaming triggers, or context menu deletes, and trigger the custom `'show-unauthorized-alert'` event with a descriptive warning message.
-  * Render the "Read-only" badge next to the workspace selection name.
-
-#### [MODIFY] [TopBar.js](file:///c:/Users/hlanj/Bachelor%20info/Bachelor%20Arbeit/API%20tester/frontend/api-craft-app/src/components/workspace/TopBar.js)
-* Render "Read-only" badge next to workspace selector name.
-
-#### [MODIFY] [RequestBuilder.js](file:///c:/Users/hlanj/Bachelor%20info/Bachelor%20Arbeit/API%20tester/frontend/api-craft-app/src/components/request/RequestBuilder.js)
-* Keep "Save" button always visible.
-* If `workspaceRole === 'viewer'` and the user clicks "Save", intercept and trigger the custom `'show-unauthorized-alert'` event, and block the save action.
+#### [MODIFY] [WorkspaceDropdown.css](file:///c:/Users/hlanj/Bachelor%20info/Bachelor%20Arbeit/API%20tester/frontend/api-craft-app/src/components/workspace/WorkspaceDropdown.css)
+* Style the leave button (`.wsd-leave-btn`) visually distinct from the delete button — use a muted warning color (e.g. amber/orange) rather than red.
 
 ---
 
 ## API Contract Changes
 
-### `POST /api/workspaces/<workspace_id>/invitations`
-* Request Body:
+### `DELETE /api/workspaces/<workspace_id>/leave`
+* **Auth**: Bearer JWT token required.
+* **Response (200 OK)**:
   ```json
-  {
-    "username": "invitee_username",
-    "role": "editor" // or "viewer"
-  }
+  { "message": "You have left the workspace." }
   ```
-* Response (201 Created):
+* **Response (403 Forbidden)**:
   ```json
-  {
-    "message": "Invitation sent successfully",
-    "invitation_id": 4
-  }
+  { "error": "Workspace owners cannot leave their own workspace." }
   ```
-* Response (400 Bad Request):
+* **Response (404 Not Found)**:
   ```json
-  {
-    "error": "Invalid role specified"
-  }
+  { "error": "Membership not found." }
   ```
 
 ---
 
 ## OpenAPI Spec Additions
-Modify [openapi.yaml](file:///c:/Users/hlanj/Bachelor%20info/Bachelor%20Arbeit/API%20tester/backend/openapi.yaml):
-* Update `/api/workspaces/{workspace_id}/invitations` path definitions:
-  * Add optional `role` schema parameter (string, enum: `['editor', 'viewer']`, default `'viewer'`) inside requestBody properties.
+
+```yaml
+/api/workspaces/{workspace_id}/leave:
+  delete:
+    summary: Leave a workspace as a member
+    tags: [Workspaces]
+    security:
+      - BearerAuth: []
+    parameters:
+      - in: path
+        name: workspace_id
+        required: true
+        schema:
+          type: integer
+    responses:
+      '200':
+        description: Successfully left workspace
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                message:
+                  type: string
+      '403':
+        description: Owner cannot leave their own workspace
+      '404':
+        description: Membership not found
+```
 
 ---
 
@@ -175,14 +157,13 @@ None.
 ## Verification Plan
 
 ### Automated Tests
-* Run backend tests: `pytest backend/tests/` (extend tests in `test_invitations.py`, `test_workspaces.py` to cover viewer role restrictions).
-* Run frontend smoke tests: `npm test` inside `frontend/api-craft-app`.
+* Add tests in `backend/tests/test_workspaces.py`:
+  * `TestLeaveWorkspace` class with happy path, owner-forbidden, and non-member-404 cases.
+* Run: `pytest backend/tests/`
 
 ### Manual Verification
-1. Log in as User A. Create workspace. Verify role is `'owner'`.
-2. Invite User B as `'viewer'`.
-3. Log in as User B, accept invitation. Switch to workspace.
-4. Verify User B sees "Read-only" badge, cannot save requests, cannot add collections.
-5. Verify User B can execute requests successfully.
-6. Verify API prevents raw HTTP updates (e.g. POST collections) from User B.
-7. Invite User C as `'editor'`. Verify User C can edit requests but cannot invite new members.
+1. Log in as `editor_user`, open the workspace dropdown.
+2. Verify a **"Leave"** button appears next to the shared workspace.
+3. Click **"Leave"** and confirm. The workspace disappears from the list.
+4. Verify `editor_user` can no longer access that workspace (403).
+5. Log in as `owner_user` and verify the Leave button does NOT appear for their own workspaces.

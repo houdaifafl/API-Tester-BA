@@ -1,5 +1,5 @@
 from flask import Blueprint, request, jsonify, g
-from services.workspace_service import get_user_workspaces, create_workspace, delete_workspace, get_workspace_by_id
+from services.workspace_service import get_user_workspaces, create_workspace, delete_workspace, get_workspace_by_id, leave_workspace
 from services.jwt_service import token_required
 
 workspace_bp = Blueprint('workspace', __name__)
@@ -42,3 +42,14 @@ def delete_workspace_route(workspace_id):
         status = 403 if 'default' in error else 404
         return jsonify({'error': error}), status
     return jsonify({'message': 'Workspace deleted'}), 200
+
+@workspace_bp.route('/api/workspaces/<int:workspace_id>/leave', methods=['DELETE'])
+@token_required
+def leave_workspace_route(workspace_id):
+    user_id = g.user_id
+    _, error = leave_workspace(workspace_id, user_id)
+    if error == 'Owners cannot leave their own workspace':
+        return jsonify({'error': error}), 403
+    if error:
+        return jsonify({'error': error}), 404
+    return jsonify({'message': 'You have left the workspace.'}), 200

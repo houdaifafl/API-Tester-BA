@@ -186,3 +186,67 @@ class TestDeleteWorkspace:
         auth_client.delete(f'/api/workspaces/{ws_id}')
         res = auth_client.patch(f'/api/collections/{col_id}', json={'name': 'ghost'})
         assert res.status_code == 404
+
+
+class TestLeaveWorkspace:
+
+    def _create_member_client(self, client, owner_client, ws_id, role='editor'):
+        """Helper: sign up a second user, invite them, accept, return their client."""
+        other = signup_and_login(client, 'member_user', 'member@example.com')
+        other_token = other['token']
+        owner_client.post(
+            f'/api/workspaces/{ws_id}/invitations',
+            json={'username': 'member_user', 'role': role}
+        )
+        # Get the pending invitation id
+        inv_res = client.get('/api/invitations/pending',
+                             headers={'Authorization': f'Bearer {other_token}'})
+        inv_id = inv_res.get_json()[0]['id']
+        client.post(f'/api/invitations/{inv_id}/accept',
+                    headers={'Authorization': f'Bearer {other_token}'})
+        return other_token
+
+    def test_editor_can_leave_workspace(self, client, auth_client, auth_data):
+        ws_id = auth_data['default_workspace_id']
+        other_token = self._create_member_client(client, auth_client, ws_id, role='editor')
+        res = client.delete(f'/api/workspaces/{ws_id}/leave',
+                            headers={'Authorization': f'Bearer {other_token}'})
+        assert res.status_code == 200
+        assert res.get_json()['message'] == 'You have left the workspace.'
+
+    def test_viewer_can_leave_workspace(self, client, auth_client, auth_data):
+        ws_id = auth_data['default_workspace_id']
+        other_token = self._create_member_client(client, auth_client, ws_id, role='viewer')
+        res = client.delete(f'/api/workspaces/{ws_id}/leave',
+                            headers={'Authorization': f'Bearer {other_token}'})
+        assert res.status_code == 200
+        assert res.get_json()['message'] == 'You have left the workspace.'
+
+    def test_owner_cannot_leave_workspace(self, auth_client, auth_data):
+        ws_id = auth_data['default_workspace_id']
+        res = auth_client.delete(f'/api/workspaces/{ws_id}/leave')
+        assert res.status_code == 403
+        assert 'owners' in res.get_json()['error'].lower()
+
+    def test_non_member_leave_returns_404(self, client, auth_data):
+        other = signup_and_login(client, 'stranger', 'stranger@example.com')
+        other_token = other['token']
+        ws_id = auth_data['default_workspace_id']
+        res = client.delete(f'/api/workspaces/{ws_id}/leave',
+                            headers={'Authorization': f'Bearer {other_token}'})
+        assert res.status_code == 404
+
+    def test_workspace_inaccessible_after_leave(self, client, auth_client, auth_data):
+        ws_id = auth_data['default_workspace_id']
+        other_token = self._create_member_client(client, auth_client, ws_id, role='editor')
+        client.delete(f'/api/workspaces/{ws_id}/leave',
+                      headers={'Authorization': f'Bearer {other_token}'})
+        res = client.get(f'/api/workspaces/{ws_id}',
+                         headers={'Authorization': f'Bearer {other_token}'})
+        assert res.status_code == 403
+
+    def test_missing_token_returns_401(self, client, auth_data):
+        ws_id = auth_data['default_workspace_id']
+        res = client.delete(f'/api/workspaces/{ws_id}/leave')
+        assert res.status_code == 401
+

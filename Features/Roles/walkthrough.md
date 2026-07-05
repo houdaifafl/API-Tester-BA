@@ -1,71 +1,49 @@
-# Walkthrough — Workspace-Level Roles
+# Walkthrough — Leave Workspace (Member Self-Removal)
 
-This walkthrough documents the implementation and verification details of the **Workspace-Level Roles** feature.
+This walkthrough documents the implementation and verification of the **Leave Workspace** feature, built on top of the existing Workspace Roles system.
 
 ---
 
 ## 1. Summary of Changes
 
-We implemented a robust system of workspace roles (**Owner**, **Editor**, and **Viewer**) with full database, service, route, and frontend UI synchronization.
+Members (Editors and Viewers) can now voluntarily leave any workspace they joined via an invitation. Leaving immediately deletes their `WorkspaceMember` record, removes the workspace from their list, and navigates them to their next available workspace.
 
 ### 1.1 Backend Implementation
-*   **Database Schema**: Added the `role` column to the `invitations` and `workspace_members` tables.Purged legacy invitation records and backfilled existing members to `'viewer'` dynamically on startup.
-*   **Services**:
-    *   `invitation_service.py`: Restructured invitation checks so only the workspace owner can send invites, and stored/serialized chosen roles.
-    *   `workspace_service.py`: Injected active user roles into workspace metadata and added `check_user_write_access` to gate mutations.
-    *   `collection_service.py` / `request_service.py`: Enforced write-permission gates on collections and requests for Viewers, returning `403 Forbidden` status. Removed deprecated `Model.query.get(id)` syntax.
-*   **Routes**: Modified invitation, collection, and request blueprints to validate role payloads and return proper `403` status codes.
+* **`workspace_service.py`**: Added `leave_workspace(workspace_id, user_id)` — validates that the caller is not the owner, finds their `WorkspaceMember` row, deletes it, and commits.
+* **`workspace_routes.py`**: Added `DELETE /api/workspaces/<workspace_id>/leave` (JWT protected) — calls the service, returns 200 on success, 403 for owners, 404 if not a member.
+* **`openapi.yaml`**: Documented the new endpoint with all response codes (200, 401, 403, 404).
 
 ### 1.2 Frontend Implementation
-*   **Global Interceptor**: Configured `authFetch` in `api.js` to catch any `403` status code globally and trigger a user-facing warning alert.
-*   **Custom Hooks**: Exposed `workspaceRole` in `useWorkspace.js`.
-*   **UI Layout & Permission Checks**:
-    *   `InviteModal.js`: Added a dropdown to select either `'Editor'` or `'Viewer'` when inviting members.
-    *   `Sidebar.js`: Hides adding collections, requests, and context menus for Viewers. Renders a visible lock badge indicator.
-    *   `TopBar.js`: Displays a `🔒 Read-only` badge next to the active workspace name if the user is a Viewer.
-    *   `WorkspaceDropdown.js`: Hides the 'Invite members' and 'Settings' buttons for non-owners, and restricts deleting workspaces to owners.
-    *   `RequestBuilder.js` / `MainPanel.js`: Hides the request 'Save' button for Viewers.
+* **`workspaceService.js`**: Added `leaveWorkspace(workspaceId)` — calls `DELETE /api/workspaces/{id}/leave` via `authFetch`.
+* **`WorkspaceDropdown.js`**: Added amber `FaSignOutAlt` Leave button next to each workspace where `is_owner === false`. Uses a two-click confirmation pattern (`leavingId` state) — first click shows a pulsing "Confirm?" label, second click executes the leave and calls `onWorkspaceDeleted`.
+* **`WorkspaceDropdown.css`**: Added `.wsd-leave-btn` and `.wsd-leave-btn--confirm` styles — amber/orange color scheme with a pulsing keyframe animation on confirmation state.
 
 ---
 
 ## 2. Verification Results
 
-We verified the code using the **three-tier testing strategy**.
-
 ### Tier 1 — Backend pytest Integration Tests
-*   Added 4 new test cases under `backend/tests/test_invitations.py` verifying:
-    *   Restricting invitations to workspace owners (blocking members like Editors from inviting).
-    *   Returning bad request status for invalid invitation roles.
-    *   Creating database membership rows with the matching role on invitation acceptance.
-*   Ran the backend test suite: **150/150 tests passed successfully**.
+Added 6 new test cases under `TestLeaveWorkspace` in `backend/tests/test_workspaces.py`:
 
-### Tier 3 — Browser-Based End-to-End Verification
-We verified the complete flow using a browser subagent executing signup, workspace creation, invitations, acceptance, dashboard layouts, and custom popup alert modals.
+| Test | Scenario | Result |
+|---|---|---|
+| `test_editor_can_leave_workspace` | Happy path — Editor leaves | ✅ 200 |
+| `test_viewer_can_leave_workspace` | Happy path — Viewer leaves | ✅ 200 |
+| `test_owner_cannot_leave_workspace` | Error — Owner blocked | ✅ 403 |
+| `test_non_member_leave_returns_404` | Error — Non-member | ✅ 404 |
+| `test_workspace_inaccessible_after_leave` | Boundary — Access revoked | ✅ 403 |
+| `test_missing_token_returns_401` | Error — No auth | ✅ 401 |
 
-#### E2E Verification Media (Happy Path):
+**Total: 156/156 tests pass.**
 
-````carousel
-![Viewer Collab Space Read-Only](C:/Users/hlanj/.gemini/antigravity-ide/brain/6bda4e92-1556-45ba-983b-df00d2ecc363/viewer_collab_space_readonly_1783269388045.png)
-<!-- slide -->
-![Editor Collab Space Editable](C:/Users/hlanj/.gemini/antigravity-ide/brain/6bda4e92-1556-45ba-983b-df00d2ecc363/editor_collab_space_editable_1783269457558.png)
-<!-- slide -->
-![Editor Custom Collection Created](C:/Users/hlanj/.gemini/antigravity-ide/brain/6bda4e92-1556-45ba-983b-df00d2ecc363/editor_write_permission_success_1783269492418.png)
-<!-- slide -->
-![E2E Video Session](C:/Users/hlanj/.gemini/antigravity-ide/brain/6bda4e92-1556-45ba-983b-df00d2ecc363/workspace_roles_e2e_1783268859147.webp)
-````
+### Frontend Build
+`npm run build` — **Compiled successfully. Zero warnings.**
 
-#### E2E Verification Media (Custom App Modals — Edge Cases):
+---
 
-````carousel
-![Custom Add Collection Modal](C:/Users/hlanj/.gemini/antigravity-ide/brain/6bda4e92-1556-45ba-983b-df00d2ecc363/collections_alert_modal_1783273004054.png)
-<!-- slide -->
-![Custom Invite Members Modal](C:/Users/hlanj/.gemini/antigravity-ide/brain/6bda4e92-1556-45ba-983b-df00d2ecc363/invite_alert_modal_1783273018023.png)
-<!-- slide -->
-![Custom Save Request Modal](C:/Users/hlanj/.gemini/antigravity-ide/brain/6bda4e92-1556-45ba-983b-df00d2ecc363/save_alert_modal_1783273033737.png)
-<!-- slide -->
-![E2E Recording — All Forbidden Action Modals](C:/Users/hlanj/.gemini/antigravity-ide/brain/6bda4e92-1556-45ba-983b-df00d2ecc363/custom_popups_e2e_1783272955847.webp)
-````
+## 3. UX Behaviour
 
-*   **Viewer Visual Layout**: Displays the lock badge next to the collection header and active workspace header. All "+" buttons, context menu triggers, and request Save buttons remain visible. Clicking any of them intercepts the event and pops up our custom application-styled `AlertModal` overlay (e.g. `"Action forbidden: Viewers cannot create collections."`, `"Viewers cannot save request changes."`).
-*   **Editor Visual Layout**: Exposes full collection and request write capabilities. Re-ordering, creating, and renaming items function as normal. Clicking the visible `"Invite members"` or `"Settings"` dropdown options intercepts the action and displays the custom styled `AlertModal` overlay: `"Action forbidden: Only workspace owners can invite members."` / `"Only workspace owners can modify settings."`.
-*   **Workspace Re-routing**: Attempting to load an unauthorized workspace triggers the custom warning modal and immediately re-routes/reverts the browser back to their active workspace dashboard rather than showing a blank error screen.
+- The **Leave** button (↩ icon) appears on hover next to shared workspaces in the workspace dropdown — only for members, never for owners.
+- First click → button turns amber and shows "Confirm?" with a pulsing animation.
+- Second click → `leaveWorkspace()` is called; the workspace disappears from the list and the app navigates to the next available workspace.
+- Owners see no Leave button — only their existing red delete (🗑) button on non-default workspaces.

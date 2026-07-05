@@ -44,3 +44,13 @@ export async function deleteWorkspace(workspaceId, userId) {
   if (!res.ok) throw new Error(data.error);
   return data;
 }
+
+export async function leaveWorkspace(workspaceId) {
+  const res = await authFetch(`/api/workspaces/${workspaceId}/leave`, {
+    method: 'DELETE',
+    skipGlobal403: true,
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error);
+  return data;
+}

@@ -1,6 +1,6 @@
-import React, { useEffect, useRef, useState } from 'react';
-import { FaCog, FaUserFriends, FaPlus, FaMinus } from 'react-icons/fa';
-import { createWorkspace, deleteWorkspace } from '../../services/workspaceService';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
+import { FaCog, FaUserFriends, FaPlus, FaMinus, FaSignOutAlt } from 'react-icons/fa';
+import { createWorkspace, deleteWorkspace, leaveWorkspace } from '../../services/workspaceService';
 import { useAuth } from '../../contexts/AuthContext';
 import './WorkspaceDropdown.css';
 
@@ -22,6 +22,7 @@ export default function WorkspaceDropdown({
 
   const [creating, setCreating] = useState(false);
   const [newName, setNewName] = useState('');
+  const [leavingId, setLeavingId] = useState(null);
   const ref = useRef(null);
 
   useEffect(() => {
@@ -49,6 +50,22 @@ export default function WorkspaceDropdown({
       onWorkspaceDeleted(ws.id);
     } catch {}
   };
+
+  const handleLeave = useCallback(async (e, ws) => {
+    e.stopPropagation();
+    if (leavingId !== ws.id) {
+      setLeavingId(ws.id);
+      return;
+    }
+    try {
+      await leaveWorkspace(ws.id);
+      onWorkspaceDeleted(ws.id);
+    } catch {
+      // silently reset — button should not have been visible for owners
+    } finally {
+      setLeavingId(null);
+    }
+  }, [leavingId, onWorkspaceDeleted]);
 
   const currentName = activeWorkspace ? activeWorkspace.name : '';
 
@@ -102,22 +119,22 @@ export default function WorkspaceDropdown({
           <li key={ws.id} className="wsd-item" onClick={() => onSwitch(ws)}>
             <div className="wsd-item-avatar">{ws.name.charAt(0).toUpperCase()}</div>
             <span className="wsd-item-name">{ws.name}</span>
-            {!ws.is_default && (
+            {!ws.is_default && ws.is_owner && (
               <button
                 className="wsd-delete-btn"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  if (!ws.is_owner) {
-                    window.dispatchEvent(new CustomEvent('show-unauthorized-alert', {
-                      detail: { message: "Action forbidden: Only workspace owners can delete workspaces." }
-                    }));
-                  } else {
-                    handleDelete(e, ws);
-                  }
-                }}
+                onClick={(e) => handleDelete(e, ws)}
                 title="Delete workspace"
               >
                 <FaMinus />
+              </button>
+            )}
+            {!ws.is_owner && (
+              <button
+                className={`wsd-leave-btn${leavingId === ws.id ? ' wsd-leave-btn--confirm' : ''}`}
+                onClick={(e) => handleLeave(e, ws)}
+                title={leavingId === ws.id ? 'Click again to confirm' : 'Leave workspace'}
+              >
+                {leavingId === ws.id ? 'Confirm?' : <FaSignOutAlt />}
               </button>
             )}
           </li>

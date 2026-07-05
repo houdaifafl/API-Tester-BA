@@ -24,7 +24,7 @@ def create_workspace(user_id, name, is_default=False):
     db.session.add(workspace)
     db.session.flush()  # obtain workspace.id before seeding the default collection
     ensure_default_collection(workspace.id)  # creates collection + default requests and commits
-    return {'id': workspace.id, 'name': workspace.name, 'is_default': workspace.is_default}
+    return {'id': workspace.id, 'name': workspace.name, 'is_default': workspace.is_default, 'is_owner': True}
 
 def get_workspace_by_id(workspace_id, user_id):
     workspace = Workspace.query.filter_by(id=workspace_id).first()
@@ -74,3 +74,16 @@ def check_user_write_access(workspace_id, user_id):
         return True, None
         
     return False, 'Forbidden'
+
+def leave_workspace(workspace_id, user_id):
+    workspace = db.session.get(Workspace, workspace_id)
+    if not workspace:
+        return None, 'Workspace not found'
+    if workspace.user_id == user_id:
+        return None, 'Owners cannot leave their own workspace'
+    member = WorkspaceMember.query.filter_by(workspace_id=workspace_id, user_id=user_id).first()
+    if not member:
+        return None, 'Membership not found'
+    db.session.delete(member)
+    db.session.commit()
+    return True, None

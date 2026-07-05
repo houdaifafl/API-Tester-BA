@@ -619,3 +619,50 @@ components:
           type: string
           enum: [editor, viewer]
           example: viewer
+
+  /api/workspaces/{workspace_id}/leave:
+    delete:
+      summary: Leave a workspace as a member (Editor or Viewer)
+      tags: [Workspaces]
+      security:
+        - BearerAuth: []
+      parameters:
+        - in: path
+          name: workspace_id
+          required: true
+          schema:
+            type: integer
+          description: The ID of the workspace to leave
+      responses:
+        '200':
+          description: Successfully left the workspace
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: You have left the workspace.
+        '401':
+          description: Missing or invalid JWT token
+        '403':
+          description: Workspace owners cannot leave their own workspace
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: Owners cannot leave their own workspace
+        '404':
+          description: Membership not found (user is not a member of this workspace)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: Membership not found
