@@ -26,4 +26,6 @@ def login_user(username, password):
     user = User.query.filter_by(username=username).first()
     if not user or not bcrypt.checkpw(password.encode('utf-8'), user.password.encode('utf-8')):
         return None, 'Invalid username or password'
+    if user.is_suspended:
+        return None, 'Your account has been suspended. Please contact the administrator.'
     return user, None

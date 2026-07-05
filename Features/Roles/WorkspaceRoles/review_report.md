@@ -1,4 +1,4 @@
-# Review Report — Workspace-Level Roles
+﻿# Review Report — Workspace-Level Roles
 
 This report documents the review of the **Workspace-Level Roles** implementation against the checklist rules defined in Section 13.2 of `AGENTS.md`.
 

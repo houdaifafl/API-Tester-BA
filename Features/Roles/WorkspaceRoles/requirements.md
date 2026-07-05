@@ -1,4 +1,4 @@
-# APICraft Requirement Document: Workspace-Level Roles & Collaborative Permissions
+﻿# APICraft Requirement Document: Workspace-Level Roles & Collaborative Permissions
 
 This document outlines the requirements and functional specifications for implementing Workspace-Level Roles in the APICraft application. Any implementation plan or code generation must follow these instructions.
 

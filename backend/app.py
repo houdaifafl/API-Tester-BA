@@ -9,7 +9,8 @@ from routes.workspace_routes import workspace_bp
 from routes.request_routes import request_bp
 from routes.history_routes import history_bp
 from routes.invitation_routes import invitation_bp
-from models import collection_model, request_model, user_model, workspace_model, history_model, workspace_member_model, invitation_model
+from routes.admin_routes import admin_bp
+from models import collection_model, request_model, user_model, workspace_model, history_model, workspace_member_model, invitation_model, audit_log_model, notification_model
 
 def safe_add_column(conn, table, column, col_type, logger):
     try:
@@ -51,13 +52,32 @@ def create_app():
             safe_add_column(conn, 'invitations', 'role', 'VARCHAR(20)', app.logger)
             safe_add_column(conn, 'workspace_members', 'role', 'VARCHAR(20)', app.logger)
 
+            is_sqlite = 'sqlite' in str(db.engine.url)
+            bool_col_type = 'BOOLEAN' if is_sqlite else 'BIT'
+            safe_add_column(conn, 'users', 'is_admin', bool_col_type, app.logger)
+            safe_add_column(conn, 'users', 'is_suspended', bool_col_type, app.logger)
+
             # Backfill existing NULL roles
             try:
                 conn.execute(text("UPDATE workspace_members SET role = 'viewer' WHERE role IS NULL"))
                 conn.execute(text("UPDATE invitations SET role = 'viewer' WHERE role IS NULL"))
+                conn.execute(text("UPDATE users SET is_admin = 0 WHERE is_admin IS NULL"))
+                conn.execute(text("UPDATE users SET is_suspended = 0 WHERE is_suspended IS NULL"))
                 conn.commit()
             except Exception as e:
-                app.logger.warning(f"Error backfilling roles: {e}")
+                app.logger.warning(f"Error backfilling roles and admin: {e}")
+
+            # Clean up workspaces owned by admin accounts
+            try:
+                from models.user_model import User
+                from models.workspace_model import Workspace
+                admins = User.query.filter_by(is_admin=True).all()
+                for admin in admins:
+                    for ws in list(admin.workspaces):
+                        db.session.delete(ws)
+                db.session.commit()
+            except Exception as e:
+                app.logger.warning(f"Error cleaning up admin workspaces on startup: {e}")
 
     # Register Blueprints
     app.register_blueprint(api_client_bp)
@@ -67,6 +87,7 @@ def create_app():
     app.register_blueprint(request_bp)
     app.register_blueprint(history_bp)
     app.register_blueprint(invitation_bp)
+    app.register_blueprint(admin_bp)
 
 
     # Simple test route

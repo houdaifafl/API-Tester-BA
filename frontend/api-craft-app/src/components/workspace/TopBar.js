@@ -5,6 +5,7 @@ import { useAuth } from '../../contexts/AuthContext';
 import WorkspaceDropdown from './WorkspaceDropdown';
 import SignOutModal from './SignOutModal';
 import InviteModal from './InviteModal';
+import NotificationBell from '../admin/NotificationBell';
 import { METHOD_COLORS } from '../../constants';
 import './TopBar.css';
 
@@ -134,7 +135,8 @@ export default function TopBar({
           </button>
         </div>
 
-        <div className="top-bar-profile" ref={accountRef}>
+        <div className="top-bar-profile" ref={accountRef} style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <NotificationBell />
           <button
             className="profile-btn"
             title="Account"

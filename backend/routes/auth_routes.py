@@ -41,7 +41,8 @@ def login():
 
     user, error = login_user(username, password)
     if error:
-        return jsonify({'error': error}), 401
+        status = 403 if 'suspended' in error.lower() else 401
+        return jsonify({'error': error}), status
 
     token = encode_token({'user_id': user.id})
     workspaces = get_user_workspaces(user.id)
@@ -53,5 +54,6 @@ def login():
         'username': user.username,
         'user_id': user.id,
         'email': user.email,
+        'is_admin': user.is_admin,
         'default_workspace_id': default_ws['id'] if default_ws else None,
     }), 200

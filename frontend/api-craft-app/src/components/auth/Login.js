@@ -22,8 +22,21 @@ function Login() {
       sessionStorage.setItem('userId', data.user_id);
       sessionStorage.setItem('email', data.email);
       sessionStorage.setItem('token', data.token);
-      setUser({ userId: data.user_id, email: data.email, username: data.username, token: data.token });
-      navigate(`/workspace/${data.default_workspace_id}`);
+      sessionStorage.setItem('isAdmin', data.is_admin ? 'true' : 'false');
+      
+      setUser({
+        userId: data.user_id,
+        email: data.email,
+        username: data.username,
+        token: data.token,
+        isAdmin: data.is_admin,
+      });
+
+      if (data.is_admin) {
+        navigate('/admin');
+      } else {
+        navigate(`/workspace/${data.default_workspace_id}`);
+      }
     } catch (err) {
       setError(err.message || 'Could not connect to the server.');
     }

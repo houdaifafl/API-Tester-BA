@@ -8,6 +8,7 @@ export function AuthProvider({ children }) {
     email: sessionStorage.getItem('email'),
     username: sessionStorage.getItem('username'),
     token: sessionStorage.getItem('token'),
+    isAdmin: sessionStorage.getItem('isAdmin') === 'true',
   });
 
   const logout = useCallback(() => {
@@ -15,7 +16,8 @@ export function AuthProvider({ children }) {
     sessionStorage.removeItem('email');
     sessionStorage.removeItem('username');
     sessionStorage.removeItem('token');
-    setUser({ userId: null, email: null, username: null, token: null });
+    sessionStorage.removeItem('isAdmin');
+    setUser({ userId: null, email: null, username: null, token: null, isAdmin: false });
   }, []);
 
   const value = useMemo(() => ({ user, setUser, logout }), [user, logout]);

@@ -666,3 +666,243 @@ components:
                   error:
                     type: string
                     example: Membership not found
+
+  /api/admin/users:
+    get:
+      summary: List all users on the platform
+      tags: [Admin]
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: List of all users
+        '403':
+          description: Access denied for non-admins
+
+  /api/admin/users/{user_id}/suspend:
+    post:
+      summary: Suspend a user account
+      tags: [Admin]
+      security:
+        - BearerAuth: []
+      parameters:
+        - in: path
+          name: user_id
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: User suspended
+        '403':
+          description: Forbidden
+
+  /api/admin/users/{user_id}/reactivate:
+    post:
+      summary: Reactivate a user account
+      tags: [Admin]
+      security:
+        - BearerAuth: []
+      parameters:
+        - in: path
+          name: user_id
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: User reactivated
+        '403':
+          description: Forbidden
+
+  /api/admin/users/{user_id}:
+    delete:
+      summary: Permanently delete a user
+      tags: [Admin]
+      security:
+        - BearerAuth: []
+      parameters:
+        - in: path
+          name: user_id
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: User deleted
+        '403':
+          description: Forbidden
+
+  /api/admin/users/{user_id}/promote:
+    post:
+      summary: Promote a user to Super Admin
+      tags: [Admin]
+      security:
+        - BearerAuth: []
+      parameters:
+        - in: path
+          name: user_id
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: User promoted
+        '403':
+          description: Forbidden
+
+  /api/admin/users/{user_id}/demote:
+    post:
+      summary: Demote a user from Super Admin
+      tags: [Admin]
+      security:
+        - BearerAuth: []
+      parameters:
+        - in: path
+          name: user_id
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: User demoted
+        '403':
+          description: Forbidden
+
+  /api/admin/workspaces:
+    get:
+      summary: List all workspaces
+      tags: [Admin]
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: List of workspaces
+        '403':
+          description: Forbidden
+
+  /api/admin/workspaces/{workspace_id}:
+    delete:
+      summary: Delete a workspace
+      tags: [Admin]
+      security:
+        - BearerAuth: []
+      parameters:
+        - in: path
+          name: workspace_id
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Workspace deleted
+        '403':
+          description: Forbidden
+
+  /api/admin/workspaces/{workspace_id}/collections:
+    get:
+      summary: List collections and requests inside a workspace
+      tags: [Admin]
+      security:
+        - BearerAuth: []
+      parameters:
+        - in: path
+          name: workspace_id
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: List of collections and requests
+        '403':
+          description: Forbidden
+
+  /api/admin/collections/{collection_id}:
+    delete:
+      summary: Delete a collection
+      tags: [Admin]
+      security:
+        - BearerAuth: []
+      parameters:
+        - in: path
+          name: collection_id
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Collection deleted
+        '403':
+          description: Forbidden
+
+  /api/admin/workspaces/{workspace_id}/log-view:
+    post:
+      summary: Log a sensitive view of request configurations or history
+      tags: [Admin]
+      security:
+        - BearerAuth: []
+      parameters:
+        - in: path
+          name: workspace_id
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                details:
+                  type: string
+      responses:
+        '200':
+          description: Sensitive view logged
+        '403':
+          description: Forbidden
+
+  /api/admin/audit-logs:
+    get:
+      summary: Fetch administrative audit logs
+      tags: [Admin]
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+            default: 100
+        - name: offset
+          in: query
+          required: false
+          schema:
+            type: integer
+            default: 0
+      responses:
+        '200':
+          description: List of audit logs
+        '403':
+          description: Forbidden
+
+  /api/notifications:
+    get:
+      summary: Fetch notifications for active user
+      tags: [Notifications]
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: User notifications list
+
+  /api/notifications/read:
+    post:
+      summary: Mark all active user's notifications as read
+      tags: [Notifications]
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Notifications marked read
