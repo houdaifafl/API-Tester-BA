@@ -60,6 +60,7 @@ export default function MainPage() {
     updateTabLabel,
     updateTabCollectionName,
     removeTabsByRequestIds,
+    openAnalyticsTab,
   } = useWorkspaceTabs(workspaceIdParam);
 
   const activeWorkspaceId = activeWorkspace?.id ?? null;
@@ -215,6 +216,7 @@ export default function MainPage() {
         workspaceRole={workspaceRole}
         isChatOpen={commentsState.isChatOpen}
         onChatToggle={commentsState.toggleChat}
+        onAnalyticsOpen={openAnalyticsTab}
       />
       <div className="workspace-body">
         <Sidebar
@@ -246,6 +248,7 @@ export default function MainPage() {
           workspaceRole={workspaceRole}
           comments={commentsState.comments}
           onCommentClick={handleCommentClick}
+          workspaceId={activeWorkspaceId}
         />
         {commentsState.isChatOpen && (
           <WorkspaceChat

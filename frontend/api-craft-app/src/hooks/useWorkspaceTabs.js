@@ -156,6 +156,23 @@ export default function useWorkspaceTabs(workspaceIdParam) {
     });
   }, []);
 
+  // Opens (or focuses) a singleton analytics tab
+  const openAnalyticsTab = useCallback(() => {
+    setOpenTabs(prev => {
+      const exists = prev.some(t => t.id === 'analytics');
+      if (exists) return prev;
+      return [...prev, {
+        id: 'analytics',
+        type: 'analytics',
+        label: 'Analytics',
+        method: null,
+        requestId: null,
+        collectionName: null,
+      }];
+    });
+    setActiveTabId('analytics');
+  }, []);
+
   return {
     openTabs,
     activeTabId,
@@ -169,5 +186,6 @@ export default function useWorkspaceTabs(workspaceIdParam) {
     updateTabLabel,
     updateTabCollectionName,
     removeTabsByRequestIds,
+    openAnalyticsTab,
   };
 }

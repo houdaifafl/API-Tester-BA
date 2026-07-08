@@ -174,3 +174,23 @@
   color: #ffc107;
   background: rgba(0, 0, 0, 0.04);
 }
+
+.analytics-toggle-btn {
+  background: transparent;
+  border: none;
+  color: #888;
+  font-size: 18px;
+  padding: 6px;
+  border-radius: 50%;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: color 0.12s, background 0.12s;
+  user-select: none;
+}
+
+.analytics-toggle-btn:hover {
+  color: #ffc107;
+  background: rgba(0, 0, 0, 0.06);
+}

@@ -11,6 +11,7 @@ from routes.history_routes import history_bp
 from routes.invitation_routes import invitation_bp
 from routes.admin_routes import admin_bp
 from routes.comment_routes import comment_bp
+from routes.analytics_routes import analytics_bp
 from models import collection_model, request_model, user_model, workspace_model, history_model, workspace_member_model, invitation_model, audit_log_model, notification_model, comment_model
 
 def safe_add_column(conn, table, column, col_type, logger):
@@ -68,6 +69,23 @@ def create_app():
             except Exception as e:
                 app.logger.warning(f"Error backfilling roles and admin: {e}")
 
+            # Composite index for analytics queries
+            try:
+                is_sqlite_idx = 'sqlite' in str(db.engine.url)
+                if is_sqlite_idx:
+                    conn.execute(text(
+                        "CREATE INDEX IF NOT EXISTS idx_history_workspace_created "
+                        "ON history (workspace_id, created_at)"
+                    ))
+                else:
+                    conn.execute(text(
+                        "IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = 'idx_history_workspace_created') "
+                        "CREATE INDEX idx_history_workspace_created ON history (workspace_id, created_at)"
+                    ))
+                conn.commit()
+            except Exception as e:
+                app.logger.warning(f"Error creating analytics index: {e}")
+
             # Clean up workspaces owned by admin accounts
             try:
                 from models.user_model import User
@@ -90,6 +108,7 @@ def create_app():
     app.register_blueprint(invitation_bp)
     app.register_blueprint(admin_bp)
     app.register_blueprint(comment_bp)
+    app.register_blueprint(analytics_bp)
 
 
     # Simple test route

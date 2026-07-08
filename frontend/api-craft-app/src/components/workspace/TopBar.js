@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
-import { FaChevronDown, FaPlus, FaBinoculars, FaTimes, FaUserCircle, FaSignOutAlt, FaCommentAlt } from 'react-icons/fa';
+import { FaChevronDown, FaPlus, FaBinoculars, FaTimes, FaUserCircle, FaSignOutAlt, FaCommentAlt, FaChartLine } from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import WorkspaceDropdown from './WorkspaceDropdown';
@@ -26,6 +26,7 @@ export default function TopBar({
   workspaceRole = 'viewer',
   isChatOpen = false,
   onChatToggle,
+  onAnalyticsOpen,
 }) {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
@@ -112,6 +113,7 @@ export default function TopBar({
               onClick={() => onTabChange(tab.id)}
             >
               {tab.type === 'overview' && <FaBinoculars className="top-tab-icon" />}
+              {tab.type === 'analytics' && <FaChartLine className="top-tab-icon" style={{ color: '#ffc107' }} />}
               {tab.type === 'request' && (
                 <span
                   className="top-tab-method"
@@ -121,7 +123,7 @@ export default function TopBar({
                 </span>
               )}
               <span className="top-tab-label">{tab.label}</span>
-              {tab.type === 'request' && (
+              {(tab.type === 'request' || tab.type === 'analytics') && (
                 <span
                   className="top-tab-close"
                   onClick={e => { e.stopPropagation(); onTabClose(tab.id); }}
@@ -138,6 +140,13 @@ export default function TopBar({
         </div>
 
         <div className="top-bar-profile" ref={accountRef} style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <button
+            className="analytics-toggle-btn"
+            title="Performance Analytics"
+            onClick={onAnalyticsOpen}
+          >
+            <FaChartLine />
+          </button>
           <button
             className={`chat-toggle-btn ${isChatOpen ? 'active' : ''}`}
             title="Toggle Workspace Chat"

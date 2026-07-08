@@ -1,0 +1,239 @@
+/* ── Analytics Dashboard ──────────────────────────────────────────────────── */
+
+.analytics-dashboard {
+  padding: 24px 32px;
+  overflow-y: auto;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.analytics-loading,
+.analytics-error {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  color: #888;
+  font-size: 0.95rem;
+  user-select: none;
+  cursor: default;
+}
+
+.analytics-error {
+  color: #ef5350;
+}
+
+/* Header */
+.analytics-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.analytics-title {
+  font-size: 1.3rem;
+  font-weight: 700;
+  color: #eee;
+  margin: 0;
+}
+
+.analytics-controls {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.timeframe-group {
+  display: flex;
+  border-radius: 6px;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.tf-btn {
+  background: rgba(255, 255, 255, 0.04);
+  border: none;
+  color: #999;
+  font-size: 0.72rem;
+  padding: 6px 14px;
+  cursor: pointer;
+  transition: all 0.2s;
+  user-select: none;
+}
+
+.tf-btn:not(:last-child) {
+  border-right: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.tf-btn.active {
+  background: rgba(255, 193, 7, 0.15);
+  color: #ffc107;
+  font-weight: 600;
+}
+
+.tf-btn:hover:not(.active) {
+  background: rgba(255, 255, 255, 0.08);
+  color: #ccc;
+}
+
+.refresh-btn {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 6px;
+  color: #999;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.refresh-btn:hover {
+  color: #ffc107;
+  border-color: rgba(255, 193, 7, 0.3);
+}
+
+.refresh-btn .spinning {
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+/* KPI Grid */
+.kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 14px;
+}
+
+.kpi-card {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 10px;
+  padding: 16px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  transition: border-color 0.2s;
+}
+
+.kpi-card:hover {
+  border-color: rgba(255, 193, 7, 0.2);
+}
+
+.kpi-label {
+  font-size: 0.7rem;
+  color: #777;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.kpi-value {
+  font-size: 1.35rem;
+  font-weight: 700;
+  color: #eee;
+}
+
+.kpi-value small {
+  font-size: 0.7rem;
+  font-weight: 400;
+  color: #666;
+}
+
+/* Charts Row */
+.charts-row {
+  display: grid;
+  grid-template-columns: 1.6fr 1fr;
+  gap: 14px;
+}
+
+.chart-card {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 10px;
+  padding: 16px;
+}
+
+.chart-title {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: #bbb;
+  margin: 0 0 12px;
+}
+
+.chart-empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 180px;
+  color: #555;
+  font-size: 0.8rem;
+  font-style: italic;
+}
+
+/* Tables Row */
+.tables-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+}
+
+.table-card {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 10px;
+  padding: 16px;
+}
+
+.analytics-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.75rem;
+}
+
+.analytics-table th {
+  text-align: left;
+  color: #777;
+  font-weight: 600;
+  padding: 6px 8px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  text-transform: uppercase;
+  font-size: 0.65rem;
+  letter-spacing: 0.4px;
+}
+
+.analytics-table td {
+  padding: 8px;
+  color: #ccc;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+}
+
+.analytics-table tr:hover td {
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.ep-url {
+  max-width: 200px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: #aaa;
+}
+
+.method-chip {
+  font-size: 0.65rem;
+  font-weight: 700;
+  padding: 2px 6px;
+  border-radius: 3px;
+  background: rgba(255, 255, 255, 0.06);
+  color: #eee;
+}

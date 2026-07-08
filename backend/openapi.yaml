@@ -1021,3 +1021,98 @@ components:
           description: Unauthorized to delete
         '404':
           description: Not found
+
+  /api/workspaces/{workspace_id}/analytics:
+    get:
+      summary: Get workspace performance analytics
+      description: Returns aggregated KPI metrics, time series, status distribution, slowest endpoints, and error hotspots for the workspace.
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: workspace_id
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: timeframe
+          in: query
+          required: false
+          schema:
+            type: string
+            enum: ["24h", "7d", "30d"]
+            default: "24h"
+      responses:
+        '200':
+          description: Aggregated analytics data
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  kpis:
+                    type: object
+                    properties:
+                      avg_latency:
+                        type: number
+                      p90_latency:
+                        type: number
+                      p95_latency:
+                        type: number
+                      total_requests:
+                        type: integer
+                      error_rate:
+                        type: number
+                  time_series:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        bucket:
+                          type: string
+                        avg_latency:
+                          type: number
+                        count:
+                          type: integer
+                  status_distribution:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        category:
+                          type: string
+                        count:
+                          type: integer
+                  slowest_endpoints:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        url:
+                          type: string
+                        method:
+                          type: string
+                        avg_latency:
+                          type: number
+                        max_latency:
+                          type: number
+                  error_hotspots:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        url:
+                          type: string
+                        method:
+                          type: string
+                        total_runs:
+                          type: integer
+                        failure_rate:
+                          type: number
+        '400':
+          description: Invalid timeframe value
+        '401':
+          description: Unauthorized
+        '403':
+          description: Access denied
+        '404':
+          description: Workspace not found

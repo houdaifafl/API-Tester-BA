@@ -16,6 +16,7 @@ from routes.history_routes import history_bp
 from routes.invitation_routes import invitation_bp
 from routes.admin_routes import admin_bp
 from routes.comment_routes import comment_bp
+from routes.analytics_routes import analytics_bp
 
 
 @pytest.fixture
@@ -34,6 +35,7 @@ def app():
     test_app.register_blueprint(invitation_bp)
     test_app.register_blueprint(admin_bp)
     test_app.register_blueprint(comment_bp)
+    test_app.register_blueprint(analytics_bp)
 
 
     with test_app.app_context():
