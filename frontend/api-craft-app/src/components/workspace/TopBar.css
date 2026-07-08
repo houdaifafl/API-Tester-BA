@@ -149,3 +149,28 @@
   background: rgba(231, 76, 60, 0.06);
   color: #e74c3c;
 }
+
+.chat-toggle-btn {
+  background: transparent;
+  border: none;
+  color: #888;
+  font-size: 18px;
+  padding: 6px;
+  border-radius: 50%;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: color 0.12s, background 0.12s;
+  user-select: none;
+}
+
+.chat-toggle-btn:hover {
+  color: #333;
+  background: rgba(0, 0, 0, 0.06);
+}
+
+.chat-toggle-btn.active {
+  color: #ffc107;
+  background: rgba(0, 0, 0, 0.04);
+}

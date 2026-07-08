@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
-import { FaChevronDown, FaPlus, FaBinoculars, FaTimes, FaUserCircle, FaSignOutAlt } from 'react-icons/fa';
+import { FaChevronDown, FaPlus, FaBinoculars, FaTimes, FaUserCircle, FaSignOutAlt, FaCommentAlt } from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import WorkspaceDropdown from './WorkspaceDropdown';
@@ -24,6 +24,8 @@ export default function TopBar({
   onAcceptInvitation,
   onDeclineInvitation,
   workspaceRole = 'viewer',
+  isChatOpen = false,
+  onChatToggle,
 }) {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
@@ -136,6 +138,13 @@ export default function TopBar({
         </div>
 
         <div className="top-bar-profile" ref={accountRef} style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <button
+            className={`chat-toggle-btn ${isChatOpen ? 'active' : ''}`}
+            title="Toggle Workspace Chat"
+            onClick={onChatToggle}
+          >
+            <FaCommentAlt />
+          </button>
           <NotificationBell />
           <button
             className="profile-btn"

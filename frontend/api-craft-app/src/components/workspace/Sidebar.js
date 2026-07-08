@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
-import { FaCube, FaHistory, FaPlus, FaChevronDown, FaChevronRight, FaEllipsisH } from 'react-icons/fa';
+import { FaCube, FaHistory, FaPlus, FaChevronDown, FaChevronRight, FaEllipsisH, FaComment } from 'react-icons/fa';
 import RequestContextMenu from './RequestContextMenu';
 import { METHOD_COLORS } from '../../constants';
 import './Sidebar.css';
@@ -51,11 +51,36 @@ export default function Sidebar({
   onHistoryOpen,
   activeHistoryId,
   workspaceRole = 'viewer',
+  comments = [],
+  onCommentClick,
 }) {
   const [sidebarMode, setSidebarMode]           = useState('collections');
   const [collectionsOpen, setCollectionsOpen]   = useState(true);
   const [collapsedCols, setCollapsedCols]       = useState(new Set());
   const [searchQuery, setSearchQuery]           = useState('');
+
+  useEffect(() => {
+    const handleNavigate = (e) => {
+      const { collectionId } = e.detail;
+      const element = document.getElementById(`comment-target-collection-${collectionId}`);
+      if (element) {
+        setCollapsedCols(prev => {
+          const next = new Set(prev);
+          next.delete(collectionId);
+          return next;
+        });
+        setTimeout(() => {
+          element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          element.classList.add('comment-highlight-glow');
+          setTimeout(() => {
+            element.classList.remove('comment-highlight-glow');
+          }, 3000);
+        }, 120);
+      }
+    };
+    window.addEventListener('navigate-to-collection-context', handleNavigate);
+    return () => window.removeEventListener('navigate-to-collection-context', handleNavigate);
+  }, []);
 
   // Context menu state — { kind: 'request'|'collection', id, rect }
   const [menuState, setMenuState]               = useState(null);
@@ -213,10 +238,13 @@ export default function Sidebar({
                 {filteredCollections.map(col => {
                   const expanded = query ? true : !collapsedCols.has(col.id);
                   const isRenamingCol = renaming?.kind === 'collection' && renaming.id === col.id;
+                  const colComments = comments.filter(c => c.target_tab === 'collection' && c.target_key === String(col.id));
+                  const colCommentsCount = colComments.length;
 
                   return (
                     <li key={col.id}>
                       <div
+                        id={`comment-target-collection-${col.id}`}
                         className="ws-collection-row"
                         onClick={() => { if (!isRenamingCol) toggleCollection(col.id); }}
                       >
@@ -238,7 +266,33 @@ export default function Sidebar({
                             onClick={e => e.stopPropagation()}
                           />
                         ) : (
-                          <span className="ws-collection-name">{col.name}</span>
+                          <>
+                            <span className="ws-collection-name">{col.name}</span>
+                            <div className="collection-comment-trigger" style={{ marginLeft: '6px', userSelect: 'none', display: 'inline-flex', alignItems: 'center' }}>
+                              {colCommentsCount > 0 ? (
+                                <button
+                                  type="button"
+                                  className="row-comment-btn has-comments"
+                                  onClick={e => { e.stopPropagation(); onCommentClick?.(null, null, col.id); }}
+                                  title={`${colCommentsCount} comments on this collection. Click to view.`}
+                                  style={{ padding: '2px 4px', fontSize: '9px' }}
+                                >
+                                  <FaComment />
+                                  <span className="row-comment-count">{colCommentsCount}</span>
+                                </button>
+                              ) : (
+                                <button
+                                  type="button"
+                                  className="row-comment-btn add-comment"
+                                  onClick={e => { e.stopPropagation(); onCommentClick?.(null, null, col.id); }}
+                                  title="Add comment to collection"
+                                  style={{ padding: '2px 4px', fontSize: '9px' }}
+                                >
+                                  <FaPlus />
+                                </button>
+                              )}
+                            </div>
+                          </>
                         )}
 
                         {!isRenamingCol && (

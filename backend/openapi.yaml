@@ -906,3 +906,118 @@ components:
       responses:
         '200':
           description: Notifications marked read
+
+  /api/workspaces/{workspace_id}/comments:
+    get:
+      summary: Get workspace comments
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: workspace_id
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: request_id
+          in: query
+          required: false
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: A list of comments
+        '401':
+          description: Unauthorized
+        '403':
+          description: Access denied
+        '404':
+          description: Workspace not found
+    post:
+      summary: Post a comment or reply
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: workspace_id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - content
+              properties:
+                content:
+                  type: string
+                parent_id:
+                  type: integer
+                request_id:
+                  type: integer
+                target_tab:
+                  type: string
+                target_key:
+                  type: string
+      responses:
+        '201':
+          description: Comment created
+        '400':
+          description: Invalid nesting or payload
+        '401':
+          description: Unauthorized
+        '403':
+          description: Access denied
+
+  /api/comments/{comment_id}:
+    patch:
+      summary: Edit a comment
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: comment_id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - content
+              properties:
+                content:
+                  type: string
+      responses:
+        '200':
+          description: Comment updated
+        '401':
+          description: Unauthorized
+        '403':
+          description: Unauthorized to edit
+        '404':
+          description: Not found
+    delete:
+      summary: Delete a comment
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: comment_id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Comment deleted
+        '401':
+          description: Unauthorized
+        '403':
+          description: Unauthorized to delete
+        '404':
+          description: Not found

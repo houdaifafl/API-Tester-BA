@@ -1,4 +1,4 @@
-import React, { useState, useRef, useCallback } from 'react';
+import React, { useState, useRef, useCallback, useEffect } from 'react';
 import { FaSave } from 'react-icons/fa';
 import RequestBar from './RequestBar';
 import RequestTabs from './RequestTabs';
@@ -55,7 +55,7 @@ function buildBody(bodyState) {
   return Object.keys(out).length ? out : null;
 }
 
-export default function RequestBuilder({ request, initialResponseHeight, onResponseHeightChange, savedState, onStateChange, onMethodChange, onSaveRequest, onExecute, workspaceRole = 'viewer' }) {
+export default function RequestBuilder({ request, initialResponseHeight, onResponseHeightChange, savedState, onStateChange, onMethodChange, onSaveRequest, onExecute, workspaceRole = 'viewer', comments = [], onCommentClick }) {
   const [activeTab, setActiveTab] = useState(savedState?.activeSubTab ?? 'Docs');
   const [url, setUrl]             = useState(savedState?.url ?? '');
   const [response, setResponse]   = useState(savedState?.response ?? null);
@@ -71,10 +71,10 @@ export default function RequestBuilder({ request, initialResponseHeight, onRespo
     docs:    initDocs(savedState, request.label),
   });
 
-  const handleSubTabChange = (tab) => {
+  const handleSubTabChange = useCallback((tab) => {
     setActiveTab(tab);
     onStateChange?.({ activeSubTab: tab });
-  };
+  }, [onStateChange]);
 
   const handleUrlChange = (val) => {
     setUrl(val);
@@ -147,6 +147,42 @@ export default function RequestBuilder({ request, initialResponseHeight, onRespo
     }
   }, [url, method, onStateChange, onExecute]);
 
+  useEffect(() => {
+    const handleNavigate = (e) => {
+      const { requestId: targetReqId, tab: targetTab, key: targetKey } = e.detail;
+      if (targetReqId !== request.requestId) return;
+
+      const tabMap = {
+        params: 'Params',
+        headers: 'Headers',
+        body: 'Body',
+        auth: 'Authorization'
+      };
+      const uiTab = tabMap[targetTab];
+      if (uiTab) {
+        handleSubTabChange(uiTab);
+        
+        setTimeout(() => {
+          const id = targetKey 
+            ? `comment-target-${targetTab}-${targetKey}` 
+            : `comment-target-${targetTab}`;
+          const element = document.getElementById(id);
+          if (element) {
+            element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            element.classList.add('comment-highlight-glow');
+            setTimeout(() => {
+              element.classList.remove('comment-highlight-glow');
+            }, 3000);
+          }
+        }, 120);
+      }
+    };
+    window.addEventListener('navigate-to-comment-context', handleNavigate);
+    return () => window.removeEventListener('navigate-to-comment-context', handleNavigate);
+  }, [request.requestId, handleSubTabChange]);
+
+  const reqComments = comments.filter(c => c.request_id === request.requestId);
+
   return (
     <div className="request-builder">
       <div className="req-breadcrumb-row">
@@ -183,23 +219,43 @@ export default function RequestBuilder({ request, initialResponseHeight, onRespo
         onSend={handleSend}
         loading={loading}
       />
-      <RequestTabs activeTab={activeTab} onTabChange={handleSubTabChange} />
+      <RequestTabs activeTab={activeTab} onTabChange={handleSubTabChange} comments={reqComments} />
 
       <div className="req-content">
         {activeTab === 'Docs' && (
           <DocsTab value={tabState.current.docs} onChange={handleDocsChange} />
         )}
         {activeTab === 'Params' && (
-          <ParamsTab initialParams={tabState.current.params} onParamsChange={handleParamsChange} />
+          <ParamsTab
+            initialParams={tabState.current.params}
+            onParamsChange={handleParamsChange}
+            comments={reqComments.filter(c => c.target_tab === 'params')}
+            onCommentClick={(key) => onCommentClick?.('params', key)}
+          />
         )}
         {activeTab === 'Authorization' && (
-          <AuthorizationTab initialAuth={tabState.current.auth} onAuthChange={handleAuthChange} />
+          <AuthorizationTab
+            initialAuth={tabState.current.auth}
+            onAuthChange={handleAuthChange}
+            comments={reqComments.filter(c => c.target_tab === 'auth')}
+            onCommentClick={(key) => onCommentClick?.('auth', key)}
+          />
         )}
         {activeTab === 'Headers' && (
-          <HeadersTab initialHeaders={tabState.current.headers} onHeadersChange={handleHeadersChange} />
+          <HeadersTab
+            initialHeaders={tabState.current.headers}
+            onHeadersChange={handleHeadersChange}
+            comments={reqComments.filter(c => c.target_tab === 'headers')}
+            onCommentClick={(key) => onCommentClick?.('headers', key)}
+          />
         )}
         {activeTab === 'Body' && (
-          <BodyTab initialBody={tabState.current.body} onBodyChange={handleBodyChange} />
+          <BodyTab
+            initialBody={tabState.current.body}
+            onBodyChange={handleBodyChange}
+            comments={reqComments.filter(c => c.target_tab === 'body')}
+            onCommentClick={(key) => onCommentClick?.('body', key)}
+          />
         )}
       </div>
 

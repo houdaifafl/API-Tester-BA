@@ -176,3 +176,62 @@
 .auth-field-input::placeholder {
   color: #ccc;
 }
+
+.auth-field-container {
+  display: flex;
+  flex-direction: column;
+  max-width: 280px;
+}
+
+.auth-field-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 5px;
+}
+
+.auth-field-header .auth-field-label {
+  margin: 0;
+}
+
+.auth-field-comment-trigger {
+  user-select: none;
+}
+
+.auth-field-container .row-comment-btn {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  border-radius: 4px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+  padding: 2px 4px;
+  font-size: 10px;
+}
+
+.auth-field-container .row-comment-btn.add-comment {
+  opacity: 0;
+  color: #888;
+}
+
+.auth-field-container:hover .row-comment-btn.add-comment {
+  opacity: 1;
+}
+
+.auth-field-container .row-comment-btn.add-comment:hover {
+  background: rgba(0, 0, 0, 0.05);
+  color: #ffc107;
+}
+
+.auth-field-container .row-comment-btn.has-comments {
+  color: #ffc107;
+  background: rgba(255, 193, 7, 0.1);
+  border: 1px solid rgba(255, 193, 7, 0.2);
+  gap: 4px;
+}
+
+.auth-field-container .row-comment-btn.has-comments:hover {
+  background: rgba(255, 193, 7, 0.2);
+}

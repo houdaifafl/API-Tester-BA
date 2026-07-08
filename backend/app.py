@@ -10,7 +10,8 @@ from routes.request_routes import request_bp
 from routes.history_routes import history_bp
 from routes.invitation_routes import invitation_bp
 from routes.admin_routes import admin_bp
-from models import collection_model, request_model, user_model, workspace_model, history_model, workspace_member_model, invitation_model, audit_log_model, notification_model
+from routes.comment_routes import comment_bp
+from models import collection_model, request_model, user_model, workspace_model, history_model, workspace_member_model, invitation_model, audit_log_model, notification_model, comment_model
 
 def safe_add_column(conn, table, column, col_type, logger):
     try:
@@ -88,6 +89,7 @@ def create_app():
     app.register_blueprint(history_bp)
     app.register_blueprint(invitation_bp)
     app.register_blueprint(admin_bp)
+    app.register_blueprint(comment_bp)
 
 
     # Simple test route

@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { FaChevronDown, FaCheck } from 'react-icons/fa';
+import { FaChevronDown, FaCheck, FaComment, FaPlus } from 'react-icons/fa';
 import './AuthorizationTab.css';
 
 const AUTH_OPTIONS = [
@@ -10,7 +10,7 @@ const AUTH_OPTIONS = [
 
 const DEFAULT_AUTH = { type: 'bearer', token: '', username: '', password: '' };
 
-export default function AuthorizationTab({ initialAuth, onAuthChange }) {
+export default function AuthorizationTab({ initialAuth, onAuthChange, comments = [], onCommentClick }) {
   const [auth, setAuth] = useState(initialAuth ?? DEFAULT_AUTH);
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const dropdownRef = useRef(null);
@@ -36,11 +36,81 @@ export default function AuthorizationTab({ initialAuth, onAuthChange }) {
 
   const selectedLabel = AUTH_OPTIONS.find(o => o.value === auth.type)?.label ?? '';
 
+  const renderAuthField = (label, fieldKey, inputType, placeholder, value, onChange) => {
+    const fieldComments = comments.filter(c => c.target_key === fieldKey);
+    const count = fieldComments.length;
+
+    return (
+      <div className="auth-field-container">
+        <div className="auth-field-header">
+          <label className="auth-field-label">{label}</label>
+          <div className="auth-field-comment-trigger">
+            {count > 0 ? (
+              <button
+                type="button"
+                className="row-comment-btn has-comments"
+                onClick={() => onCommentClick?.(fieldKey)}
+                title={`${count} comments. Click to view.`}
+              >
+                <FaComment />
+                <span className="row-comment-count">{count}</span>
+              </button>
+            ) : (
+              <button
+                type="button"
+                className="row-comment-btn add-comment"
+                onClick={() => onCommentClick?.(fieldKey)}
+                title="Add comment"
+              >
+                <FaPlus />
+              </button>
+            )}
+          </div>
+        </div>
+        <input
+          id={`comment-target-auth-${fieldKey}`}
+          className="auth-field-input"
+          type={inputType}
+          placeholder={placeholder}
+          value={value}
+          onChange={onChange}
+        />
+      </div>
+    );
+  };
+
+  const tabLevelComments = comments.filter(c => !c.target_key);
+  const tabLevelCount = tabLevelComments.length;
+
   return (
-    <div className="auth-tab">
+    <div id="comment-target-auth" className="auth-tab">
       {/* ── Left panel ── */}
       <div className="auth-left">
-        <p className="auth-label">Auth Type</p>
+        <div className="tab-header-row" style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '10px' }}>
+          <p className="auth-label" style={{ margin: 0 }}>Auth Type</p>
+          <div className="tab-comment-trigger" style={{ userSelect: 'none' }}>
+            {tabLevelCount > 0 ? (
+              <button
+                type="button"
+                className="row-comment-btn has-comments"
+                onClick={() => onCommentClick?.(null)}
+                title={`${tabLevelCount} comments on auth. Click to view.`}
+              >
+                <FaComment />
+                <span className="row-comment-count">{tabLevelCount}</span>
+              </button>
+            ) : (
+              <button
+                type="button"
+                className="row-comment-btn add-comment"
+                onClick={() => onCommentClick?.(null)}
+                title="Add comment to Auth tab"
+              >
+                <FaPlus />
+              </button>
+            )}
+          </div>
+        </div>
         <div className="auth-dropdown" ref={dropdownRef}>
           <button
             className="auth-dropdown-toggle"
@@ -79,41 +149,14 @@ export default function AuthorizationTab({ initialAuth, onAuthChange }) {
 
         {auth.type === 'bearer' && (
           <div className="auth-fields">
-            <div>
-              <label className="auth-field-label">Token</label>
-              <input
-                className="auth-field-input"
-                type="text"
-                placeholder="Token"
-                value={auth.token}
-                onChange={e => update({ token: e.target.value })}
-              />
-            </div>
+            {renderAuthField('Token', 'token', 'text', 'Token', auth.token, e => update({ token: e.target.value }))}
           </div>
         )}
 
         {auth.type === 'basic' && (
           <div className="auth-fields">
-            <div>
-              <label className="auth-field-label">Username</label>
-              <input
-                className="auth-field-input"
-                type="text"
-                placeholder="Username"
-                value={auth.username}
-                onChange={e => update({ username: e.target.value })}
-              />
-            </div>
-            <div>
-              <label className="auth-field-label">Password</label>
-              <input
-                className="auth-field-input"
-                type="password"
-                placeholder="Password"
-                value={auth.password}
-                onChange={e => update({ password: e.target.value })}
-              />
-            </div>
+            {renderAuthField('Username', 'username', 'text', 'Username', auth.username, e => update({ username: e.target.value }))}
+            {renderAuthField('Password', 'password', 'password', 'Password', auth.password, e => update({ password: e.target.value }))}
           </div>
         )}
       </div>

@@ -51,12 +51,12 @@ describe('InviteModal Component Smoke Test', () => {
     const submitBtn = screen.getByRole('button', { name: 'Send Invitation' });
     fireEvent.click(submitBtn);
 
-    expect(inviteUserToWorkspace).toHaveBeenCalledWith(1, 'inviteduser');
+    expect(inviteUserToWorkspace).toHaveBeenCalledWith(1, 'inviteduser', 'editor');
 
     await waitFor(() => {
-      expect(screen.getByText('Successfully invited inviteduser!')).toBeInTheDocument();
+      expect(screen.getByText('Successfully invited inviteduser as editor!')).toBeInTheDocument();
+      expect(input.value).toBe('');
     });
-    expect(input.value).toBe('');
   });
 
   it('shows error feedback on failure', async () => {

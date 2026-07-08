@@ -90,6 +90,44 @@ def save_request(request_id, data, user_id):
     if not allowed:
         return None, err
 
+    from models.comment_model import Comment
+
+    # Check for parameter key renames
+    if 'params' in data:
+        old_params = req.params or []
+        new_params = data['params'] or []
+        old_map = {p['id']: p['key'].strip() for p in old_params if 'id' in p and p.get('key')}
+        for p in new_params:
+            if 'id' in p and p.get('key'):
+                new_key = p['key'].strip()
+                pid = p['id']
+                if pid in old_map:
+                    old_key = old_map[pid]
+                    if old_key != new_key and new_key:
+                        Comment.query.filter_by(
+                            request_id=req.id,
+                            target_tab='params',
+                            target_key=old_key
+                        ).update({Comment.target_key: new_key}, synchronize_session=False)
+
+    # Check for header key renames
+    if 'headers' in data:
+        old_headers = req.headers or []
+        new_headers = data['headers'] or []
+        old_map = {h['id']: h['key'].strip() for h in old_headers if 'id' in h and h.get('key')}
+        for h in new_headers:
+            if 'id' in h and h.get('key'):
+                new_key = h['key'].strip()
+                hid = h['id']
+                if hid in old_map:
+                    old_key = old_map[hid]
+                    if old_key != new_key and new_key:
+                        Comment.query.filter_by(
+                            request_id=req.id,
+                            target_tab='headers',
+                            target_key=old_key
+                        ).update({Comment.target_key: new_key}, synchronize_session=False)
+
     if 'url'     in data: req.url     = data['url']
     if 'params'  in data: req.params  = data['params']
     if 'headers' in data: req.headers = data['headers']

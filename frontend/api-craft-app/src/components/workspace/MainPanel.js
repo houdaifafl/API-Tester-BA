@@ -2,7 +2,7 @@ import React from 'react';
 import RequestBuilder from '../request/RequestBuilder';
 import OverviewPanel from './OverviewPanel';
 
-export default function MainPanel({ activeTab, responseHeights, requestStates, onMethodChange, onSaveRequest, onExecute, workspaceRole }) {
+export default function MainPanel({ activeTab, responseHeights, requestStates, onMethodChange, onSaveRequest, onExecute, workspaceRole, comments = [], onCommentClick }) {
   if (activeTab.type === 'request' || activeTab.type === 'history') {
     const tabId = activeTab.id;
     const savedState = requestStates.current[tabId];
@@ -23,6 +23,8 @@ export default function MainPanel({ activeTab, responseHeights, requestStates, o
           onSaveRequest={onSaveRequest}
           onExecute={onExecute}
           workspaceRole={workspaceRole}
+          comments={comments}
+          onCommentClick={onCommentClick}
         />
       </main>
     );

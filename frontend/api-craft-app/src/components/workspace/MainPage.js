@@ -8,6 +8,9 @@ import useCollections from '../../hooks/useCollections';
 import useWorkspaceTabs from '../../hooks/useWorkspaceTabs';
 import useHistory from '../../hooks/useHistory';
 import useInvitations from '../../hooks/useInvitations';
+import useComments from '../../hooks/useComments';
+import WorkspaceChat from './WorkspaceChat';
+import { useAuth } from '../../contexts/AuthContext';
 import './MainPage.css';
 
 const MIN_SIDEBAR_WIDTH = 150;
@@ -116,6 +119,69 @@ export default function MainPage() {
   const activeRequestId = activeTab.type === 'request' ? activeTab.requestId : null;
   const activeHistoryId = activeTab.type === 'history' ? activeTab.historyId : null;
 
+  const { user } = useAuth();
+  const currentUserId = user?.userId ?? null;
+
+  const commentsState = useComments(activeWorkspaceId, activeRequestId);
+
+  const handleBadgeNavigate = useCallback((comment) => {
+    if (comment.target_tab === 'collection') {
+      const event = new CustomEvent('navigate-to-collection-context', {
+        detail: {
+          collectionId: parseInt(comment.target_key)
+        }
+      });
+      window.dispatchEvent(event);
+      return;
+    }
+
+    const event = new CustomEvent('navigate-to-comment-context', {
+      detail: {
+        requestId: comment.request_id,
+        tab: comment.target_tab,
+        key: comment.target_key
+      }
+    });
+
+    const req = collections.flatMap(c => c.requests || []).find(r => r.id === comment.request_id);
+    if (req) {
+      handleRequestOpen(req);
+      setTimeout(() => {
+        window.dispatchEvent(event);
+      }, 100);
+    }
+  }, [collections, handleRequestOpen]);
+
+  const handleCommentClick = useCallback((tab, key = null, collectionId = null) => {
+    if (collectionId) {
+      const count = commentsState.comments.filter(c => 
+        c.target_tab === 'collection' &&
+        c.target_key === String(collectionId)
+      ).length;
+
+      if (count > 0) {
+        commentsState.openCommentsForElement(null, 'collection', String(collectionId));
+      } else {
+        commentsState.openCommentsForCollectionDraft(collectionId);
+      }
+      return;
+    }
+
+    if (activeRequestId) {
+      const count = commentsState.comments.filter(c => 
+        c.request_id === activeRequestId &&
+        c.target_tab === tab &&
+        (!key || c.target_key === key)
+      ).length;
+
+      if (count > 0) {
+        commentsState.openCommentsForElement(activeRequestId, tab, key);
+      } else {
+        commentsState.openCommentsForDraft(activeRequestId, tab, key);
+      }
+    }
+  }, [activeRequestId, commentsState]);
+
   if (workspaceLoading || workspaceError) {
     return (
       <div className="workspace-error">
@@ -147,6 +213,8 @@ export default function MainPage() {
         onAcceptInvitation={handleAccept}
         onDeclineInvitation={handleDecline}
         workspaceRole={workspaceRole}
+        isChatOpen={commentsState.isChatOpen}
+        onChatToggle={commentsState.toggleChat}
       />
       <div className="workspace-body">
         <Sidebar
@@ -165,6 +233,8 @@ export default function MainPage() {
           onHistoryOpen={handleHistoryOpen}
           activeHistoryId={activeHistoryId}
           workspaceRole={workspaceRole}
+          comments={commentsState.comments}
+          onCommentClick={handleCommentClick}
         />
         <MainPanel
           activeTab={activeTab}
@@ -174,7 +244,20 @@ export default function MainPage() {
           onSaveRequest={handleSaveRequest}
           onExecute={addHistoryItem}
           workspaceRole={workspaceRole}
+          comments={commentsState.comments}
+          onCommentClick={handleCommentClick}
         />
+        {commentsState.isChatOpen && (
+          <WorkspaceChat
+            workspaceId={activeWorkspaceId}
+            currentUserId={currentUserId}
+            workspaceRole={workspaceRole}
+            collections={collections}
+            activeRequestId={activeRequestId}
+            commentsState={commentsState}
+            onBadgeNavigate={handleBadgeNavigate}
+          />
+        )}
       </div>
       <AlertModal message={alertMessage} onClose={() => setAlertMessage(null)} />
     </div>

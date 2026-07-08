@@ -17,3 +17,23 @@ code {
   font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
     monospace;
 }
+
+@keyframes comment-glow {
+  0% {
+    outline: 2px solid rgba(255, 193, 7, 0.8);
+    box-shadow: 0 0 10px rgba(255, 193, 7, 0.8);
+  }
+  50% {
+    outline: 2px solid rgba(255, 193, 7, 1);
+    box-shadow: 0 0 20px rgba(255, 193, 7, 1);
+  }
+  100% {
+    outline: 2px solid rgba(255, 193, 7, 0);
+    box-shadow: 0 0 0px rgba(255, 193, 7, 0);
+  }
+}
+
+.comment-highlight-glow {
+  animation: comment-glow 3s ease-out;
+  border-radius: 4px;
+}

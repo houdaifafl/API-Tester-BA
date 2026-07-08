@@ -1,4 +1,5 @@
 import React, { useState, useCallback, useRef, useEffect } from 'react';
+import { FaComment, FaPlus } from 'react-icons/fa';
 import KeyValueTable from '../shared/KeyValueTable';
 import './BodyTab.css';
 
@@ -15,7 +16,7 @@ const DEFAULT_BODY = {
 
 const RAW_FORMATS = ['Text', 'JavaScript', 'JSON', 'HTML', 'XML'];
 
-export default function BodyTab({ initialBody, onBodyChange }) {
+export default function BodyTab({ initialBody, onBodyChange, comments = [], onCommentClick }) {
   const [body, setBody] = useState(() => initialBody ?? DEFAULT_BODY);
   const onBodyChangeRef = useRef(onBodyChange);
   useEffect(() => { onBodyChangeRef.current = onBodyChange; });
@@ -55,33 +56,61 @@ export default function BodyTab({ initialBody, onBodyChange }) {
     });
   }, []);
 
+  const tabLevelComments = comments.filter(c => !c.target_key);
+  const tabLevelCount = tabLevelComments.length;
+
   return (
-    <div className="body-tab">
+    <div id="comment-target-body" className="body-tab">
 
-      <div className="body-type-row">
-        {['none', 'form-data', 'x-www-form-urlencoded', 'raw'].map(type => (
-          <label key={type} className="body-radio-label">
-            <input
-              type="radio"
-              className="body-radio"
-              name="bodyType"
-              value={type}
-              checked={body.bodyType === type}
-              onChange={() => patch({ bodyType: type })}
-            />
-            {type}
-          </label>
-        ))}
+      <div className="body-type-row" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+          {['none', 'form-data', 'x-www-form-urlencoded', 'raw'].map(type => (
+            <label key={type} className="body-radio-label">
+              <input
+                type="radio"
+                className="body-radio"
+                name="bodyType"
+                value={type}
+                checked={body.bodyType === type}
+                onChange={() => patch({ bodyType: type })}
+              />
+              {type}
+            </label>
+          ))}
 
-        {body.bodyType === 'raw' && (
-          <select
-            className="body-raw-format-select"
-            value={body.rawType}
-            onChange={e => patch({ rawType: e.target.value })}
-          >
-            {RAW_FORMATS.map(f => <option key={f} value={f}>{f}</option>)}
-          </select>
-        )}
+          {body.bodyType === 'raw' && (
+            <select
+              className="body-raw-format-select"
+              value={body.rawType}
+              onChange={e => patch({ rawType: e.target.value })}
+            >
+              {RAW_FORMATS.map(f => <option key={f} value={f}>{f}</option>)}
+            </select>
+          )}
+        </div>
+
+        <div className="tab-comment-trigger" style={{ marginRight: '8px', userSelect: 'none' }}>
+          {tabLevelCount > 0 ? (
+            <button
+              type="button"
+              className="row-comment-btn has-comments"
+              onClick={() => onCommentClick?.(null)}
+              title={`${tabLevelCount} comments on body. Click to view.`}
+            >
+              <FaComment />
+              <span className="row-comment-count">{tabLevelCount}</span>
+            </button>
+          ) : (
+            <button
+              type="button"
+              className="row-comment-btn add-comment"
+              onClick={() => onCommentClick?.(null)}
+              title="Add comment to Body tab"
+            >
+              <FaPlus />
+            </button>
+          )}
+        </div>
       </div>
 
       {body.bodyType === 'none' && (
@@ -97,6 +126,9 @@ export default function BodyTab({ initialBody, onBodyChange }) {
             showTypeSelector
             onRowChange={(id, field, val) => handleTableChange('formData', id, field, val)}
             onRowDelete={(id) => handleTableDelete('formData', id)}
+            comments={comments}
+            onCommentClick={onCommentClick}
+            tab="body"
           />
         </div>
       )}
@@ -107,6 +139,9 @@ export default function BodyTab({ initialBody, onBodyChange }) {
             rows={body.urlEncoded}
             onRowChange={(id, field, val) => handleTableChange('urlEncoded', id, field, val)}
             onRowDelete={(id) => handleTableDelete('urlEncoded', id)}
+            comments={comments}
+            onCommentClick={onCommentClick}
+            tab="body"
           />
         </div>
       )}
