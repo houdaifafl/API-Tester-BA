@@ -23,6 +23,8 @@ def update_request_route(request_id):
     new_method = data.get('method')
 
     if new_name:
+        if len(new_name) > 100:
+            return jsonify({'error': 'Request name exceeds maximum length of 100 characters'}), 400
         result, error = rename_request(request_id, new_name, g.user_id)
         if error:
             status = 403 if error == 'Forbidden' else 404
@@ -30,6 +32,8 @@ def update_request_route(request_id):
         return jsonify(result), 200
 
     if new_method:
+        if len(new_method) > 10:
+            return jsonify({'error': 'Request method exceeds maximum length of 10 characters'}), 400
         result, error = update_request_method(request_id, new_method, g.user_id)
         if error:
             status = 403 if error == 'Forbidden' else (400 if 'Invalid' in error else 404)
@@ -38,6 +42,9 @@ def update_request_route(request_id):
 
     save_fields = {'url', 'params', 'headers', 'body', 'auth'}
     if save_fields & data.keys():
+        url = data.get('url')
+        if url and len(url) > 500:
+            return jsonify({'error': 'URL exceeds maximum length of 500 characters'}), 400
         result, error = save_request(request_id, data, g.user_id)
         if error:
             status = 403 if error == 'Forbidden' else 404

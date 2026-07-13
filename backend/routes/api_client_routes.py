@@ -15,6 +15,11 @@ def handle_execute():
     if not method or not url:
         return jsonify({"error": "Method and URL are required"}), 400
 
+    if len(method) > 10:
+        return jsonify({"error": "Method exceeds maximum length of 10 characters"}), 400
+    if len(url) > 2048:
+        return jsonify({"error": "URL exceeds maximum length of 2048 characters"}), 400
+
     headers = data.get("headers") or {}
     params  = data.get("params")  or {}
     body    = data.get("body")

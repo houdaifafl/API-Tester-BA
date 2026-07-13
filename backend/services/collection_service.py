@@ -35,10 +35,16 @@ def ensure_default_collection(workspace_id):
         db.session.commit()
 
 
-def get_collections_by_workspace(workspace_id):
+def get_collections_by_workspace(workspace_id, user_id):
+    from services.workspace_service import check_user_read_access
+    allowed, err = check_user_read_access(workspace_id, user_id)
+    if not allowed:
+        return None, err
+
     ensure_default_collection(workspace_id)
     collections = Collection.query.filter_by(workspace_id=workspace_id).all()
-    return [_serialize(c) for c in collections]
+    return [_serialize(c) for c in collections], None
+
 
 
 def add_collection(workspace_id, user_id):

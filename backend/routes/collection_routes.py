@@ -13,7 +13,12 @@ collection_bp = Blueprint('collection', __name__)
 @collection_bp.route('/api/workspaces/<int:workspace_id>/collections', methods=['GET'])
 @token_required
 def list_collections(workspace_id):
-    return jsonify(get_collections_by_workspace(workspace_id)), 200
+    result, error = get_collections_by_workspace(workspace_id, g.user_id)
+    if error:
+        status = 403 if error == 'Forbidden' else 404
+        return jsonify({'error': error}), status
+    return jsonify(result), 200
+
 
 
 @collection_bp.route('/api/workspaces/<int:workspace_id>/collections', methods=['POST'])
@@ -33,6 +38,8 @@ def rename_collection_route(collection_id):
     new_name = data.get('name')
     if not new_name:
         return jsonify({'error': 'name is required'}), 400
+    if len(new_name) > 100:
+        return jsonify({'error': 'Collection name exceeds maximum length of 100 characters'}), 400
     result, error = rename_collection(collection_id, new_name, g.user_id)
     if error:
         status = 403 if error == 'Forbidden' else 404

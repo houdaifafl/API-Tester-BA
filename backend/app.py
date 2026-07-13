@@ -29,13 +29,27 @@ def safe_add_column(conn, table, column, col_type, logger):
         else:
             logger.warning(f"Database migration error adding column '{column}' to '{table}': {e}")
 
+def register_security_headers(app):
+    @app.after_request
+    def add_security_headers(response):
+        response.headers['Content-Security-Policy'] = "default-src 'none'; frame-ancestors 'none'; sandbox;"
+        response.headers['X-Content-Type-Options'] = 'nosniff'
+        response.headers['X-Frame-Options'] = 'DENY'
+        response.headers['Referrer-Policy'] = 'no-referrer'
+        response.headers['Strict-Transport-Security'] = 'max-age=31536000; includeSubDomains'
+        response.headers['Permissions-Policy'] = 'geolocation=(), camera=(), microphone=()'
+        return response
+
 def create_app():
     app = Flask(__name__)
+    register_security_headers(app)
 
-    app.config[
-        'SQLALCHEMY_DATABASE_URI'] = ("mssql+pyodbc://@MSI\\SQLEXPRESS01/"
-                                      "API_tester?driver=ODBC+Driver+17+"
-                                      "for+SQL+Server")
+    db_uri = os.environ.get('DATABASE_URL') or os.environ.get('SQLALCHEMY_DATABASE_URI')
+    if not db_uri:
+        db_uri = ("mssql+pyodbc://@MSI\\SQLEXPRESS01/"
+                  "API_tester?driver=ODBC+Driver+17+"
+                  "for+SQL+Server")
+    app.config['SQLALCHEMY_DATABASE_URI'] = db_uri
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
     # SEC-03 fix: restrict CORS to the known frontend origin only.
@@ -67,8 +81,26 @@ def create_app():
             safe_add_column(conn, 'history', 'data', 'NVARCHAR(MAX)', app.logger)
             safe_add_column(conn, 'invitations', 'role', 'VARCHAR(20)', app.logger)
             safe_add_column(conn, 'workspace_members', 'role', 'VARCHAR(20)', app.logger)
+            safe_add_column(conn, 'admin_audit_log', 'admin_username', 'VARCHAR(100)', app.logger)
 
             is_sqlite = 'sqlite' in str(db.engine.url)
+            if not is_sqlite:
+                try:
+                    conn.execute(text("ALTER TABLE admin_audit_log ALTER COLUMN admin_id INT NULL"))
+                    # Find and drop old foreign key constraints on admin_audit_log
+                    result = conn.execute(text(
+                        "SELECT name FROM sys.foreign_keys WHERE parent_object_id = OBJECT_ID('admin_audit_log')"
+                    )).fetchall()
+                    for row in result:
+                        conn.execute(text(f"ALTER TABLE admin_audit_log DROP CONSTRAINT [{row[0]}]"))
+                    # Re-add foreign key constraint with ON DELETE SET NULL
+                    conn.execute(text(
+                        "ALTER TABLE admin_audit_log ADD CONSTRAINT fk_audit_log_admin "
+                        "FOREIGN KEY (admin_id) REFERENCES users(id) ON DELETE SET NULL"
+                    ))
+                    conn.commit()
+                except Exception as e:
+                    app.logger.warning(f"Error migrating admin_audit_log schema: {e}")
             bool_col_type = 'BOOLEAN' if is_sqlite else 'BIT'
             safe_add_column(conn, 'users', 'is_admin', bool_col_type, app.logger)
             safe_add_column(conn, 'users', 'is_suspended', bool_col_type, app.logger)
@@ -123,6 +155,8 @@ def create_app():
     app.register_blueprint(admin_bp)
     app.register_blueprint(comment_bp)
     app.register_blueprint(analytics_bp)
+
+
 
 
     # Simple test route

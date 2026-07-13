@@ -87,3 +87,19 @@ def leave_workspace(workspace_id, user_id):
     db.session.delete(member)
     db.session.commit()
     return True, None
+
+def check_user_read_access(workspace_id, user_id):
+    workspace = db.session.get(Workspace, workspace_id)
+    if not workspace:
+        return False, 'Workspace not found'
+        
+    is_owner = (workspace.user_id == user_id)
+    if is_owner:
+        return True, None
+        
+    member = WorkspaceMember.query.filter_by(workspace_id=workspace_id, user_id=user_id).first()
+    if member:
+        return True, None
+        
+    return False, 'Forbidden'
+

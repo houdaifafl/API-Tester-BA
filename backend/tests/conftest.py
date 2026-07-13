@@ -29,6 +29,9 @@ def app():
     db.init_app(test_app)
     limiter.init_app(test_app)
 
+    from app import register_security_headers
+    register_security_headers(test_app)
+
     from flask import jsonify
     from flask_limiter.errors import RateLimitExceeded
     @test_app.errorhandler(RateLimitExceeded)

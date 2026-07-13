@@ -17,6 +17,8 @@ def create_workspace_route():
     name = data.get('name')
     if not name:
         return jsonify({'error': 'Workspace name is required'}), 400
+    if len(name) > 100:
+        return jsonify({'error': 'Workspace name exceeds maximum length of 100 characters'}), 400
     user_id = g.user_id
     return jsonify(create_workspace(user_id, name)), 201
 

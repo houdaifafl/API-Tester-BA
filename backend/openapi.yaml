@@ -236,6 +236,10 @@ paths:
           description: A list of collections
         '401':
           $ref: '#/components/responses/401Unauthorized'
+        '403':
+          description: Forbidden access to this workspace
+        '404':
+          description: Workspace not found
     post:
       summary: Create a collection in a workspace
       security:

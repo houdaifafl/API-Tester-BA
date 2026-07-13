@@ -17,6 +17,10 @@ def create_invitation_route(workspace_id):
     role = data.get('role', 'viewer')
     if not username:
         return jsonify({'error': 'Username is required'}), 400
+    if len(username) > 100:
+        return jsonify({'error': 'Username exceeds maximum length of 100 characters'}), 400
+    if role and len(role) > 20:
+        return jsonify({'error': 'Role exceeds maximum length of 20 characters'}), 400
         
     user_id = g.user_id
     result, error = create_invitation(workspace_id, user_id, username, role)

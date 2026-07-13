@@ -56,6 +56,29 @@ class TestListCollections:
         default_cols = [c for c in cols if c['is_default']]
         assert len(default_cols) == 1
 
+    def test_list_collections_unauthorized_fails(self, client, auth_data):
+        client._cookies.clear()
+        client.post('/api/auth/signup', json={
+            'username': 'unauthorized_cols_user',
+            'first_name': 'Unauthorized',
+            'email': 'unauthorized_cols@example.com',
+            'password': 'password123'
+        })
+        login_res = client.post('/api/auth/login', json={
+            'username': 'unauthorized_cols_user',
+            'password': 'password123'
+        })
+        token = login_res.get_json()['token']
+
+        ws_id = auth_data['default_workspace_id']
+        res = client.get(f'/api/workspaces/{ws_id}/collections', headers={'Authorization': f'Bearer {token}'})
+        assert res.status_code == 403
+        assert 'forbidden' in res.get_json()['error'].lower()
+
+    def test_list_collections_nonexistent_workspace_fails(self, auth_client):
+        res = auth_client.get('/api/workspaces/99999/collections')
+        assert res.status_code == 404
+
 
 class TestCreateCollection:
 

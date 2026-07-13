@@ -7,8 +7,10 @@ from models.notification_model import UserNotification
 from sqlalchemy import select
 
 def _write_audit_log(admin_id, action, target_type, target_id, target_snapshot=None):
+    admin = db.session.get(User, admin_id)
     log = AdminAuditLog(
         admin_id=admin_id,
+        admin_username=admin.username if admin else 'Unknown',
         action=action,
         target_type=target_type,
         target_id=target_id,

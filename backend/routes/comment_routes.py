@@ -26,6 +26,15 @@ def create_comment_route(workspace_id):
     target_tab = data.get('target_tab')
     target_key = data.get('target_key')
 
+    if not content:
+        return jsonify({'error': 'Content is required'}), 400
+    if len(content) > 2000:
+        return jsonify({'error': 'Content exceeds maximum length of 2000 characters'}), 400
+    if target_tab and len(target_tab) > 50:
+        return jsonify({'error': 'Target tab exceeds maximum length of 50 characters'}), 400
+    if target_key and len(target_key) > 255:
+        return jsonify({'error': 'Target key exceeds maximum length of 255 characters'}), 400
+
     result, error = create_comment(
         workspace_id=workspace_id,
         user_id=g.user_id,
@@ -49,6 +58,11 @@ def create_comment_route(workspace_id):
 def edit_comment_route(comment_id):
     data = request.json if request.is_json else {}
     content = data.get('content')
+
+    if not content:
+        return jsonify({'error': 'Content is required'}), 400
+    if len(content) > 2000:
+        return jsonify({'error': 'Content exceeds maximum length of 2000 characters'}), 400
 
     result, error = edit_comment(comment_id, g.user_id, content)
     if error:

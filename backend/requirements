@@ -9,4 +9,6 @@ pytest
 python-dotenv
 Flask-Limiter
 cryptography
+pyjwt
+
 

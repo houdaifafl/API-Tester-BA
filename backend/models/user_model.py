@@ -19,5 +19,5 @@ class User(db.Model):
     memberships = db.relationship('WorkspaceMember', back_populates='user', lazy=True, cascade='all, delete-orphan')
     sent_invitations = db.relationship('Invitation', foreign_keys='Invitation.inviter_id', back_populates='inviter', lazy=True, cascade='all, delete-orphan')
     received_invitations = db.relationship('Invitation', foreign_keys='Invitation.invitee_id', back_populates='invitee', lazy=True, cascade='all, delete-orphan')
-    audit_logs = db.relationship('AdminAuditLog', back_populates='admin', lazy=True, cascade='all, delete-orphan')
+    audit_logs = db.relationship('AdminAuditLog', back_populates='admin', lazy=True)
     notifications = db.relationship('UserNotification', back_populates='user', lazy=True, cascade='all, delete-orphan')

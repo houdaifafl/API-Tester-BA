@@ -25,6 +25,15 @@ def signup():
     if not password:
         return jsonify({'error': 'Password is required'}), 400
 
+    if len(username) > 100:
+        return jsonify({'error': 'Username exceeds maximum length of 100 characters'}), 400
+    if len(first_name) > 100:
+        return jsonify({'error': 'First name exceeds maximum length of 100 characters'}), 400
+    if len(email) > 255:
+        return jsonify({'error': 'Email exceeds maximum length of 255 characters'}), 400
+    if len(password) > 72:
+        return jsonify({'error': 'Password exceeds maximum length of 72 characters'}), 400
+
     _, error = signup_user(username, first_name, email, password)
     if error:
         return jsonify({'error': error}), 409
@@ -42,6 +51,11 @@ def login():
         return jsonify({'error': 'Username is required'}), 400
     if not password:
         return jsonify({'error': 'Password is required'}), 400
+
+    if len(username) > 100:
+        return jsonify({'error': 'Username exceeds maximum length of 100 characters'}), 400
+    if len(password) > 72:
+        return jsonify({'error': 'Password exceeds maximum length of 72 characters'}), 400
 
     user, error = login_user(username, password)
     if error:
