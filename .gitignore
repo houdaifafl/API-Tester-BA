@@ -11,5 +11,9 @@ frontend/api-craft-app/build/
 # IDE
 .idea/
 
-# Environment
+# Environment — never commit real secrets
 .env
+.env.local
+.env.production
+.env.staging
+# .env.example is safe to commit (contains only placeholders)

@@ -6,3 +6,7 @@ pyodbc
 bcrypt
 requests
 pytest
+python-dotenv
+Flask-Limiter
+cryptography
+

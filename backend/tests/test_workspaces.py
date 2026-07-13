@@ -125,6 +125,7 @@ class TestGetWorkspace:
         assert res.get_json()['error'] == 'Forbidden'
 
     def test_missing_token_returns_401(self, client, auth_data):
+        client._cookies.clear()
         ws_id = auth_data['default_workspace_id']
         res = client.get(f'/api/workspaces/{ws_id}')
         assert res.status_code == 401
@@ -170,6 +171,7 @@ class TestDeleteWorkspace:
         assert res.status_code == 404
 
     def test_missing_token_returns_401(self, client, auth_data):
+        client._cookies.clear()
         ws_id = auth_data['default_workspace_id']
         res = client.delete(f'/api/workspaces/{ws_id}')
         assert res.status_code == 401
@@ -246,6 +248,7 @@ class TestLeaveWorkspace:
         assert res.status_code == 403
 
     def test_missing_token_returns_401(self, client, auth_data):
+        client._cookies.clear()
         ws_id = auth_data['default_workspace_id']
         res = client.delete(f'/api/workspaces/{ws_id}/leave')
         assert res.status_code == 401

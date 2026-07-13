@@ -6,8 +6,18 @@ import time
 import os
 from functools import wraps
 from flask import request, jsonify, g
+from dotenv import load_dotenv
 
-SECRET_KEY = os.environ.get('JWT_SECRET', 'apicraft-jwt-development-secret-key-38491024')
+# Load .env file if present (development convenience)
+load_dotenv()
+
+SECRET_KEY = os.environ.get('JWT_SECRET')
+if not SECRET_KEY:
+    raise RuntimeError(
+        "JWT_SECRET environment variable is not set. "
+        "Generate one with: python -c \"import secrets; print(secrets.token_hex(32))\" "
+        "and add it to your .env file or environment."
+    )
 
 def base64url_encode(payload_bytes):
     return base64.urlsafe_b64encode(payload_bytes).rstrip(b'=').decode('utf-8')
@@ -66,18 +76,47 @@ def token_required(f):
     """
     @wraps(f)
     def decorated(*args, **kwargs):
+        # SEC-04: Try Authorization header first (tests, API clients)
+        token = None
         auth_header = request.headers.get('Authorization')
-        if not auth_header or not auth_header.startswith('Bearer '):
+        if auth_header and auth_header.startswith('Bearer '):
+            token = auth_header.split(' ')[1]
+        
+        # Fallback to httpOnly cookie (standard browser/web app UI requests)
+        if not token:
+            token = request.cookies.get('token')
+                
+        if not token:
             return jsonify({'error': 'Unauthorized: Token is missing or invalid'}), 401
         
-        token = auth_header.split(' ')[1]
         payload, error = decode_token(token)
         if error:
             return jsonify({'error': f'Unauthorized: {error}'}), 401
         
         g.user_id = payload.get('user_id')
+        g.is_admin = payload.get('is_admin', False)
         if not g.user_id:
             return jsonify({'error': 'Unauthorized: Invalid token payload'}), 401
             
         return f(*args, **kwargs)
     return decorated
+
+def admin_required(f):
+    """
+    Decorator to restrict access to administrators only.
+    Checks the 'is_admin' claim in the verified JWT token (with database validation fallback).
+    """
+    @wraps(f)
+    @token_required
+    def decorated(*args, **kwargs):
+        is_admin = getattr(g, 'is_admin', False)
+        if not is_admin:
+            from models.base import db
+            from models.user_model import User
+            user = db.session.get(User, g.user_id)
+            if not (user and user.is_admin):
+                return jsonify({'error': 'Forbidden: Admin privilege required'}), 403
+            g.is_admin = True
+        return f(*args, **kwargs)
+    return decorated
+

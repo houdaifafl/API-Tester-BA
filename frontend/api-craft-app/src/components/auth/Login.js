@@ -21,14 +21,12 @@ function Login() {
       sessionStorage.setItem('username', data.username);
       sessionStorage.setItem('userId', data.user_id);
       sessionStorage.setItem('email', data.email);
-      sessionStorage.setItem('token', data.token);
-      sessionStorage.setItem('isAdmin', data.is_admin ? 'true' : 'false');
+
       
       setUser({
         userId: data.user_id,
         email: data.email,
         username: data.username,
-        token: data.token,
         isAdmin: data.is_admin,
       });
 

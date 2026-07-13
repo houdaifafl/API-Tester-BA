@@ -44,6 +44,8 @@ paths:
                     type: integer
         '400':
           description: Bad request (e.g. username/email already exists)
+        '429':
+          $ref: '#/components/responses/429TooManyRequests'
 
   /api/auth/login:
     post:
@@ -84,6 +86,52 @@ paths:
                     type: integer
         '401':
           description: Invalid username or password
+        '429':
+          $ref: '#/components/responses/429TooManyRequests'
+
+  /api/auth/logout:
+    post:
+      summary: Log out the active user and clear the auth cookie
+      responses:
+        '200':
+          description: Logout successful
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Logout successful"
+
+  /api/auth/me:
+    get:
+      summary: Retrieve the current authenticated user's session profile
+      security:
+        - CookieAuth: []
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Session profile retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  user_id:
+                    type: integer
+                    example: 123
+                  username:
+                    type: string
+                    example: "alice"
+                  email:
+                    type: string
+                    example: "alice@example.com"
+                  is_admin:
+                    type: boolean
+                    example: true
+        '401':
+          $ref: '#/components/responses/401Unauthorized'
 
   /api/workspaces:
     get:
@@ -539,6 +587,10 @@ components:
       type: http
       scheme: bearer
       bearerFormat: JWT
+    CookieAuth:
+      type: apiKey
+      in: cookie
+      name: token
   responses:
     401Unauthorized:
       description: Unauthorized - Token is missing or invalid
@@ -550,6 +602,19 @@ components:
               error:
                 type: string
                 example: "Unauthorized: Token is missing or invalid"
+    429TooManyRequests:
+      description: Too Many Requests - Rate limit exceeded
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+                example: "Too Many Requests"
+              message:
+                type: string
+                example: "10 per 1 minute"
   schemas:
     Workspace:
       type: object

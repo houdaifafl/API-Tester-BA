@@ -10,7 +10,7 @@ class TestCreateHistory:
             'headers': [{'key': 'Content-Type', 'value': 'application/json'}],
             'params': [{'key': 'q', 'value': 'test'}],
             'body': {'foo': 'bar'},
-            'auth': {'type': 'bearer', 'token': 'xyz'},
+            'auth': {'type': 'none'},
             'status': 200,
             'response_time': 150.5,
             'data': {'success': True}
@@ -25,7 +25,7 @@ class TestCreateHistory:
         assert data['headers'] == [{'key': 'Content-Type', 'value': 'application/json'}]
         assert data['params'] == [{'key': 'q', 'value': 'test'}]
         assert data['body'] == {'foo': 'bar'}
-        assert data['auth'] == {'type': 'bearer', 'token': 'xyz'}
+        assert data['auth'] == {'type': 'none'}
         assert data['status'] == 200
         assert data['response_time'] == 150.5
         assert data['data'] == {'success': True}
@@ -42,6 +42,7 @@ class TestCreateHistory:
         assert 'url' in res.get_json()['error'].lower()
 
     def test_create_history_missing_token(self, client, auth_data):
+        client._cookies.clear()
         ws_id = auth_data['default_workspace_id']
         res = client.post(f'/api/workspaces/{ws_id}/history', json={'method': 'GET', 'url': 'http://example.com'})
         assert res.status_code == 401
@@ -109,6 +110,7 @@ class TestListHistory:
         assert data[99]['url'] == 'http://example.com/api/5'
 
     def test_list_history_missing_token(self, client, auth_data):
+        client._cookies.clear()
         ws_id = auth_data['default_workspace_id']
         res = client.get(f'/api/workspaces/{ws_id}/history')
         assert res.status_code == 401

@@ -167,6 +167,7 @@ class TestAnalyticsErrorPath:
         assert resp.status_code == 404
 
     def test_no_auth_token_returns_401(self, client, auth_data):
+        client._cookies.clear()
         resp = client.get(f"/api/workspaces/{auth_data['default_workspace_id']}/analytics")
         assert resp.status_code == 401
 

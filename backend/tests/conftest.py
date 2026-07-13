@@ -7,6 +7,7 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from flask import Flask
 from models.base import db
+from extensions import limiter
 from routes.auth_routes import auth_bp
 from routes.workspace_routes import workspace_bp
 from routes.collection_routes import collection_bp
@@ -26,6 +27,13 @@ def app():
     test_app.config['TESTING'] = True
 
     db.init_app(test_app)
+    limiter.init_app(test_app)
+
+    from flask import jsonify
+    from flask_limiter.errors import RateLimitExceeded
+    @test_app.errorhandler(RateLimitExceeded)
+    def ratelimit_handler(e):
+        return jsonify({'error': 'Too Many Requests', 'message': str(e.description)}), 429
     test_app.register_blueprint(auth_bp)
     test_app.register_blueprint(workspace_bp)
     test_app.register_blueprint(collection_bp)
@@ -117,3 +125,9 @@ def auth_client(client, auth_data):
             return self.client.delete(*args, **kwargs)
 
     return AuthenticatedClient(client, token)
+
+
+@pytest.fixture(autouse=True)
+def clear_cookies(client):
+    """Automatically clear client cookies before every test to ensure isolation."""
+    client._cookies.clear()

@@ -2,6 +2,9 @@ from models.base import db
 from models.history_model import History
 from models.workspace_model import Workspace
 from models.workspace_member_model import WorkspaceMember
+from services.encryption_service import (
+    mask_sensitive_headers, mask_sensitive_auth, should_mask_response_data
+)
 
 def get_history_entries(workspace_id, user_id):
     """
@@ -31,9 +34,9 @@ def get_history_entries(workspace_id, user_id):
             'method': e.method,
             'url': e.url,
             'params': e.params,
-            'headers': e.headers,
+            'headers': mask_sensitive_headers(e.headers),
             'body': e.body,
-            'auth': e.auth,
+            'auth': mask_sensitive_auth(e.auth),
             'status': e.status,
             'response_time': e.response_time,
             'data': e.data,
@@ -68,6 +71,10 @@ def create_history_entry(workspace_id, user_id, history_data):
     if not url:
         return None, 'URL is required'
 
+    resp_data = history_data.get('data')
+    if should_mask_response_data(history_data):
+        resp_data = {'message': 'Response body not stored due to security policy (contains sensitive request/response data)'}
+
     new_entry = History(
         workspace_id=workspace_id,
         method=method,
@@ -78,7 +85,7 @@ def create_history_entry(workspace_id, user_id, history_data):
         auth=history_data.get('auth'),
         status=history_data.get('status'),
         response_time=history_data.get('response_time'),
-        data=history_data.get('data')
+        data=resp_data
     )
     db.session.add(new_entry)
     db.session.commit()
@@ -89,9 +96,9 @@ def create_history_entry(workspace_id, user_id, history_data):
         'method': new_entry.method,
         'url': new_entry.url,
         'params': new_entry.params,
-        'headers': new_entry.headers,
+        'headers': mask_sensitive_headers(new_entry.headers),
         'body': new_entry.body,
-        'auth': new_entry.auth,
+        'auth': mask_sensitive_auth(new_entry.auth),
         'status': new_entry.status,
         'response_time': new_entry.response_time,
         'data': new_entry.data,

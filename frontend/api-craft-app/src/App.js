@@ -6,15 +6,45 @@ import AdminDashboard from './components/admin/AdminDashboard';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 
 function ProtectedRoute({ children }) {
-  const { user } = useAuth();
+  const { user, loading } = useAuth();
+  if (loading) {
+    return (
+      <div style={{
+        display: 'flex',
+        justifyContent: 'center',
+        alignItems: 'center',
+        height: '100vh',
+        background: '#1e1e2e',
+        color: '#cdd6f4',
+        fontFamily: 'sans-serif'
+      }}>
+        <div style={{ fontSize: '18px', fontWeight: '500' }}>Loading session...</div>
+      </div>
+    );
+  }
   if (!user?.userId) return <Navigate to="/login" replace />;
   return children;
 }
 
 function AdminRoute({ children }) {
-  const { user } = useAuth();
+  const { user, loading } = useAuth();
+  if (loading) {
+    return (
+      <div style={{
+        display: 'flex',
+        justifyContent: 'center',
+        alignItems: 'center',
+        height: '100vh',
+        background: '#1e1e2e',
+        color: '#cdd6f4',
+        fontFamily: 'sans-serif'
+      }}>
+        <div style={{ fontSize: '18px', fontWeight: '500' }}>Loading session...</div>
+      </div>
+    );
+  }
   if (!user?.userId) return <Navigate to="/login" replace />;
-  if (!user.isAdmin) return <Navigate to="/workspace/default" replace />; // Redirect to default if not admin
+  if (!user.isAdmin) return <Navigate to="/workspace/default" replace />;
   return children;
 }
 

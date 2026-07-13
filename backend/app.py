@@ -1,7 +1,11 @@
-from flask import Flask
+from flask import Flask, jsonify
 from flask_cors import CORS
+import os
+from dotenv import load_dotenv
+load_dotenv()
 from sqlalchemy import text
 from models.base import db
+from extensions import limiter
 from routes.collection_routes import collection_bp
 from routes.api_client_routes import api_client_bp
 from routes.auth_routes import auth_bp
@@ -33,8 +37,18 @@ def create_app():
                                       "API_tester?driver=ODBC+Driver+17+"
                                       "for+SQL+Server")
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-    CORS(app)
+
+    # SEC-03 fix: restrict CORS to the known frontend origin only.
+    # Set FRONTEND_ORIGIN in .env for development or in the deployment environment for production.
+    _frontend_origin = os.environ.get('FRONTEND_ORIGIN', 'http://localhost:3000')
+    CORS(app, origins=[_frontend_origin], supports_credentials=True)
     db.init_app(app)
+    limiter.init_app(app)
+
+    from flask_limiter.errors import RateLimitExceeded
+    @app.errorhandler(RateLimitExceeded)
+    def ratelimit_handler(e):
+        return jsonify({'error': 'Too Many Requests', 'message': str(e.description)}), 429
 
     with app.app_context():
         db.create_all()
@@ -119,4 +133,5 @@ def create_app():
 
 if __name__ == "__main__":
     app = create_app()
-    app.run(debug=True)
+    debug_mode = os.environ.get('FLASK_DEBUG', 'false').lower() == 'true'
+    app.run(debug=debug_mode)
