@@ -585,109 +585,7 @@ paths:
         '404':
           description: Invitation not found
 
-components:
-  securitySchemes:
-    BearerAuth:
-      type: http
-      scheme: bearer
-      bearerFormat: JWT
-    CookieAuth:
-      type: apiKey
-      in: cookie
-      name: token
-  responses:
-    401Unauthorized:
-      description: Unauthorized - Token is missing or invalid
-      content:
-        application/json:
-          schema:
-            type: object
-            properties:
-              error:
-                type: string
-                example: "Unauthorized: Token is missing or invalid"
-    429TooManyRequests:
-      description: Too Many Requests - Rate limit exceeded
-      content:
-        application/json:
-          schema:
-            type: object
-            properties:
-              error:
-                type: string
-                example: "Too Many Requests"
-              message:
-                type: string
-                example: "10 per 1 minute"
-  schemas:
-    Workspace:
-      type: object
-      properties:
-        id:
-          type: integer
-        name:
-          type: string
-        is_default:
-          type: boolean
-        owner_id:
-          type: integer
 
-    History:
-      type: object
-      properties:
-        id:
-          type: integer
-        workspace_id:
-          type: integer
-        method:
-          type: string
-        url:
-          type: string
-        params:
-          type: array
-          items:
-            type: object
-        headers:
-          type: array
-          items:
-            type: object
-        body:
-          type: object
-        auth:
-          type: object
-        status:
-          type: integer
-          nullable: true
-        response_time:
-          type: number
-          nullable: true
-        data:
-          type: object
-          nullable: true
-        created_at:
-          type: string
-          format: date-time
-
-    Invitation:
-      type: object
-      properties:
-        id:
-          type: integer
-        workspace_id:
-          type: integer
-        workspace_name:
-          type: string
-        inviter_username:
-          type: string
-        inviter_email:
-          type: string
-        status:
-          type: string
-          example: pending
-        role:
-          type: string
-          enum: [editor, viewer]
-          example: viewer
 
   /api/workspaces/{workspace_id}/leave:
     delete:
@@ -1185,3 +1083,108 @@ components:
           description: Access denied
         '404':
           description: Workspace not found
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+    CookieAuth:
+      type: apiKey
+      in: cookie
+      name: token
+  responses:
+    401Unauthorized:
+      description: Unauthorized - Token is missing or invalid
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+                example: "Unauthorized: Token is missing or invalid"
+    429TooManyRequests:
+      description: Too Many Requests - Rate limit exceeded
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+                example: "Too Many Requests"
+              message:
+                type: string
+                example: "10 per 1 minute"
+  schemas:
+    Workspace:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        is_default:
+          type: boolean
+        owner_id:
+          type: integer
+
+    History:
+      type: object
+      properties:
+        id:
+          type: integer
+        workspace_id:
+          type: integer
+        method:
+          type: string
+        url:
+          type: string
+        params:
+          type: array
+          items:
+            type: object
+        headers:
+          type: array
+          items:
+            type: object
+        body:
+          type: object
+        auth:
+          type: object
+        status:
+          type: integer
+          nullable: true
+        response_time:
+          type: number
+          nullable: true
+        data:
+          type: object
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+
+    Invitation:
+      type: object
+      properties:
+        id:
+          type: integer
+        workspace_id:
+          type: integer
+        workspace_name:
+          type: string
+        inviter_username:
+          type: string
+        inviter_email:
+          type: string
+        status:
+          type: string
+          example: pending
+        role:
+          type: string
+          enum: [editor, viewer]
+          example: viewer
+

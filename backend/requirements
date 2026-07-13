@@ -10,5 +10,4 @@ python-dotenv
 Flask-Limiter
 cryptography
 pyjwt
-
-
+pyyaml
