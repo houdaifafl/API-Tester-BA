@@ -1,0 +1,159 @@
+.act-timeline-container {
+  padding: 16px;
+  max-width: 800px;
+  margin: 0 auto;
+  user-select: none;
+  cursor: default;
+}
+
+.act-timeline {
+  position: relative;
+  border-left: 2px solid var(--border-color, #e0e0e0);
+  margin-left: 24px;
+  padding: 8px 0;
+}
+
+.act-timeline-item {
+  position: relative;
+  margin-bottom: 24px;
+  padding-left: 24px;
+}
+
+.act-timeline-badge {
+  position: absolute;
+  left: -15px;
+  top: 4px;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: var(--bg-surface, #ffffff);
+  border: 2px solid var(--border-color, #e0e0e0);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.act-icon {
+  font-size: 12px;
+}
+
+.act-icon--create { color: #2ecc71; }
+.act-icon--delete { color: #e74c3c; }
+.act-icon--edit { color: #3498db; }
+.act-icon--execute { color: #f39c12; }
+.act-icon--invite { color: #9b59b6; }
+.act-icon--join { color: #27ae60; }
+.act-icon--leave { color: #d35400; }
+
+.act-timeline-content {
+  background: var(--bg-card, #f9f9f9);
+  border: 1px solid var(--border-color, #e0e0e0);
+  border-radius: 6px;
+  padding: 12px 16px;
+}
+
+.act-timeline-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 14px;
+}
+
+.act-user {
+  color: var(--text-primary, #333333);
+}
+
+.act-target {
+  color: var(--text-secondary, #666666);
+}
+
+.act-email {
+  font-style: italic;
+  color: var(--text-secondary, #666666);
+}
+
+.act-timeline-time {
+  font-size: 12px;
+  color: var(--text-muted, #999999);
+}
+
+.act-timeline-actions {
+  margin-top: 8px;
+}
+
+.act-expand-btn {
+  background: none;
+  border: none;
+  color: var(--text-link, #0076ff);
+  font-size: 12px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 0;
+}
+
+.act-expand-btn:hover {
+  text-decoration: underline;
+}
+
+.act-diff-viewer {
+  margin-top: 12px;
+  border-top: 1px solid var(--border-color, #e0e0e0);
+  padding-top: 8px;
+  font-family: monospace;
+  font-size: 12px;
+  background: #272822;
+  color: #f8f8f2;
+  border-radius: 4px;
+  padding: 10px;
+  user-select: text;
+  cursor: text;
+}
+
+.act-diff-line {
+  display: flex;
+  padding: 2px 4px;
+  border-radius: 2px;
+}
+
+.act-diff-line--before {
+  background-color: rgba(231, 76, 60, 0.2);
+  color: #ff8b80;
+}
+
+.act-diff-line--after {
+  background-color: rgba(46, 204, 113, 0.2);
+  color: #8eff8b;
+}
+
+.act-diff-sign {
+  width: 14px;
+  font-weight: bold;
+}
+
+.act-diff-field {
+  font-weight: bold;
+  margin-right: 8px;
+}
+
+.act-diff-val {
+  margin: 0;
+  white-space: pre-wrap;
+  word-break: break-all;
+}
+
+.act-empty-state, .act-status-msg {
+  padding: 40px;
+  text-align: center;
+  color: var(--text-muted, #999999);
+}
+
+.act-empty-icon {
+  font-size: 40px;
+  margin-bottom: 12px;
+}
+
+.act-status-msg--error {
+  color: #e74c3c;
+}

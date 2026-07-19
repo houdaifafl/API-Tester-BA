@@ -3,6 +3,7 @@ from models.invitation_model import Invitation
 from models.workspace_member_model import WorkspaceMember
 from models.workspace_model import Workspace
 from models.user_model import User
+from services.activity_service import log_activity
 
 def create_invitation(workspace_id, inviter_id, invitee_username, role='viewer'):
     # Verify workspace exists
@@ -41,7 +42,6 @@ def create_invitation(workspace_id, inviter_id, invitee_username, role='viewer')
     if existing_invitation:
         return None, 'invitation_pending'
 
-    # Insert Invitation row
     invitation = Invitation(
         workspace_id=workspace_id,
         inviter_id=inviter_id,
@@ -50,6 +50,8 @@ def create_invitation(workspace_id, inviter_id, invitee_username, role='viewer')
         role=role
     )
     db.session.add(invitation)
+    log_activity(workspace_id, inviter_id, 'membership', 'invite', 'member', invitee.email, invitee.id,
+                 after_state={'role': role})
     db.session.commit()
     return {'id': invitation.id}, None
 
@@ -89,7 +91,8 @@ def accept_invitation(invitation_id, user_id):
     if not existing:
         member = WorkspaceMember(workspace_id=invitation.workspace_id, user_id=user_id, role=invitation.role or 'viewer')
         db.session.add(member)
-        
+    username = invitation.invitee.username if invitation.invitee else 'Unknown'
+    log_activity(invitation.workspace_id, user_id, 'membership', 'join', 'member', username, user_id)
     db.session.commit()
     return True, None
 
@@ -105,5 +108,22 @@ def decline_invitation(invitation_id, user_id):
         return None, 'not_pending'
         
     invitation.status = 'declined'
+    username = invitation.invitee.username if invitation.invitee else 'Unknown'
+    log_activity(invitation.workspace_id, user_id, 'membership', 'decline', 'member', username, user_id)
+    db.session.commit()
+    return True, None
+
+def cancel_invitation(invitation_id, user_id):
+    invitation = db.session.get(Invitation, invitation_id)
+    if not invitation:
+        return None, 'not_found'
+    workspace = invitation.workspace
+    if not workspace or workspace.user_id != user_id:
+        return None, 'forbidden'
+    if invitation.status != 'pending':
+        return None, 'not_pending'
+    invitee_name = invitation.invitee.username if invitation.invitee else 'Unknown'
+    log_activity(invitation.workspace_id, user_id, 'membership', 'revoke', 'member', invitee_name, invitation.invitee_id)
+    db.session.delete(invitation)
     db.session.commit()
     return True, None

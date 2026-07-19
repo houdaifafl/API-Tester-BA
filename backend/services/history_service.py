@@ -5,6 +5,7 @@ from models.workspace_member_model import WorkspaceMember
 from services.encryption_service import (
     mask_sensitive_headers, mask_sensitive_auth, should_mask_response_data
 )
+from services.activity_service import log_activity
 
 def get_history_entries(workspace_id, user_id):
     """
@@ -75,6 +76,9 @@ def create_history_entry(workspace_id, user_id, history_data):
     if should_mask_response_data(history_data):
         resp_data = {'message': 'Response body not stored due to security policy (contains sensitive request/response data)'}
 
+    status = history_data.get('status')
+    response_time = history_data.get('response_time')
+
     new_entry = History(
         workspace_id=workspace_id,
         method=method,
@@ -83,11 +87,25 @@ def create_history_entry(workspace_id, user_id, history_data):
         headers=history_data.get('headers'),
         body=history_data.get('body'),
         auth=history_data.get('auth'),
-        status=history_data.get('status'),
-        response_time=history_data.get('response_time'),
+        status=status,
+        response_time=response_time,
         data=resp_data
     )
     db.session.add(new_entry)
+    
+    # Calculate response time in ms for activity feed log
+    resp_time_ms = int(response_time * 1000) if response_time is not None else 0
+    log_activity(
+        workspace_id,
+        user_id,
+        'execution',
+        'execute',
+        'request',
+        f"{method} {url}",
+        before_state=None,
+        after_state={"status_code": status, "response_time_ms": resp_time_ms}
+    )
+    
     db.session.commit()
 
     serialized = {

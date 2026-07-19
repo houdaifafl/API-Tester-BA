@@ -1,6 +1,7 @@
 from models.request_model import Request
 from models.collection_model import Collection
 from models.base import db
+from services.activity_service import log_activity
 
 
 def create_request(collection_id, user_id):
@@ -23,6 +24,8 @@ def create_request(collection_id, user_id):
         collection_id=collection_id,
     )
     db.session.add(new_request)
+    db.session.flush()
+    log_activity(collection.workspace_id, user_id, 'request', 'create', 'request', 'New Request', new_request.id)
     db.session.commit()
 
     return {
@@ -48,7 +51,10 @@ def rename_request(request_id, new_name, user_id):
     if not allowed:
         return None, err
 
+    old_name = req.name
     req.name = new_name
+    log_activity(collection.workspace_id, user_id, 'request', 'rename', 'request', new_name, req.id,
+                 before_state={'name': old_name}, after_state={'name': new_name})
     db.session.commit()
     return {'id': req.id, 'name': req.name}, None
 
@@ -71,7 +77,10 @@ def update_request_method(request_id, method, user_id):
     if not allowed:
         return None, err
 
+    old_method = req.method
     req.method = method
+    log_activity(collection.workspace_id, user_id, 'request', 'update', 'request', req.name, req.id,
+                 before_state={'method': old_method}, after_state={'method': method})
     db.session.commit()
     return {'id': req.id, 'method': req.method}, None
 
@@ -128,11 +137,27 @@ def save_request(request_id, data, user_id):
                             target_key=old_key
                         ).update({Comment.target_key: new_key}, synchronize_session=False)
 
+    # Calculate diff before modifying
+    before_diff = {}
+    after_diff = {}
+    for field in ['url', 'params', 'headers', 'body', 'auth']:
+        if field in data:
+            current_val = getattr(req, field)
+            new_val = data[field]
+            if current_val != new_val:
+                before_diff[field] = current_val
+                after_diff[field] = new_val
+
     if 'url'     in data: req.url     = data['url']
     if 'params'  in data: req.params  = data['params']
     if 'headers' in data: req.headers = data['headers']
     if 'body'    in data: req.body    = data['body']
     if 'auth'    in data: req.auth    = data['auth']
+    
+    if before_diff:
+        log_activity(collection.workspace_id, user_id, 'request', 'update', 'request', req.name, req.id,
+                     before_state=before_diff, after_state=after_diff)
+                     
     db.session.commit()
     return {'id': req.id}, None
 
@@ -151,6 +176,7 @@ def delete_request(request_id, user_id):
     if not allowed:
         return None, err
 
+    log_activity(collection.workspace_id, user_id, 'request', 'delete', 'request', req.name, req.id)
     db.session.delete(req)
     db.session.commit()
     return True, None

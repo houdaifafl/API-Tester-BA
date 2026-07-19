@@ -41,7 +41,7 @@ export default function MainPanel({ activeTab, responseHeights, requestStates, o
 
   return (
     <main className="main-panel">
-      <OverviewPanel />
+      <OverviewPanel workspaceId={workspaceId} workspaceRole={workspaceRole} />
     </main>
   );
 }

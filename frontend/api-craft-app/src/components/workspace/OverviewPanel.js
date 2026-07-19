@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
-import { FaFileAlt, FaBell } from 'react-icons/fa';
+import { FaFileAlt, FaBell, FaHistory } from 'react-icons/fa';
+import ActivityLogTab from './ActivityLogTab';
 import './OverviewPanel.css';
 
-export default function OverviewPanel() {
+export default function OverviewPanel({ workspaceId, workspaceRole }) {
   const [activeTab, setActiveTab] = useState('docs');
 
   return (
@@ -22,6 +23,13 @@ export default function OverviewPanel() {
           <FaBell className="panel-tab-icon" />
           Updates
         </button>
+        <button
+          className={`panel-tab ${activeTab === 'activities' ? 'active' : ''}`}
+          onClick={() => setActiveTab('activities')}
+        >
+          <FaHistory className="panel-tab-icon" />
+          Activity Log
+        </button>
       </div>
 
       <div className="panel-body">
@@ -40,6 +48,9 @@ export default function OverviewPanel() {
           <div className="overview-docs">
             <p>Keep users informed about all new features</p>
           </div>
+        )}
+        {activeTab === 'activities' && (
+          <ActivityLogTab workspaceId={workspaceId} workspaceRole={workspaceRole} />
         )}
       </div>
     </>

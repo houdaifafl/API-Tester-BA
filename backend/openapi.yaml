@@ -200,6 +200,38 @@ paths:
           description: Forbidden access to this workspace
         '404':
           description: Workspace not found
+    patch:
+      summary: Rename a workspace
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: workspace_id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - name
+              properties:
+                name:
+                  type: string
+      responses:
+        '200':
+          description: Workspace renamed successfully
+        '400':
+          description: Workspace name is required or too long
+        '401':
+          $ref: '#/components/responses/401Unauthorized'
+        '403':
+          description: Forbidden - Only owners can rename workspaces
+        '404':
+          description: Workspace not found
     delete:
       summary: Delete a workspace
       security:
@@ -633,6 +665,147 @@ paths:
                   error:
                     type: string
                     example: Membership not found
+
+  /api/invitations/{invitation_id}:
+    delete:
+      summary: Cancel a pending workspace invitation
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: invitation_id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Invitation cancelled successfully
+        '401':
+          $ref: '#/components/responses/401Unauthorized'
+        '403':
+          description: Forbidden - only owners can cancel invitations
+        '404':
+          description: Invitation not found
+
+  /api/workspaces/{workspace_id}/activities:
+    get:
+      summary: Get chronological activities logs for a workspace
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: workspace_id
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+            default: 100
+        - name: offset
+          in: query
+          required: false
+          schema:
+            type: integer
+            default: 0
+      responses:
+        '200':
+          description: List of activity logs
+        '401':
+          $ref: '#/components/responses/401Unauthorized'
+        '403':
+          description: Forbidden - not a member of the workspace
+        '404':
+          description: Workspace not found
+
+  /api/workspaces/{workspace_id}/collaborators:
+    get:
+      summary: List members and pending invitations for a workspace
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: workspace_id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Workspace members and pending invitations
+        '401':
+          $ref: '#/components/responses/401Unauthorized'
+        '403':
+          description: Forbidden - not a member of the workspace
+        '404':
+          description: Workspace not found
+
+  /api/workspaces/{workspace_id}/members/{target_user_id}:
+    patch:
+      summary: Update collaborator role in a workspace
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: workspace_id
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: target_user_id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - role
+              properties:
+                role:
+                  type: string
+                  enum: [editor, viewer]
+      responses:
+        '200':
+          description: Collaborator role updated successfully
+        '400':
+          description: Invalid request or member not found
+        '401':
+          $ref: '#/components/responses/401Unauthorized'
+        '403':
+          description: Forbidden - only owners can change roles
+        '404':
+          description: Workspace not found
+    delete:
+      summary: Remove a collaborator from a workspace
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: workspace_id
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: target_user_id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Collaborator removed successfully
+        '400':
+          description: Member not found in workspace
+        '401':
+          $ref: '#/components/responses/401Unauthorized'
+        '403':
+          description: Forbidden - only owners can remove members
+        '404':
+          description: Workspace not found
 
   /api/admin/users:
     get:

@@ -63,6 +63,37 @@
   font-size: 11px;
 }
 
+/* ── Export / Action buttons container ───────────────────────── */
+.req-action-buttons {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.req-export-btn {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 12px;
+  font-size: 12.5px;
+  font-weight: 500;
+  color: #1a73e8;
+  background: transparent;
+  border: 1px solid rgba(26, 115, 232, 0.25);
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s, color 0.15s;
+}
+
+.req-export-btn:hover {
+  background: rgba(26, 115, 232, 0.06);
+  border-color: rgba(26, 115, 232, 0.45);
+}
+
+.export-icon {
+  font-size: 11px;
+}
+
 /* ── URL bar ───────────────────────────────────────────────────── */
 .req-bar {
   display: flex;

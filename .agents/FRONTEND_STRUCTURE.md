@@ -34,7 +34,8 @@ src/
 │   ├── collectionService.js   # Collection API client
 │   ├── requestService.js      # HTTP Request execution/management client
 │   ├── historyService.js      # Workspace Request History API client
-│   └── invitationService.js   # Workspace invitations API client
+│   ├── invitationService.js   # Workspace invitations API client
+│   └── activityService.js     # Workspace activities feed API client
 │
 └── components/
     ├── auth/                  # Authentication pages
@@ -56,7 +57,10 @@ src/
     │   ├── RequestContextMenu.js/.css # Context menu for requests/collections
     │   ├── SignOutModal.js / .css     # Sign-out confirmation modal
     │   ├── InviteModal.js / .css      # Workspace invitations send modal
-    │   └── InviteModal.test.js        # InviteModal smoke/interaction tests
+    │   ├── InviteModal.test.js        # InviteModal smoke/interaction tests
+    │   ├── WorkspaceSettingsModal.js/.css # Settings and member management modal
+    │   ├── ActivityLogTab.js / .css   # Workspace chronological log timeline tab
+    │   └── ActivityLogTab.test.js     # ActivityLogTab smoke test
     │
     └── request/               # Request composition & builder tabs
         ├── RequestBuilder.js / .css   # Request builder container
@@ -67,7 +71,9 @@ src/
         ├── AuthorizationTab.js / .css # Auth type and credentials manager
         ├── HeadersTab.js              # Headers manager (implicitly shares ParamsTab.css)
         ├── BodyTab.js / .css          # Body format (raw, urlencoded, formdata) manager
-        └── ResponsePanel.js           # Executed request response panel
+        ├── ResponsePanel.js           # Executed request response panel
+        ├── requestExportUtils.js      # Client-side cURL generation & JSON download utils
+        └── requestExportUtils.test.js # Unit test suite for request export utilities
 ```
 
 ---
@@ -138,7 +144,11 @@ All routing is defined in [App.js](file:///c:/Users/hlanj/Bachelor%20info/Bachel
 * **[MainPanel.js](file:///c:/Users/hlanj/Bachelor%20info/Bachelor%20Arbeit/API%20tester/frontend/api-craft-app/src/components/workspace/MainPanel.js)**
   * *Responsibility*: Switches center screen between the `OverviewPanel` (welcome/docs screen) and `RequestBuilder` based on current tab type.
 * **[OverviewPanel.js](file:///c:/Users/hlanj/Bachelor%20info/Bachelor%20Arbeit/API%20tester/frontend/api-craft-app/src/components/workspace/OverviewPanel.js)**
-  * *Responsibility*: General workspace welcome landing page. Features a two-tab view: `Docs` and `Updates`.
+  * *Responsibility*: General workspace welcome landing page. Features a three-tab view: `Docs`, `Updates`, and `Activity Log`.
+* **[WorkspaceSettingsModal.js](file:///c:/Users/hlanj/Bachelor%20info/Bachelor%20Arbeit/API%20tester/frontend/api-craft-app/src/components/workspace/WorkspaceSettingsModal.js)**
+  * *Responsibility*: Coordinates workspace name renaming and displays list of collaborators/invitations, allowing Owner role upgrades, deletes, and invite cancels.
+* **[ActivityLogTab.js](file:///c:/Users/hlanj/Bachelor%20info/Bachelor%20Arbeit/API%20tester/frontend/api-craft-app/src/components/workspace/ActivityLogTab.js)**
+  * *Responsibility*: Displays chronological workspace event timeline with color-coded diff logs.
 * **[RequestContextMenu.js](file:///c:/Users/hlanj/Bachelor%20info/Bachelor%20Arbeit/API%20tester/frontend/api-craft-app/src/components/workspace/RequestContextMenu.js)**
   * *Responsibility*: Absolute-positioned overlay for collection/request actions (Rename, Delete).
 * **[SignOutModal.js](file:///c:/Users/hlanj/Bachelor%20info/Bachelor%20Arbeit/API%20tester/frontend/api-craft-app/src/components/workspace/SignOutModal.js)**
@@ -251,6 +261,9 @@ All HTTP communication uses the custom `authFetch` wrapper or standard `fetch` s
   * `createWorkspace(userId, name)` -> `POST /api/workspaces` (via `authFetch`, JWT protected, body `name` only)
   * `getWorkspaceById(workspaceId)` -> `GET /api/workspaces/{id}` (via `authFetch`, JWT protected, attaches `.status` code to thrown `Error` for handling 403 vs 404 client rendering).
   * `deleteWorkspace(workspaceId)` -> `DELETE /api/workspaces/{id}` (via `authFetch`, JWT protected)
+  * `renameWorkspace(workspaceId, name)` -> `PATCH /api/workspaces/{id}` (via `authFetch`, JWT protected)
+  * `updateMemberRole(workspaceId, memberUserId, role)` -> `PATCH /api/workspaces/{id}/members/{memberUserId}` (via `authFetch`, JWT protected)
+  * `removeMember(workspaceId, memberUserId)` -> `DELETE /api/workspaces/{id}/members/{memberUserId}` (via `authFetch`, JWT protected)
 * **[collectionService.js](file:///c:/Users/hlanj/Bachelor%20info/Bachelor%20Arbeit/API%20tester/frontend/api-craft-app/src/services/collectionService.js)**:
   * `getCollections(workspaceId)` -> `GET /api/workspaces/{id}/collections` (via `authFetch`, JWT protected)
   * `addCollection(workspaceId)` -> `POST /api/workspaces/{id}/collections` (via `authFetch`, JWT protected)
@@ -271,6 +284,9 @@ All HTTP communication uses the custom `authFetch` wrapper or standard `fetch` s
   * `getPendingInvitations()` -> `GET /api/invitations/pending` (via `authFetch`, JWT protected)
   * `acceptInvitation(invitationId)` -> `POST /api/invitations/{id}/accept` (via `authFetch`, JWT protected)
   * `declineInvitation(invitationId)` -> `POST /api/invitations/{id}/decline` (via `authFetch`, JWT protected)
+  * `cancelInvitation(invitationId)` -> `DELETE /api/invitations/{id}` (via `authFetch`, JWT protected)
+* **[activityService.js](file:///c:/Users/hlanj/Bachelor%20info/Bachelor%20Arbeit/API%20tester/frontend/api-craft-app/src/services/activityService.js)**:
+  * `getActivities(workspaceId, limit, offset)` -> `GET /api/workspaces/{id}/activities` (via `authFetch`, JWT protected)
 
 ---
 

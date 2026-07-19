@@ -35,3 +35,12 @@ export async function declineInvitation(invitationId) {
   if (!res.ok) throw new Error(data.error);
   return data;
 }
+
+export async function cancelInvitation(invitationId) {
+  const res = await authFetch(`/api/invitations/${invitationId}`, {
+    method: 'DELETE',
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error);
+  return data;
+}

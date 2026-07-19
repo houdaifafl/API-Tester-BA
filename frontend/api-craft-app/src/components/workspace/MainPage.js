@@ -217,6 +217,7 @@ export default function MainPage() {
         isChatOpen={commentsState.isChatOpen}
         onChatToggle={commentsState.toggleChat}
         onAnalyticsOpen={openAnalyticsTab}
+        onWorkspaceUpdated={reloadWorkspaces}
       />
       <div className="workspace-body">
         <Sidebar

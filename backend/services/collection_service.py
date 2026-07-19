@@ -1,6 +1,7 @@
 from models.collection_model import Collection
 from models.request_model import Request
 from models.base import db
+from services.activity_service import log_activity
 
 
 def _serialize(c):
@@ -55,6 +56,8 @@ def add_collection(workspace_id, user_id):
 
     collection = Collection(name='New Collection', workspace_id=workspace_id, is_default=False)
     db.session.add(collection)
+    db.session.flush()
+    log_activity(workspace_id, user_id, 'collection', 'create', 'collection', 'New Collection', collection.id)
     db.session.commit()
     return _serialize(collection), None
 
@@ -69,7 +72,10 @@ def rename_collection(collection_id, new_name, user_id):
     if not allowed:
         return None, err
 
+    old_name = col.name
     col.name = new_name
+    log_activity(col.workspace_id, user_id, 'collection', 'rename', 'collection', new_name, col.id,
+                 before_state={'name': old_name}, after_state={'name': new_name})
     db.session.commit()
     return _serialize(col), None
 
@@ -86,6 +92,7 @@ def delete_collection(collection_id, user_id):
     if not allowed:
         return None, err
 
+    log_activity(col.workspace_id, user_id, 'collection', 'delete', 'collection', col.name, col.id)
     db.session.delete(col)
     db.session.commit()
     return True, None

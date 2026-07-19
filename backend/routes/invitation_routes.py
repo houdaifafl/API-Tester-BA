@@ -3,7 +3,8 @@ from services.invitation_service import (
     create_invitation,
     get_pending_invitations,
     accept_invitation,
-    decline_invitation
+    decline_invitation,
+    cancel_invitation
 )
 from services.jwt_service import token_required
 
@@ -84,3 +85,16 @@ def decline_invitation_route(invitation_id):
         return jsonify({'error': error}), 400
         
     return jsonify({'message': 'Invitation declined'}), 200
+
+@invitation_bp.route('/api/invitations/<int:invitation_id>', methods=['DELETE'])
+@token_required
+def cancel_invitation_route(invitation_id):
+    user_id = g.user_id
+    result, error = cancel_invitation(invitation_id, user_id)
+    if error:
+        if error == 'not_found':
+            return jsonify({'error': 'Invitation not found'}), 404
+        if error == 'forbidden':
+            return jsonify({'error': 'Forbidden'}), 403
+        return jsonify({'error': error}), 400
+    return jsonify({'message': 'Invitation cancelled successfully'}), 200

@@ -1,0 +1,227 @@
+.wsm-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1100;
+  user-select: none;
+  cursor: default;
+}
+
+.wsm-modal {
+  background: var(--bg-surface, #ffffff);
+  border: 1px solid var(--border-color, #e0e0e0);
+  border-radius: 8px;
+  width: 500px;
+  max-width: 90%;
+  max-height: 85vh;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.wsm-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--border-color, #e0e0e0);
+}
+
+.wsm-header h2 {
+  margin: 0;
+  font-size: 18px;
+  color: var(--text-primary, #333333);
+}
+
+.wsm-close-btn {
+  background: none;
+  border: none;
+  font-size: 18px;
+  color: var(--text-muted, #999999);
+  cursor: pointer;
+  padding: 0;
+  display: flex;
+  align-items: center;
+}
+
+.wsm-close-btn:hover {
+  color: var(--text-primary, #333333);
+}
+
+.wsm-body {
+  padding: 20px;
+  overflow-y: auto;
+  flex: 1;
+}
+
+.wsm-section {
+  margin-bottom: 24px;
+}
+
+.wsm-section h3 {
+  margin: 0 0 12px 0;
+  font-size: 14px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--text-muted, #999999);
+}
+
+.wsm-rename-form {
+  display: flex;
+  gap: 10px;
+}
+
+.wsm-input {
+  flex: 1;
+  padding: 8px 12px;
+  border: 1px solid var(--border-color, #e0e0e0);
+  border-radius: 4px;
+  font-size: 14px;
+  background: var(--bg-surface, #ffffff);
+  color: var(--text-primary, #333333);
+  user-select: text;
+  cursor: text;
+}
+
+.wsm-input:focus {
+  outline: none;
+  border-color: var(--text-link, #0076ff);
+}
+
+.wsm-btn {
+  padding: 8px 16px;
+  border: none;
+  border-radius: 4px;
+  font-size: 14px;
+  cursor: pointer;
+  font-weight: 500;
+}
+
+.wsm-btn--primary {
+  background: var(--text-link, #0076ff);
+  color: #ffffff;
+}
+
+.wsm-btn--primary:disabled {
+  background: var(--border-color, #e0e0e0);
+  color: var(--text-muted, #999999);
+  cursor: not-allowed;
+}
+
+.wsm-success-msg {
+  color: #2ecc71;
+  font-size: 12px;
+  margin-top: 6px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.wsm-loading, .wsm-empty-text {
+  font-size: 13px;
+  color: var(--text-muted, #999999);
+  padding: 8px 0;
+}
+
+.wsm-spinner {
+  animation: wsm-spin 1s linear infinite;
+}
+
+@keyframes wsm-spin {
+  100% { transform: rotate(360deg); }
+}
+
+.wsm-collab-group {
+  margin-top: 16px;
+}
+
+.wsm-collab-group h4 {
+  margin: 0 0 8px 0;
+  font-size: 13px;
+  color: var(--text-secondary, #666666);
+  border-bottom: 1px dashed var(--border-color, #e0e0e0);
+  padding-bottom: 4px;
+}
+
+.wsm-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.wsm-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--border-color, #f4f4f4);
+}
+
+.wsm-item-details {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.wsm-username {
+  font-size: 14px;
+  font-weight: bold;
+  color: var(--text-primary, #333333);
+}
+
+.wsm-email {
+  font-size: 12px;
+  color: var(--text-muted, #999999);
+}
+
+.wsm-role-badge {
+  font-size: 10px;
+  text-transform: uppercase;
+  background: var(--border-color, #e0e0e0);
+  color: var(--text-secondary, #666666);
+  padding: 2px 6px;
+  border-radius: 10px;
+  width: fit-content;
+  margin-top: 2px;
+}
+
+.wsm-item-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.wsm-select {
+  padding: 4px 8px;
+  border: 1px solid var(--border-color, #e0e0e0);
+  border-radius: 4px;
+  font-size: 13px;
+  background: var(--bg-surface, #ffffff);
+  color: var(--text-primary, #333333);
+  cursor: pointer;
+}
+
+.wsm-action-btn {
+  background: none;
+  border: none;
+  font-size: 16px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px;
+}
+
+.wsm-action-btn--delete {
+  color: #e74c3c;
+}
+
+.wsm-action-btn:hover {
+  opacity: 0.8;
+}

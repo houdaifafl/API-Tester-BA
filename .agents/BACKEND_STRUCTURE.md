@@ -22,6 +22,7 @@ The backend utilizes the Flask application factory pattern. The server entry poi
   * `workspace_bp` -> Handles workspace dashboard operations.
   * `request_bp` -> Handles CRUD actions for saved request configurations.
   * `history_bp` -> Handles request execution history logs.
+  * `activity_bp` -> Handles workspace chronological activity and settings logs.
 
 ---
 
@@ -81,6 +82,10 @@ All database models reside inside `backend/models/` and extend from SQLAlchemy's
   * Table: `history`
   * Columns: `id` (PK, Integer), `workspace_id` (FK to `workspaces.id`, nullable=False), `method` (String, nullable=False), `url` (String, nullable=False), `params` (JSON), `headers` (JSON), `body` (JSON), `auth` (JSON), `status` (Integer), `response_time` (Float), `data` (JSON), `created_at` (DateTime).
   * Relationships: `workspace` (many-to-one relationship mapping to `Workspace` model via `history` back_populates).
+* **[activity_model.py](file:///c:/Users/hlanj/Bachelor%20info/Bachelor%20Arbeit/API%20tester/backend/models/activity_model.py) (`WorkspaceActivity` model)**:
+  * Table: `workspace_activities`
+  * Columns: `id` (PK, Integer), `workspace_id` (FK to `workspaces.id`, nullable=False), `user_id` (FK to `users.id`, nullable=False), `event_category` (String), `action` (String), `target_type` (String), `target_name` (String, nullable=False), `target_id` (Integer), `before_state` (JSON), `after_state` (JSON), `created_at` (DateTime).
+  * Relationships: `workspace` (many-to-one), `user` (many-to-one).
 
 ---
 
@@ -109,6 +114,12 @@ Routes are thin orchestrators that digest JSON requests, delegate logic to servi
 | | `GET` | `/api/invitations/pending` (JWT) | `get_pending_invitations()` | 200 | 401 (unauthorized) |
 | | `POST` | `/api/invitations/<invitation_id>/accept` (JWT) | `accept_invitation()` | 200 | 400 (not pending), 401 (unauthorized), 403 (forbidden), 404 (not found) |
 | | `POST` | `/api/invitations/<invitation_id>/decline` (JWT) | `decline_invitation()` | 200 | 400 (not pending), 401 (unauthorized), 403 (forbidden), 404 (not found) |
+| | `DELETE`| `/api/invitations/<invitation_id>` (JWT) | `cancel_invitation()` | 200 | 401 (unauthorized), 403 (forbidden), 404 (not found) |
+| **Activity**  | `GET` | `/api/workspaces/<workspace_id>/activities` (JWT)| `get_activities()` | 200 | 401 (unauthorized), 403 (forbidden), 404 (not found) |
+| | `PATCH`| `/api/workspaces/<workspace_id>` (JWT) | `update_workspace_name()` | 200 | 400 (validation), 401 (unauthorized), 403 (forbidden), 404 (not found) |
+| | `GET` | `/api/workspaces/<workspace_id>/collaborators` (JWT)| `get_workspace_collaborators()` | 200 | 401 (unauthorized), 403 (forbidden), 404 (not found) |
+| | `PATCH`| `/api/workspaces/<workspace_id>/members/<user_id>` (JWT)| `update_member_role()` | 200 | 400 (validation), 401 (unauthorized), 403 (forbidden), 404 (not found) |
+| | `DELETE`| `/api/workspaces/<workspace_id>/members/<user_id>` (JWT)| `remove_member()` | 200 | 400 (validation), 401 (unauthorized), 403 (forbidden), 404 (not found) |
 | **API Client**| `POST` | `/api/execute` (JWT) | `execute_request()` | 200 | 400 (missing URL/method), 401 (unauthorized), 500 (API error), 504 (timeout) |
 
 ---
@@ -130,11 +141,16 @@ All business logic, database queries, and transaction commits are isolated in se
   * `create_workspace(user_id, name, is_default)`: Persists new workspace and invokes `ensure_default_collection`.
   * `get_workspace_by_id(workspace_id, user_id)`: Fetches workspace metadata and verifies ownership or membership.
   * `delete_workspace(workspace_id, user_id)`: Deletes workspace if ownership matches and workspace is not default.
+  * `update_workspace_name(workspace_id, user_id, name)`: Renames custom workspace and logs activity.
+  * `update_member_role(workspace_id, user_id, target_user_id, role)`: Updates collaborator membership role and logs activity.
+  * `remove_member(workspace_id, user_id, target_user_id)`: Removes collaborator from workspace and logs activity.
+  * `get_workspace_collaborators(workspace_id, user_id)`: Lists active collaborators and pending invites for the workspace.
 * **[invitation_service.py](file:///c:/Users/hlanj/Bachelor%20info/Bachelor%20Arbeit/API%20tester/backend/services/invitation_service.py)**:
   * `create_invitation(workspace_id, inviter_id, invitee_username, role)`: Validates and creates a pending invitation with specified role.
   * `get_pending_invitations(user_id)`: Retrieves all pending invitations for a user.
   * `accept_invitation(invitation_id, user_id)`: Marks an invitation accepted and registers workspace membership with the invitation role.
   * `decline_invitation(invitation_id, user_id)`: Marks an invitation declined.
+  * `cancel_invitation(invitation_id, user_id)`: Cancels pending workspace invitation (Owner only) and logs activity.
 * **[collection_service.py](file:///c:/Users/hlanj/Bachelor%20info/Bachelor%20Arbeit/API%20tester/backend/services/collection_service.py)**:
   * `ensure_default_collection(workspace_id)`: Automatically seeds "My Collection" containing two default request items ("Get data", "Post data") if the workspace has no collections.
   * `get_collections_by_workspace(workspace_id)`: Returns all collections (and serialized nested requests) inside the workspace.
@@ -152,6 +168,9 @@ All business logic, database queries, and transaction commits are isolated in se
   * `create_history_entry(workspace_id, user_id, history_data)`: Creates and persists a history entry for owners/members.
 * **[api_client_service.py](file:///c:/Users/hlanj/Bachelor%20info/Bachelor%20Arbeit/API%20tester/backend/services/api_client_service.py)**:
   * `execute_request(method, url, params, headers, body)`: Constructs and executes a proxied HTTP request using the Python `requests` library. Calculates round-trip response time and parses output. *Note: directly returns Flask `jsonify()` responses (known violation).*
+* **[activity_service.py](file:///c:/Users/hlanj/Bachelor%20info/Bachelor%20Arbeit/API%20tester/backend/services/activity_service.py)**:
+  * `log_activity(workspace_id, user_id, event_category, action, target_type, target_name, target_id, before_state, after_state)`: Stores credential-scrubbed logs in the database.
+  * `get_activities(workspace_id, user_id, limit, offset)`: Retrieves workspace log list applying viewer visibility constraints.
 
 ---
 
@@ -173,6 +192,7 @@ Backend integration tests reside inside `backend/tests/`. The test environment u
 * **[test_execute.py](file:///c:/Users/hlanj/Bachelor%20info/Bachelor%20Arbeit/API%20tester/backend/tests/test_execute.py)**: Verifies the proxy client behavior (GET, POST JSON parsing, error handling, request timeouts).
 * **[test_history.py](file:///c:/Users/hlanj/Bachelor%20info/Bachelor%20Arbeit/API%20tester/backend/tests/test_history.py)**: Tests request history creation, listings, ownership authorization limits, reverse chronological ordering, and list length caps.
 * **[test_invitations.py](file:///c:/Users/hlanj/Bachelor%20info/Bachelor%20Arbeit/API%20tester/backend/tests/test_invitations.py)**: Tests workspace invitations sending, listing, accepting, declining, and member access verification.
+* **[test_activities.py](file:///c:/Users/hlanj/Bachelor%20info/Bachelor%20Arbeit/API%20tester/backend/tests/test_activities.py)**: Tests activity logging creations, diffs serialization, parameter/header/body credentials scrubbing, and viewer role category visibility filters.
 
 ---
 

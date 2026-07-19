@@ -15,6 +15,7 @@ export default function WorkspaceDropdown({
   onAcceptInvitation,
   onDeclineInvitation,
   onInviteClick,
+  onSettingsClick,
   workspaceRole = 'viewer',
 }) {
   const { user } = useAuth();
@@ -82,11 +83,13 @@ export default function WorkspaceDropdown({
       <div className="wsd-actions">
         <button
           className="wsd-action-btn"
-          onClick={() => {
+          onClick={(e) => {
             if (workspaceRole !== 'owner') {
               window.dispatchEvent(new CustomEvent('show-unauthorized-alert', {
                 detail: { message: "Action forbidden: Only workspace owners can modify settings." }
               }));
+            } else {
+              onSettingsClick(e);
             }
           }}
         >

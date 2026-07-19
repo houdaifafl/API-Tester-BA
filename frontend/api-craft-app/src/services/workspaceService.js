@@ -54,3 +54,34 @@ export async function leaveWorkspace(workspaceId) {
   if (!res.ok) throw new Error(data.error);
   return data;
 }
+
+export async function renameWorkspace(workspaceId, name) {
+  const res = await authFetch(`/api/workspaces/${workspaceId}`, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ name }),
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error);
+  return data;
+}
+
+export async function updateMemberRole(workspaceId, memberUserId, role) {
+  const res = await authFetch(`/api/workspaces/${workspaceId}/members/${memberUserId}`, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ role }),
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error);
+  return data;
+}
+
+export async function removeMember(workspaceId, memberUserId) {
+  const res = await authFetch(`/api/workspaces/${workspaceId}/members/${memberUserId}`, {
+    method: 'DELETE',
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error);
+  return data;
+}

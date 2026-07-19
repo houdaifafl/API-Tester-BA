@@ -16,7 +16,8 @@ from routes.invitation_routes import invitation_bp
 from routes.admin_routes import admin_bp
 from routes.comment_routes import comment_bp
 from routes.analytics_routes import analytics_bp
-from models import collection_model, request_model, user_model, workspace_model, history_model, workspace_member_model, invitation_model, audit_log_model, notification_model, comment_model
+from routes.activity_routes import activity_bp
+from models import collection_model, request_model, user_model, workspace_model, history_model, workspace_member_model, invitation_model, audit_log_model, notification_model, comment_model, activity_model
 
 def safe_add_column(conn, table, column, col_type, logger):
     try:
@@ -155,6 +156,7 @@ def create_app():
     app.register_blueprint(admin_bp)
     app.register_blueprint(comment_bp)
     app.register_blueprint(analytics_bp)
+    app.register_blueprint(activity_bp)
 
 
 

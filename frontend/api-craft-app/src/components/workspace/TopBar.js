@@ -5,6 +5,7 @@ import { useAuth } from '../../contexts/AuthContext';
 import WorkspaceDropdown from './WorkspaceDropdown';
 import SignOutModal from './SignOutModal';
 import InviteModal from './InviteModal';
+import WorkspaceSettingsModal from './WorkspaceSettingsModal';
 import NotificationBell from '../admin/NotificationBell';
 import { METHOD_COLORS } from '../../constants';
 import './TopBar.css';
@@ -27,6 +28,7 @@ export default function TopBar({
   isChatOpen = false,
   onChatToggle,
   onAnalyticsOpen,
+  onWorkspaceUpdated,
 }) {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
@@ -34,6 +36,7 @@ export default function TopBar({
   const [accountOpen, setAccountOpen] = useState(false);
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [inviteOpen, setInviteOpen] = useState(false);
+  const [settingsOpen, setSettingsOpen] = useState(false);
   const accountRef = useRef(null);
 
   useEffect(() => {
@@ -72,6 +75,11 @@ export default function TopBar({
     setDropdownOpen(false);
   }, []);
 
+  const handleSettingsTrigger = useCallback(() => {
+    setSettingsOpen(true);
+    setDropdownOpen(false);
+  }, []);
+
   const headerName = activeWorkspace ? activeWorkspace.name : '';
 
   return (
@@ -100,6 +108,7 @@ export default function TopBar({
               onAcceptInvitation={onAcceptInvitation}
               onDeclineInvitation={onDeclineInvitation}
               onInviteClick={handleInviteTrigger}
+              onSettingsClick={handleSettingsTrigger}
               workspaceRole={workspaceRole}
             />
           )}
@@ -189,6 +198,15 @@ export default function TopBar({
         <InviteModal
           workspace={activeWorkspace}
           onClose={() => setInviteOpen(false)}
+        />
+      )}
+
+      {settingsOpen && activeWorkspace && (
+        <WorkspaceSettingsModal
+          workspace={activeWorkspace}
+          workspaceRole={workspaceRole}
+          onClose={() => setSettingsOpen(false)}
+          onWorkspaceUpdated={onWorkspaceUpdated}
         />
       )}
     </>

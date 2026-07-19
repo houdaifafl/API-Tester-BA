@@ -1,5 +1,5 @@
 import React, { useState, useRef, useCallback, useEffect } from 'react';
-import { FaSave } from 'react-icons/fa';
+import { FaSave, FaCopy, FaDownload } from 'react-icons/fa';
 import RequestBar from './RequestBar';
 import RequestTabs from './RequestTabs';
 import DocsTab from './DocsTab';
@@ -9,6 +9,7 @@ import HeadersTab from './HeadersTab';
 import BodyTab from './BodyTab';
 import ResponsePanel from './ResponsePanel';
 import { executeRequest } from '../../services/requestService';
+import { generateCurlCommand, exportRequestAsJson } from './requestExportUtils';
 import './RequestBuilder.css';
 
 const DEFAULT_DOCS = {
@@ -62,6 +63,7 @@ export default function RequestBuilder({ request, initialResponseHeight, onRespo
   const [loading, setLoading]     = useState(false);
   const [saving, setSaving]       = useState(false);
   const [method, setMethod]       = useState(request.method);
+  const [copied, setCopied]       = useState(false);
 
   const tabState = useRef({
     params:  savedState?.params  ?? null,
@@ -147,6 +149,37 @@ export default function RequestBuilder({ request, initialResponseHeight, onRespo
     }
   }, [url, method, onStateChange, onExecute]);
 
+  const handleCopyCurl = useCallback(() => {
+    const curlCmd = generateCurlCommand({
+      method,
+      url,
+      params: tabState.current.params,
+      headers: tabState.current.headers,
+      body: tabState.current.body,
+      auth: tabState.current.auth,
+    });
+    navigator.clipboard.writeText(curlCmd)
+      .then(() => {
+        setCopied(true);
+        setTimeout(() => setCopied(false), 2000);
+      })
+      .catch((err) => {
+        console.error('Failed to copy cURL: ', err);
+      });
+  }, [method, url]);
+
+  const handleExportJson = useCallback(() => {
+    exportRequestAsJson({
+      name: request.label,
+      method,
+      url,
+      params: tabState.current.params,
+      headers: tabState.current.headers,
+      body: tabState.current.body,
+      auth: tabState.current.auth,
+    });
+  }, [request.label, method, url]);
+
   useEffect(() => {
     const handleNavigate = (e) => {
       const { requestId: targetReqId, tab: targetTab, key: targetKey } = e.detail;
@@ -191,24 +224,42 @@ export default function RequestBuilder({ request, initialResponseHeight, onRespo
           <span className="breadcrumb-sep">›</span>
           <span className="breadcrumb-request">{request.label}</span>
         </div>
-        {request.type !== 'history' && (
+        <div className="req-action-buttons">
           <button
-            className="req-save-btn"
-            onClick={() => {
-              if (workspaceRole === 'viewer') {
-                window.dispatchEvent(new CustomEvent('show-unauthorized-alert', {
-                  detail: { message: "Action forbidden: Viewers cannot save request changes." }
-                }));
-              } else {
-                handleSave();
-              }
-            }}
-            disabled={saving}
+            className="req-export-btn"
+            onClick={handleCopyCurl}
+            title="Copy request as cURL command"
           >
-            <FaSave className="save-icon" />
-            {saving ? 'Saving…' : 'Save'}
+            <FaCopy className="export-icon" />
+            {copied ? 'Copied!' : 'Copy cURL'}
           </button>
-        )}
+          <button
+            className="req-export-btn"
+            onClick={handleExportJson}
+            title="Export request configuration as JSON file"
+          >
+            <FaDownload className="export-icon" />
+            Export JSON
+          </button>
+          {request.type !== 'history' && (
+            <button
+              className="req-save-btn"
+              onClick={() => {
+                if (workspaceRole === 'viewer') {
+                  window.dispatchEvent(new CustomEvent('show-unauthorized-alert', {
+                    detail: { message: "Action forbidden: Viewers cannot save request changes." }
+                  }));
+                } else {
+                  handleSave();
+                }
+              }}
+              disabled={saving}
+            >
+              <FaSave className="save-icon" />
+              {saving ? 'Saving…' : 'Save'}
+            </button>
+          )}
+        </div>
       </div>
 
       <RequestBar
