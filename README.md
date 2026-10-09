@@ -2,7 +2,7 @@
 
 APICraft is a web application for building, organising and running API requests, similar in purpose to tools like Postman. It was developed as the practical part of my bachelor's thesis at FH Aachen, which compares two ways of developing software together with AI coding agents.
 
-![APICraft showing a GET request and its JSON response](docs/screenshot.png)
+![APICraft showing a GET request and its JSON response](APICRAFT.png)
 
 ## About the thesis project
 
